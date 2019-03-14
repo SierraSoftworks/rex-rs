@@ -8,6 +8,7 @@ pub struct Idea {
     pub name: String,
     pub description: String,
     pub tags: HashSet<String>,
+    pub completed: bool,
 }
 
 fn new_id() -> u128 {
@@ -32,6 +33,7 @@ impl api::StateView<Idea> for IdeaV1 {
             name: self.name.clone(),
             description: self.description.clone(),
             tags: HashSet::new(),
+            completed: false,
         }
     }
 
@@ -50,6 +52,7 @@ pub struct IdeaV2 {
     pub name: String,
     pub description: String,
     pub tags: HashSet<String>,
+    pub completed: Option<bool>,
 }
 
 impl api::StateView<Idea> for IdeaV2 {
@@ -62,6 +65,7 @@ impl api::StateView<Idea> for IdeaV2 {
             name: self.name.clone(),
             description: self.description.clone(),
             tags: self.tags.clone(),
+            completed: self.completed.unwrap_or_else(|| false),
         }
     }
 
@@ -71,6 +75,7 @@ impl api::StateView<Idea> for IdeaV2 {
             name: state.name.clone(),
             description: state.description.clone(),
             tags: state.tags.clone(),
+            completed: Some(state.completed),
         }
     }
 }

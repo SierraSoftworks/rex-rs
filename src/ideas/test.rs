@@ -261,6 +261,7 @@ fn idea_v2() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string(), "test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -310,6 +311,7 @@ fn random_idea_v2() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string(), "test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -334,6 +336,7 @@ fn random_idea_v2() {
 
     assert_eq!(idea.name, "Test Idea".to_string());
     assert_eq!(idea.description, "This is a test idea".to_string());
+    assert_eq!(idea.completed, Some(false));
     assert!(idea.tags.contains(&"test1".to_string()));
     assert!(idea.tags.contains(&"test2".to_string()));
 }
@@ -358,6 +361,7 @@ fn random_idea_v2_with_tags() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string()],
+            completed: None,
         },
         state,
     )
@@ -369,6 +373,7 @@ fn random_idea_v2_with_tags() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -395,6 +400,7 @@ fn random_idea_v2_with_tags() {
 
         assert_eq!(idea.name, "Test Idea".to_string());
         assert_eq!(idea.description, "This is a test idea".to_string());
+        assert_eq!(idea.completed, Some(false));
         assert!(idea.tags.contains(&"test1".to_string()));
     }
 }
@@ -419,6 +425,7 @@ fn ideas_v2() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string(), "test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -430,6 +437,7 @@ fn ideas_v2() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string(), "test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -458,6 +466,7 @@ fn ideas_v2() {
     for idea in ideas {
         assert_eq!(idea.name, "Test Idea".to_string());
         assert_eq!(idea.description, "This is a test idea".to_string());
+        assert_eq!(idea.completed, Some(false));
         assert!(idea.tags.contains(&"test1".to_string()));
         assert!(idea.tags.contains(&"test2".to_string()));
     }
@@ -483,6 +492,7 @@ fn ideas_v2_with_tags() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string(), "test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -494,6 +504,7 @@ fn ideas_v2_with_tags() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test2".to_string()],
+            completed: None,
         },
         state,
     )
@@ -505,6 +516,7 @@ fn ideas_v2_with_tags() {
             name: "Test Idea".into(),
             description: "This is a test idea".into(),
             tags: hashset!["test1".to_string()],
+            completed: None,
         },
         state,
     )
@@ -533,6 +545,7 @@ fn ideas_v2_with_tags() {
     for idea in ideas {
         assert_eq!(idea.name, "Test Idea".to_string());
         assert_eq!(idea.description, "This is a test idea".to_string());
+        assert_eq!(idea.completed, Some(false));
         assert!(idea.tags.contains(&"test1".to_string()));
     }
 }

@@ -43,17 +43,23 @@ pub fn new_idea_v1(
     }
 }
 
-#[get("/api/v2/ideas?<tag>")]
+#[get("/api/v2/ideas?<tag>&<complete>")]
 pub fn ideas_v2(
     tag: Option<String>,
+    complete: Option<bool>,
     state: State<state::IdeasState>,
 ) -> Option<Json<Vec<models::IdeaV2>>> {
-    match tag {
-        Some(tag) => {
-            state::ideas_by(|idea| idea.tags.contains(&tag), state.inner()).map(|val| Json(val))
-        }
-        None => state::ideas(state.inner()).map(|val| Json(val)),
-    }
+    let predicate = |item: &models::Idea| {
+        tag.clone()
+            .map(|tag| item.tags.contains(&tag))
+            .unwrap_or(true)
+            && complete
+                .clone()
+                .map(|complete| item.completed == complete)
+                .unwrap_or(true)
+    };
+
+    state::ideas_by(predicate, state.inner()).map(|val| Json(val))
 }
 
 #[get("/api/v2/idea/<id>")]
@@ -78,15 +84,21 @@ pub fn new_idea_v2(
     }
 }
 
-#[get("/api/v2/idea/random?<tag>")]
+#[get("/api/v2/idea/random?<tag>&<complete>")]
 pub fn random_idea_v2(
     tag: Option<String>,
+    complete: Option<bool>,
     state: State<state::IdeasState>,
 ) -> Option<Json<models::IdeaV2>> {
-    match tag {
-        Some(tag) => {
-            state::random_idea(|item| item.tags.contains(&tag), state.inner()).map(|val| Json(val))
-        }
-        None => state::random_idea(|_| true, state.inner()).map(|val| Json(val)),
-    }
+    let predicate = |item: &models::Idea| {
+        tag.clone()
+            .map(|tag| item.tags.contains(&tag))
+            .unwrap_or(true)
+            && complete
+                .clone()
+                .map(|complete| item.completed == complete)
+                .unwrap_or(true)
+    };
+
+    state::random_idea(predicate, state.inner()).map(|val| Json(val))
 }

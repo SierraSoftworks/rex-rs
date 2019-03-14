@@ -44,26 +44,41 @@ pub fn new_idea<T: api::StateView<models::Idea>>(new_idea: &T, state: &IdeasStat
     })
 }
 
-pub fn ideas_by<T: api::StateView<models::Idea>, F>(pred: F, state: &IdeasState) -> Option<Vec<T>>
-    where F: Fn(&models::Idea) -> bool {
+pub fn ideas_by<T: api::StateView<models::Idea>>(
+    pred: impl Fn(&models::Idea) -> bool,
+    state: &IdeasState,
+) -> Option<Vec<T>> {
     state.store.read().ok().and_then(|store| {
         Some(
-            store.iter().filter(|(_id, idea)| pred(idea)).map(|(_id, idea)| T::from_state(idea)).collect::<Vec<_>>()
+            store
+                .iter()
+                .filter(|(_id, idea)| pred(idea))
+                .map(|(_id, idea)| T::from_state(idea))
+                .collect::<Vec<_>>(),
         )
     })
 }
 
-pub fn random_idea<T: api::StateView<models::Idea>, F>(pred: F, state: &IdeasState) -> Option<T>
-    where F: Fn(&models::Idea) -> bool {
+pub fn random_idea<T: api::StateView<models::Idea>>(
+    pred: impl Fn(&models::Idea) -> bool,
+    state: &IdeasState,
+) -> Option<T> {
     state.store.read().ok().and_then(|store| {
-        let ids = store.iter().filter(|(_id, idea)| pred(idea)).map(|(id, _idea)| id).collect::<Vec<_>>();
+        let ids = store
+            .iter()
+            .filter(|(_id, idea)| pred(idea))
+            .map(|(id, _idea)| id)
+            .collect::<Vec<_>>();
 
-        let mut rng = rand::thread_rng();
-        let index = rand::seq::index::sample(&mut rng, ids.len(), 1).index(0);
+        if ids.len() > 0 {
+            let mut rng = rand::thread_rng();
+            let index = rand::seq::index::sample(&mut rng, ids.len(), 1).index(0);
 
-        let id = ids[index];
+            let id = ids[index];
 
-        store.get(&id)
-            .map(|item| T::from_state(item))
+            store.get(&id).map(|item| T::from_state(item))
+        } else {
+            None
+        }
     })
 }

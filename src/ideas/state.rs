@@ -44,6 +44,15 @@ pub fn new_idea<T: api::StateView<models::Idea>>(new_idea: &T, state: &IdeasStat
     })
 }
 
+pub fn ideas_by<T: api::StateView<models::Idea>, F>(pred: F, state: &IdeasState) -> Option<Vec<T>>
+    where F: Fn(&models::Idea) -> bool {
+    state.store.read().ok().and_then(|store| {
+        Some(
+            store.iter().filter(|(_id, idea)| pred(idea)).map(|(_id, idea)| T::from_state(idea)).collect::<Vec<_>>()
+        )
+    })
+}
+
 pub fn random_idea<T: api::StateView<models::Idea>>(state: &IdeasState) -> Option<T> {
     state.store.read().ok().and_then(|store| {
         let mut rng = rand::thread_rng();

@@ -7,6 +7,7 @@ extern crate serde;
 extern crate chrono;
 extern crate rand;
 extern crate sentry;
+extern crate serde_json;
 extern crate uuid;
 
 mod api;
@@ -17,7 +18,7 @@ mod ideas;
 fn app() -> rocket::Rocket {
     rocket::ignite()
         .mount(
-            "/api",
+            "/",
             routes![
                 health::health_v1,
                 health::health_v2,

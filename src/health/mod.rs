@@ -3,6 +3,8 @@ use rocket_contrib::json::Json;
 
 mod models;
 mod state;
+#[cfg(test)]
+mod test;
 
 pub use state::new_state;
 

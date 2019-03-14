@@ -6,6 +6,7 @@ extern crate rocket;
 extern crate serde;
 extern crate chrono;
 extern crate rand;
+extern crate rocket_cors;
 extern crate sentry;
 extern crate serde_json;
 extern crate uuid;
@@ -14,6 +15,8 @@ mod api;
 mod errors;
 mod health;
 mod ideas;
+
+use rocket_cors::Error;
 
 fn app() -> rocket::Rocket {
     rocket::ignite()
@@ -41,12 +44,18 @@ fn app() -> rocket::Rocket {
         .manage(ideas::new_state())
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let raven = sentry::init("https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519");
 
     if raven.is_enabled() {
         sentry::integrations::panic::register_panic_handler();
     }
 
-    app().launch();
+    let cors_options = rocket_cors::Cors {
+        ..Default::default()
+    };
+
+    app().attach(cors_options).launch();
+
+    Ok(())
 }

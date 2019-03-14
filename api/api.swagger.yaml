@@ -1,0 +1,126 @@
+swagger: "2.0"
+info:
+  description: Shedly is a tool for scheduling tasks to execute at specific times.
+
+version: "1.0.0"
+title: Shedly
+license:
+  name: MIT
+  url: https://sierrasoftworks.com/licenses/MIT
+host: shedly.sierrasoftworks.com
+basePath: "/api/v1"
+
+tags:
+  - name: tasks
+    description: Create and manage scheduled tasks
+  - name: health
+    description: Interrogate the health of the service
+
+schemes:
+   - https
+
+paths:
+  /tasks
+    get:
+      tags:
+        - tasks
+      summary: Get scheduled task list
+      description: Gets the list of tasks you have created.
+      operationId: addTask
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body  
+          description: The task to be scheduled
+          required: true
+          schema:
+            $ref: "#/definitions/NewTask"
+      responses:
+        201:
+          description: The task has been scheduled
+        400:
+          description: You have not provided a valid task
+      security:
+        - aad_auth:
+          - "tasks.write"
+          - "tasks.read"
+
+securityDefinitions:
+  aad_auth:
+    type: oauth2
+    authorizationUrl: https://login.microsoftonline.com/common
+    flow: implicit
+    scopes:
+      "tasks.write": "Create new scheduled tasks in your subscription"
+      "tasks.read": "View scheduled tasks in your subscription"
+
+definitions:
+  Tags:
+    type: array
+    description: The list of tags you wish to associate with this task
+    minItems: 0
+    maxItems: 10
+    items:
+      type: string
+      description: A short string tag describing this task
+      maxLength: 50
+      xml:
+        wrapped: true
+        name: Tag
+    xml:
+      name: Tags
+  Notify:
+    type: object
+    additionalProperties: false
+    required:
+      - url
+    properties:
+      url:
+        type: string
+        description: The URL which will receive a notification once the task is scheduled to execute.
+        xml:
+          name: URL
+      headers:
+        type: object
+        additionalProperties:
+          type: string
+        properties: {}
+        xml:
+          name: Headers
+      body:
+        xml:
+          name: Body
+        oneOf:
+          - type: object
+            description: An object which will be sent to the endpoint.
+          - type: string
+            description: A string payload which will be sent to the endpoint.
+      acknowledgeOn:
+        type: array
+        description: The list of status codes which will be considered to represent successful acknowledgement.
+        items:
+          type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
+          xml:
+            name: StatusCode
+        xml:
+          name: StatusCodes
+    xml:
+      name: Notify
+  NewTask:
+    type: "object"
+    additionalProperties: false
+    required:
+      - "notify"
+    properties:
+      notify:
+        $ref: "#/definitions/Notify"
+      tags:
+        $ref: "#/definitions/Tags"
+    xml:
+      name: NewTask

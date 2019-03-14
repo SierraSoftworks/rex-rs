@@ -30,7 +30,11 @@ fn app() -> rocket::Rocket {
                 ideas::random_idea_v2,
             ],
         )
-        .register(catchers![errors::error_404, errors::error_422,])
+        .register(catchers![
+            errors::error_404,
+            errors::error_422,
+            errors::error_500,
+        ])
         .manage(health::new_state())
         .manage(ideas::new_state())
 }

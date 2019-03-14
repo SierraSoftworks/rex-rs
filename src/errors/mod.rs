@@ -24,3 +24,13 @@ pub fn error_422(_req: &rocket::Request) -> Json<Error> {
         description: "The request you submitted could not be processed according to the required schema. Please check your request and try again.".into(),
     })
 }
+
+#[catch(500)]
+pub fn error_500(_req: &rocket::Request) -> Json<Error> {
+    Json(Error {
+        code: 500,
+        error: "Internal Server Error".into(),
+        description:
+            "We encountered an error while processing your request, please try again later.".into(),
+    })
+}

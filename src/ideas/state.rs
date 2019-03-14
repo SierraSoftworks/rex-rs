@@ -46,7 +46,6 @@ pub fn new_idea<T: api::StateView<models::Idea>>(new_idea: &T, state: &IdeasStat
 
 pub fn random_idea<T: api::StateView<models::Idea>>(state: &IdeasState) -> Option<T> {
     state.store.read().ok().and_then(|store| {
-        let len = store.len();
         let mut rng = rand::thread_rng();
         let index = rand::seq::index::sample(&mut rng, store.len(), 1).index(0);
 

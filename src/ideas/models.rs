@@ -2,7 +2,7 @@ use super::super::api;
 use std::collections::HashSet;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Idea {
     pub id: u128,
     pub name: String,
@@ -15,7 +15,7 @@ fn new_id() -> u128 {
     u128::from_be_bytes(*id.as_bytes())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct IdeaV1 {
     pub id: Option<String>,
     pub name: String,
@@ -44,8 +44,7 @@ impl api::StateView<Idea> for IdeaV1 {
     }
 }
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct IdeaV2 {
     pub id: Option<String>,
     pub name: String,

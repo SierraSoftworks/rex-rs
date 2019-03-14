@@ -6,6 +6,7 @@ extern crate rocket;
 extern crate serde;
 extern crate chrono;
 extern crate rand;
+extern crate sentry;
 extern crate uuid;
 
 mod api;
@@ -40,5 +41,11 @@ fn app() -> rocket::Rocket {
 }
 
 fn main() {
+    let raven = sentry::init("https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519");
+
+    if raven.is_enabled() {
+        sentry::integrations::panic::register_panic_handler();
+    }
+
     app().launch();
 }

@@ -9,22 +9,16 @@ mod state;
 
 pub use state::new_state;
 
-#[get("/v1/ideas?<tag>")]
+#[get("/v1/ideas")]
 pub fn ideas_v1(
-    tag: Option<String>,
     state: State<state::IdeasState>,
 ) -> Option<Json<Vec<models::IdeaV1>>> {
-    match tag {
-        Some(tag) => {
-            state::ideas_by(|idea| idea.tags.contains(&tag), state.inner()).map(|val| Json(val))
-        }
-        None => state::ideas(state.inner()).map(|val| Json(val)),
-    }
+    state::ideas(state.inner()).map(|val| Json(val))
 }
 
 #[get("/v1/idea/random")]
 pub fn random_idea_v1(state: State<state::IdeasState>) -> Option<Json<models::IdeaV1>> {
-    state::random_idea(state.inner()).map(|val| Json(val))
+    state::random_idea(|_| true, state.inner()).map(|val| Json(val))
 }
 
 #[get("/v1/idea/<id>")]
@@ -84,7 +78,11 @@ pub fn new_idea_v2(
     }
 }
 
-#[get("/v2/idea/random")]
-pub fn random_idea_v2(state: State<state::IdeasState>) -> Option<Json<models::IdeaV2>> {
-    state::random_idea(state.inner()).map(|val| Json(val))
+#[get("/v2/idea/random?<tag>")]
+pub fn random_idea_v2(tag: Option<String>, state: State<state::IdeasState>) -> Option<Json<models::IdeaV2>> {
+    match tag {
+        Some(tag) => state::random_idea(|item| item.tags.contains(&tag), state.inner()).map(|val| Json(val)),
+        None => state::random_idea(|_| true, state.inner()).map(|val| Json(val)),
+    }
+    
 }

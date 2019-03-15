@@ -8,19 +8,19 @@ info:
     url: https://sierrasoftworks.com/licenses/MIT
   version: 1.0.
 servers:
-- url: https://randy.sierrasoftworks.com
-- url: http://localhost:8000
+  - url: https://randy.sierrasoftworks.com
+  - url: http://localhost:8000
 tags:
-- name: health
-  description: APIs used to determine the health of a Rusty instance.
-- name: ideas
-  description: APIs used to manage and retrieve ideas.
+  - name: health
+    description: APIs used to determine the health of a Rusty instance.
+  - name: ideas
+    description: APIs used to manage and retrieve ideas.
 paths:
   /api/v1/health:
     get:
       tags:
-      - health
-      
+        - health
+
       summary: Get Health (v1)
       description: Gets the current health status of the Randy instance.
       operationId: health_v1
@@ -46,8 +46,8 @@ paths:
   /api/v2/health:
     get:
       tags:
-      - health
-      
+        - health
+
       summary: Get Health (v2)
       description: Gets the current health status of the Randy instance.
       operationId: health_v2
@@ -74,8 +74,8 @@ paths:
   /api/v1/ideas:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Ideas (v1)
       description: Gets the list of ideas registered with the server.
       operationId: ideas_v1
@@ -106,8 +106,8 @@ paths:
                 description: The resource you were looking for could not be found, please check your request and try again.
     post:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: New Idea (v1)
       description: Creates a new idea on the server.
       operationId: new_idea_v1
@@ -148,13 +148,11 @@ paths:
                 error: Internal Server Error
                 description: The server encountered an error while processing your request, please try again later.
 
-
-
   /api/v1/idea/random:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Random Idea (v1)
       description: Gets a single randomly selected idea from the server.
       operationId: random_idea_v1
@@ -184,8 +182,8 @@ paths:
   /api/v1/idea/{id}:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Idea (v1)
       description: Gets a specific idea from the server based on its ID.
       operationId: idea_v1
@@ -275,14 +273,12 @@ paths:
                 code: 500
                 error: Internal Server Error
                 description: The server encountered an error while processing your request, please try again later.
-          
-
 
   /api/v2/ideas:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Ideas (v2)
       description: Gets the list of ideas registered with the server.
       operationId: ideas_v2
@@ -328,11 +324,11 @@ paths:
                 code: 404
                 error: Not Found
                 description: The resource you were looking for could not be found, please check your request and try again.
-  
+
     post:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: New Idea (v2)
       description: Creates a new idea on the server.
       operationId: new_idea_v2
@@ -377,12 +373,11 @@ paths:
                 error: Internal Server Error
                 description: The server encountered an error while processing your request, please try again later.
 
-
   /api/v2/idea/random:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Random Idea (v2)
       description: Gets a single randomly selected idea from the server.
       operationId: random_idea_v2
@@ -425,12 +420,12 @@ paths:
                 code: 404
                 error: Not Found
                 description: The resource you were looking for could not be found, please check your request and try again.
-           
+
   /api/v2/idea/{id}:
     get:
       tags:
-      - ideas
-      
+        - ideas
+
       summary: Get Idea (v2)
       description: Gets a specific idea from the server based on its ID.
       operationId: idea_v2
@@ -527,13 +522,13 @@ paths:
                 code: 500
                 error: Internal Server Error
                 description: The server encountered an error while processing your request, please try again later.
-     
+
 components:
   schemas:
     HealthV1:
       deprecated: true
       required:
-      - ok
+        - ok
       type: object
       properties:
         ok:
@@ -549,8 +544,8 @@ components:
 
     HealthV2:
       required:
-      - ok
-      - started_at
+        - ok
+        - started_at
       type: object
       properties:
         ok:
@@ -575,8 +570,8 @@ components:
     IdeaV1:
       deprecated: true
       required:
-      - description
-      - name
+        - description
+        - name
       type: object
       properties:
         id:
@@ -589,7 +584,8 @@ components:
           description: The short name used to identify this idea.
         description:
           type: string
-          description: A longer description providing more information about this
+          description:
+            A longer description providing more information about this
             idea.
       xml:
         name: Idea
@@ -600,8 +596,8 @@ components:
 
     IdeaV2:
       required:
-      - description
-      - name
+        - description
+        - name
       type: object
       properties:
         id:
@@ -614,7 +610,8 @@ components:
           description: The short name used to identify this idea.
         description:
           type: string
-          description: A longer description providing more information about this
+          description:
+            A longer description providing more information about this
             idea.
         tags:
           maxItems: 10

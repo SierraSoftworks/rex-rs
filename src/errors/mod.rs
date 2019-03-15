@@ -18,14 +18,14 @@ pub fn error_404(req: &rocket::Request) -> Json<Error> {
             scope.set_extra(
                 "route",
                 req.route()
-                    .map(|route| json!(format!("{}", route)))
+                    .map(|route| json!(format!("{} {}", route.method, route.uri)))
                     .unwrap_or(serde_json::Value::Null),
             );
         },
         || {
             capture_message(
                 &req.route()
-                    .map(|route| format!("404 Not Found - {}", route))
+                    .map(|route| format!("404 Not Found - {} {}", route.method, route.uri))
                     .unwrap_or("404 Not Found".into()),
                 Level::Warning,
             )
@@ -47,14 +47,16 @@ pub fn error_422(req: &rocket::Request) -> Json<Error> {
             scope.set_extra(
                 "route",
                 req.route()
-                    .map(|route| json!(format!("{}", route)))
+                    .map(|route| json!(format!("{} {}", route.method, route.uri)))
                     .unwrap_or(serde_json::Value::Null),
             );
         },
         || {
             capture_message(
                 &req.route()
-                    .map(|route| format!("422 Unprocessable Entity - {}", route))
+                    .map(|route| {
+                        format!("422 Unprocessable Entity - {} {}", route.method, route.uri)
+                    })
                     .unwrap_or("422 Unprocessable Entity".into()),
                 Level::Warning,
             )
@@ -76,14 +78,16 @@ pub fn error_500(req: &rocket::Request) -> Json<Error> {
             scope.set_extra(
                 "route",
                 req.route()
-                    .map(|route| json!(format!("{}", route)))
+                    .map(|route| json!(format!("{} {}", route.method, route.uri)))
                     .unwrap_or(serde_json::Value::Null),
             );
         },
         || {
             capture_message(
                 &req.route()
-                    .map(|route| format!("500 Internal Server Error - {}", route))
+                    .map(|route| {
+                        format!("500 Internal Server Error - {} {}", route.method, route.uri)
+                    })
                     .unwrap_or("500 Internal Server Error".into()),
                 Level::Warning,
             )

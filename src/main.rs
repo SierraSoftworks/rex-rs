@@ -7,7 +7,7 @@ extern crate serde;
 extern crate chrono;
 extern crate rand;
 extern crate rocket_cors;
-extern crate sentry;
+#[macro_use] extern crate sentry;
 extern crate serde_json;
 extern crate uuid;
 
@@ -17,6 +17,7 @@ mod health;
 mod ideas;
 
 use rocket_cors::Error;
+use std::str::FromStr;
 
 fn app() -> rocket::Rocket {
     rocket::ignite()
@@ -47,7 +48,10 @@ fn app() -> rocket::Rocket {
 }
 
 fn main() -> Result<(), Error> {
-    let raven = sentry::init("https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519");
+    let raven = sentry::init(("https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519", sentry::ClientOptions {
+        release: release_name!(),
+        ..Default::default()
+    }));
 
     if raven.is_enabled() {
         sentry::integrations::panic::register_panic_handler();

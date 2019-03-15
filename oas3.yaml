@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: Shedly
-  description: Randy Randy is a tool for keeping track of ideas for things to do and
-    providing, on demand, a random one to do.
+  title: Randy
+  description: Randy is a tool for keeping track of ideas for things to do and
+    providing, on demand, a random one.
   license:
     name: MIT
     url: https://sierrasoftworks.com/licenses/MIT

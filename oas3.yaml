@@ -6,7 +6,7 @@ info:
   license:
     name: MIT
     url: https://sierrasoftworks.com/licenses/MIT
-  version: 1.0.0
+  version: 1.0.
 servers:
 - url: https://randy.sierrasoftworks.com
 - url: http://localhost:8000
@@ -32,6 +32,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthV1"
+              example:
+                ok: true
         500:
           description: The service is unhealthy.
           content:
@@ -56,6 +58,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthV2"
+              example:
+                ok: true
+                started_at: "2019-03-14T23:17:27.210333300Z"
         500:
           description: The service is unhealthy.
           content:
@@ -85,6 +90,10 @@ paths:
                 description: The list of ideas registered with the server.
                 items:
                   $ref: "#/components/schemas/IdeaV1"
+              example:
+                - id: "225c5957d7f450baec75a67ede427e9"
+                  name: "Test Idea"
+                  description: "This is a test idea"
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:
@@ -124,6 +133,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV1"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
         500:
           description: The server could not create the idea, please try again.
           content:
@@ -153,6 +166,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV1"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:
@@ -188,6 +205,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV1"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:
@@ -214,12 +235,14 @@ paths:
           required: false
           schema:
             type: string
+          example: test
         - name: complete
           in: query
           description: An optional filter which may be used to constrain which ideas are returned.
           required: false
           schema:
             type: boolean
+          example: false
       responses:
         200:
           description: List of ideas
@@ -230,6 +253,13 @@ paths:
                 description: The list of ideas registered with the server.
                 items:
                   $ref: "#/components/schemas/IdeaV2"
+              example:
+                - id: "225c5957d7f450baec75a67ede427e9"
+                  name: "Test Idea"
+                  description: "This is a test idea"
+                  tags:
+                    - test
+                  completed: false
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:
@@ -271,6 +301,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV2"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
+                tags:
+                  - test
+                completed: false
         500:
           description: The server could not create the idea, please try again.
           content:
@@ -298,12 +335,14 @@ paths:
           required: false
           schema:
             type: string
+          example: test
         - name: complete
           in: query
           description: An optional filter which may be used to constrain which ideas are returned.
           required: false
           schema:
             type: boolean
+          example: false
       responses:
         200:
           description: Randomly selected idea
@@ -311,6 +350,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV2"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
+                tags:
+                  - test
+                completed: false
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:
@@ -345,6 +391,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IdeaV2"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
+                tags:
+                  - test
+                completed: false
         404:
           description: The server could not find any ideas, please submit one and try again.
           content:

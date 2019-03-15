@@ -227,6 +227,14 @@ paths:
       description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
       operationId: store_idea_v1
       deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
       requestBody:
         description: The idea to add to the server.
         content:
@@ -465,6 +473,14 @@ paths:
       summary: Store Idea (v2)
       description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
       operationId: store_idea_v2
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
       requestBody:
         description: The idea to add to the server.
         content:

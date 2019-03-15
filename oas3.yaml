@@ -219,6 +219,56 @@ paths:
                 code: 404
                 error: Not Found
                 description: The resource you were looking for could not be found, please check your request and try again.
+    put:
+      tags:
+        - ideas
+
+      summary: Store Idea (v1)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_v1
+      deprecated: true
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV1"
+            example:
+              name: "Test Idea"
+              description: "This is a test idea"
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        500:
+          description: The server could not store the idea, please try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                error: Internal Server Error
+                description: The server encountered an error while processing your request, please try again later.
+          
+
 
   /api/v2/ideas:
     get:
@@ -408,6 +458,59 @@ paths:
                 code: 404
                 error: Not Found
                 description: The resource you were looking for could not be found, please check your request and try again.
+    put:
+      tags:
+        - ideas
+
+      summary: Store Idea (v2)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_v2
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+            example:
+              name: "Test Idea"
+              description: "This is a test idea"
+              tags:
+                - test
+              completed: true
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+              example:
+                id: "225c5957d7f450baec75a67ede427e9"
+                name: "Test Idea"
+                description: "This is a test idea"
+                tags:
+                  - test
+                completed: false
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        500:
+          description: The server could not store the idea, please try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                error: Internal Server Error
+                description: The server encountered an error while processing your request, please try again later.
      
 components:
   schemas:

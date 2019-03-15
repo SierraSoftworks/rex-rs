@@ -89,7 +89,7 @@ fn idea_v1() {
         0
     );
 
-    let id = state::new_idea(
+    let id = state::store_idea(
         &models::IdeaV1 {
             id: None,
             name: "Test Idea".into(),
@@ -135,7 +135,7 @@ fn ideas_v1() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV1 {
             id: None,
             name: "Test Idea".into(),
@@ -145,7 +145,7 @@ fn ideas_v1() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV1 {
             id: None,
             name: "Test Idea".into(),
@@ -255,7 +255,7 @@ fn idea_v2() {
         0
     );
 
-    let id = state::new_idea(
+    let id = state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -305,7 +305,7 @@ fn random_idea_v2() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -355,7 +355,7 @@ fn random_idea_v2_with_tags() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -367,7 +367,7 @@ fn random_idea_v2_with_tags() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -419,7 +419,7 @@ fn random_idea_v2_with_complete() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -431,7 +431,7 @@ fn random_idea_v2_with_complete() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -483,7 +483,7 @@ fn ideas_v2() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -495,7 +495,7 @@ fn ideas_v2() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -550,7 +550,7 @@ fn ideas_v2_with_tags() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -562,7 +562,7 @@ fn ideas_v2_with_tags() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -574,7 +574,7 @@ fn ideas_v2_with_tags() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -628,7 +628,7 @@ fn ideas_v2_with_complete() {
         0
     );
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -640,7 +640,7 @@ fn ideas_v2_with_complete() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),
@@ -652,7 +652,7 @@ fn ideas_v2_with_complete() {
     )
     .expect("create idea entry");
 
-    state::new_idea(
+    state::store_idea(
         &models::IdeaV2 {
             id: None,
             name: "Test Idea".into(),

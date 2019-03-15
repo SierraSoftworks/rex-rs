@@ -33,9 +33,9 @@ pub fn idea<T: api::StateView<models::Idea>>(id: u128, state: &IdeasState) -> Op
         .and_then(|store| store.get(&id).and_then(|idea| Some(T::from_state(idea))))
 }
 
-pub fn new_idea<T: api::StateView<models::Idea>>(new_idea: &T, state: &IdeasState) -> Option<u128> {
+pub fn store_idea<T: api::StateView<models::Idea>>(idea: &T, state: &IdeasState) -> Option<u128> {
     state.store.write().ok().and_then(|mut store| {
-        let idea = new_idea.to_state();
+        let idea = idea.to_state();
         let id = idea.id;
 
         store.insert(id, idea);

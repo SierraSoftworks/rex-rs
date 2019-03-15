@@ -28,10 +28,12 @@ fn app() -> rocket::Rocket {
                 ideas::ideas_v1,
                 ideas::idea_v1,
                 ideas::new_idea_v1,
+                ideas::store_idea_v1,
                 ideas::random_idea_v1,
                 ideas::ideas_v2,
                 ideas::idea_v2,
                 ideas::new_idea_v2,
+                ideas::store_idea_v2,
                 ideas::random_idea_v2,
             ],
         )

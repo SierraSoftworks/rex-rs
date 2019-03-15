@@ -34,12 +34,35 @@ pub fn new_idea_v1(
     idea: Json<models::IdeaV1>,
     state: State<state::IdeasState>,
 ) -> Result<Created<Json<models::IdeaV1>>, rocket::http::Status> {
-    match state::new_idea(&idea.into_inner(), state.inner()) {
+    let mut new_idea = idea.into_inner();
+    new_idea.id = None;
+
+    match state::store_idea(&new_idea, state.inner()) {
         Some(id) => Ok(Created(
             rocket::uri!(idea_v1: format!("{:x}", id)).to_string(),
             state::idea(id, state.inner()).map(|val| Json(val)),
         )),
         None => Err(rocket::http::Status::InternalServerError),
+    }
+}
+
+#[put("/api/v1/idea/<id>", data = "<idea>")]
+pub fn store_idea_v1(
+    id: String,
+    idea: Json<models::IdeaV1>,
+    state: State<state::IdeasState>,
+) -> Result<Json<models::IdeaV1>, rocket::http::Status> {
+    let mut new_idea = idea.into_inner();
+    new_idea.id = Some(id.clone());
+
+    match u128::from_str_radix(&id, 16).ok() {
+        Some(_id) => {
+            match state::store_idea(&new_idea, state.inner()) {
+                Some(id) => state::idea(id, state.inner()).map(|val| Json(val)).ok_or(rocket::http::Status::InternalServerError),
+                None => Err(rocket::http::Status::InternalServerError),
+            }
+        },
+        None => Err(rocket::http::Status::NotFound),
     }
 }
 
@@ -75,12 +98,35 @@ pub fn new_idea_v2(
     idea: Json<models::IdeaV2>,
     state: State<state::IdeasState>,
 ) -> Result<Created<Json<models::IdeaV2>>, rocket::http::Status> {
-    match state::new_idea(&idea.into_inner(), state.inner()) {
+    let mut new_idea = idea.into_inner();
+    new_idea.id = None;
+
+    match state::store_idea(&new_idea, state.inner()) {
         Some(id) => Ok(Created(
             rocket::uri!(idea_v2: format!("{:x}", id)).to_string(),
             state::idea(id, state.inner()).map(|val| Json(val)),
         )),
         None => Err(rocket::http::Status::InternalServerError),
+    }
+}
+
+#[put("/api/v2/idea/<id>", data = "<idea>")]
+pub fn store_idea_v2(
+    id: String,
+    idea: Json<models::IdeaV2>,
+    state: State<state::IdeasState>,
+) -> Result<Json<models::IdeaV2>, rocket::http::Status> {
+    let mut new_idea = idea.into_inner();
+    new_idea.id = Some(id.clone());
+
+    match u128::from_str_radix(&id, 16).ok() {
+        Some(_id) => {
+            match state::store_idea(&new_idea, state.inner()) {
+                Some(id) => state::idea(id, state.inner()).map(|val| Json(val)).ok_or(rocket::http::Status::InternalServerError),
+                None => Err(rocket::http::Status::InternalServerError),
+            }
+        },
+        None => Err(rocket::http::Status::NotFound),
     }
 }
 

@@ -1,0 +1,492 @@
+openapi: 3.0.1
+info:
+  title: Randy
+  description: Randy is a tool for keeping track of ideas for things to do and
+    providing, on demand, a random one.
+  license:
+    name: MIT
+    url: https://sierrasoftworks.com/licenses/MIT
+  version: 1.0.0
+servers:
+- url: https://randy.sierrasoftworks.com
+- url: http://localhost:8000
+tags:
+- name: health
+  description: APIs used to determine the health of a Rusty instance.
+- name: ideas
+  description: APIs used to manage and retrieve ideas.
+paths:
+  /api/v1/health:
+    get:
+      tags:
+      - health
+      
+      summary: Get Health (v1)
+      description: Gets the current health status of the Randy instance.
+      operationId: health_v1
+      deprecated: true
+      responses:
+        200:
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV1"
+        500:
+          description: The service is unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV1"
+              example:
+                ok: false
+
+  /api/v2/health:
+    get:
+      tags:
+      - health
+      
+      summary: Get Health (v2)
+      description: Gets the current health status of the Randy instance.
+      operationId: health_v2
+      responses:
+        200:
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV2"
+        500:
+          description: The service is unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV2"
+              example:
+                ok: false
+                started_at: "2019-03-14T23:17:27.210333300Z"
+
+  /api/v1/ideas:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Ideas (v1)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_v1
+      deprecated: true
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+    post:
+      tags:
+      - ideas
+      
+      summary: New Idea (v1)
+      description: Creates a new idea on the server.
+      operationId: new_idea_v1
+      deprecated: true
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV1"
+            example:
+              name: "Test Idea"
+              description: "This is a test idea"
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        500:
+          description: The server could not create the idea, please try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                error: Internal Server Error
+                description: The server encountered an error while processing your request, please try again later.
+
+
+
+  /api/v1/idea/random:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Random Idea (v1)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_v1
+      deprecated: true
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+
+  /api/v1/idea/{id}:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Idea (v1)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_v1
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+
+  /api/v2/ideas:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Ideas (v2)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_v2
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+  
+    post:
+      tags:
+      - ideas
+      
+      summary: New Idea (v2)
+      description: Creates a new idea on the server.
+      operationId: new_idea_v2
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+            example:
+              name: "Test Idea"
+              description: "This is a test idea"
+              tags:
+                - test
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        500:
+          description: The server could not create the idea, please try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 500
+                error: Internal Server Error
+                description: The server encountered an error while processing your request, please try again later.
+
+
+  /api/v2/idea/random:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Random Idea (v2)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_v2
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+           
+  /api/v2/idea/{id}:
+    get:
+      tags:
+      - ideas
+      
+      summary: Get Idea (v2)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_v2
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+     
+components:
+  schemas:
+    HealthV1:
+      deprecated: true
+      required:
+      - ok
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Whether the service is healthy or not.
+          readOnly: true
+          xml:
+            name: OK
+      xml:
+        name: Health
+      example:
+        ok: true
+
+    HealthV2:
+      required:
+      - ok
+      - started_at
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Whether the service is healthy or not.
+          readOnly: true
+          xml:
+            name: OK
+        started_at:
+          type: string
+          description: The ISO 8601 datetime at which the service was started.
+          format: datetime
+          readOnly: true
+          xml:
+            name: StartedAt
+      xml:
+        name: Health
+      example:
+        ok: true
+        started_at: "2019-03-14T23:17:27.210333300Z"
+
+    IdeaV1:
+      deprecated: true
+      required:
+      - description
+      - name
+      type: object
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this idea internally.
+          readOnly: true
+        name:
+          type: string
+          description: The short name used to identify this idea.
+        description:
+          type: string
+          description: A longer description providing more information about this
+            idea.
+      xml:
+        name: Idea
+      example:
+        id: "225c5957d7f450baec75a67ede427e9"
+        name: "Test Idea"
+        description: "This is a test idea"
+
+    IdeaV2:
+      required:
+      - description
+      - name
+      type: object
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this idea internally.
+          readOnly: true
+        name:
+          type: string
+          description: The short name used to identify this idea.
+        description:
+          type: string
+          description: A longer description providing more information about this
+            idea.
+        tags:
+          maxItems: 10
+          minItems: 0
+          type: array
+          description: The list of tags you wish to associate with an idea
+          items:
+            maxLength: 50
+            type: string
+            description: A short string tag describing this idea
+            xml:
+              name: Tag
+              wrapped: true
+        completed:
+          type: boolean
+          description: Whether this idea has been completed or not.
+          default: false
+      xml:
+        name: Idea
+      example:
+        id: "225c5957d7f450baec75a67ede427e9"
+        name: "Test Idea"
+        description: "This is a test idea"
+        tags:
+          - test
+        completed: false
+
+    Error:
+      type: object
+      description: An error describing a problem that the server has encountered or identified.
+      required:
+        - code
+        - error
+        - message
+      properties:
+        code:
+          type: number
+          format: integer
+          minimum: 100
+          maximum: 599
+          description: The HTTP status code corresponding to this error.
+        error:
+          type: string
+          description: The human readable description of the HTTP status code.
+        description:
+          type: string
+          description: A human readable description of the exact error that occurred.

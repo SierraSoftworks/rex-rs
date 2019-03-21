@@ -1,150 +1,233 @@
 use std::vec::Vec;
 
-use rocket::response::status::Created;
-use rocket::State;
-use rocket_contrib::json::Json;
+use actix_web::{error, pred, App, HttpRequest, HttpResponse, Json, Path, Query, Result};
 
 mod models;
 mod state;
 #[cfg(test)]
 mod test;
+use crate::stator::Stator;
 
-pub use state::new_state;
+pub use self::state::new_state;
 
-#[get("/api/v1/ideas")]
-pub fn ideas_v1(state: State<state::IdeasState>) -> Option<Json<Vec<models::IdeaV1>>> {
-    state::ideas(state.inner()).map(|val| Json(val))
+pub fn configure(
+    app: App<std::sync::Arc<::state::Container>>,
+) -> App<std::sync::Arc<::state::Container>> {
+    app.resource("/api/v1/ideas", |r| {
+        r.route().filter(pred::Get()).with(ideas_v1);
+        r.route().filter(pred::Post()).with(new_idea_v1);
+    })
+    .resource("/api/v1/idea/random", |r| {
+        r.route().filter(pred::Get()).with(random_idea_v1)
+    })
+    .resource("/api/v1/idea/{id}", |r| {
+        r.route().filter(pred::Get()).with(idea_v1);
+        r.route().filter(pred::Put()).with(store_idea_v1);
+    })
+    .resource("/api/v2/ideas", |r| {
+        r.route().filter(pred::Get()).with(ideas_v2);
+        r.route().filter(pred::Post()).with(new_idea_v2);
+    })
+    .resource("/api/v2/idea/random", |r| {
+        r.route().filter(pred::Get()).with(random_idea_v2);
+    })
+    .resource("/api/v2/idea/{id}", |r| {
+        r.route().filter(pred::Get()).with(idea_v2);
+        r.route().filter(pred::Put()).with(store_idea_v2);
+    })
 }
 
-#[get("/api/v1/idea/random")]
-pub fn random_idea_v1(state: State<state::IdeasState>) -> Option<Json<models::IdeaV1>> {
-    state::random_idea(|_| true, state.inner()).map(|val| Json(val))
+fn ideas_v1(state: Stator<state::IdeasState>) -> Result<Json<Vec<models::IdeaV1>>> {
+    state::ideas(&state)
+        .map(|val| Json(val))
+        .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-#[get("/api/v1/idea/<id>")]
-pub fn idea_v1(id: String, state: State<state::IdeasState>) -> Option<Json<models::IdeaV1>> {
-    match u128::from_str_radix(&id, 16).ok() {
-        Some(id) => state::idea(id, state.inner()).map(|val| Json(val)),
-        None => None,
+fn random_idea_v1(state: Stator<state::IdeasState>) -> Result<Json<models::IdeaV1>> {
+    state::random_idea(|_| true, &state)
+        .map(|val| Json(val))
+        .ok_or(error::ErrorNotFound("We could not find any ideas"))
+}
+
+fn idea_v1(
+    (info, state): (Path<IdFilter>, Stator<state::IdeasState>),
+) -> Result<Json<models::IdeaV1>> {
+    match u128::from_str_radix(&info.id, 16).ok() {
+        Some(id) => state::idea(id, &state)
+            .map(|val| Json(val))
+            .ok_or(error::ErrorNotFound(
+                "We could not find any idea with the ID you provided",
+            )),
+        None => Err(error::ErrorNotFound(
+            "We could not find any idea with the ID you provided",
+        )),
     }
 }
 
-#[post("/api/v1/ideas", data = "<idea>")]
-pub fn new_idea_v1(
-    idea: Json<models::IdeaV1>,
-    state: State<state::IdeasState>,
-) -> Result<Created<Json<models::IdeaV1>>, rocket::http::Status> {
-    let mut new_idea = idea.into_inner();
+fn new_idea_v1<S>(
+    (mut new_idea, state, req): (
+        Json<models::IdeaV1>,
+        Stator<state::IdeasState>,
+        HttpRequest<S>,
+    ),
+) -> Result<HttpResponse> {
     new_idea.id = None;
 
-    match state::store_idea(&new_idea, state.inner()) {
-        Some(id) => Ok(Created(
-            rocket::uri!(idea_v1: format!("{:x}", id)).to_string(),
-            state::idea(id, state.inner()).map(|val| Json(val)),
-        )),
-        None => Err(rocket::http::Status::InternalServerError),
-    }
+    let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
+        error::ErrorInternalServerError(
+            "We could not create a new idea with the details you provided",
+        ),
+    )?;
+
+    Ok(HttpResponse::Created()
+        .header(
+            "Location",
+            req.url_for("/api/v1/idea/{id}", &vec![format!("{:x}", id)])?
+                .into_string(),
+        )
+        .json(state::idea::<models::IdeaV1>(id, &state)))
 }
 
-#[put("/api/v1/idea/<id>", data = "<idea>")]
-pub fn store_idea_v1(
-    id: String,
-    idea: Json<models::IdeaV1>,
-    state: State<state::IdeasState>,
-) -> Result<Json<models::IdeaV1>, rocket::http::Status> {
-    let mut new_idea = idea.into_inner();
-    new_idea.id = Some(id.clone());
+fn store_idea_v1(
+    (info, mut new_idea, state): (
+        Path<IdFilter>,
+        Json<models::IdeaV1>,
+        Stator<state::IdeasState>,
+    ),
+) -> Result<Json<models::IdeaV1>> {
+    new_idea.id = Some(info.id.clone());
 
-    match u128::from_str_radix(&id, 16).ok() {
+    match u128::from_str_radix(&info.id, 16).ok() {
         Some(_id) => {
-            match state::store_idea(&new_idea, state.inner()) {
-                Some(id) => state::idea(id, state.inner()).map(|val| Json(val)).ok_or(rocket::http::Status::InternalServerError),
-                None => Err(rocket::http::Status::InternalServerError),
-            }
-        },
-        None => Err(rocket::http::Status::NotFound),
+            let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
+                error::ErrorInternalServerError("We could not store the idea you provided"),
+            )?;
+            let idea = state::idea(id, &state).ok_or(error::ErrorNotFound(
+                "We could not find an idea with the ID you provided",
+            ))?;
+
+            Ok(Json(idea))
+        }
+        None => Err(error::ErrorNotFound(
+            "We could not find an idea with the ID you provided",
+        )),
     }
 }
 
-#[get("/api/v2/ideas?<tag>&<complete>")]
-pub fn ideas_v2(
-    tag: Option<String>,
-    complete: Option<bool>,
-    state: State<state::IdeasState>,
-) -> Option<Json<Vec<models::IdeaV2>>> {
+fn ideas_v2(
+    (query, state): (Query<QueryFilter>, Stator<state::IdeasState>),
+) -> Result<Json<Vec<models::IdeaV2>>> {
     let predicate = |item: &models::Idea| {
-        tag.clone()
+        query
+            .tag
+            .clone()
             .map(|tag| item.tags.contains(&tag))
             .unwrap_or(true)
-            && complete
+            && query
+                .complete
                 .clone()
                 .map(|complete| item.completed == complete)
                 .unwrap_or(true)
     };
 
-    state::ideas_by(predicate, state.inner()).map(|val| Json(val))
+    state::ideas_by(predicate, &state)
+        .map(|val| Json(val))
+        .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-#[get("/api/v2/idea/<id>")]
-pub fn idea_v2(id: String, state: State<state::IdeasState>) -> Option<Json<models::IdeaV2>> {
-    match u128::from_str_radix(&id, 16).ok() {
-        Some(id) => state::idea(id, state.inner()).map(|val| Json(val)),
-        None => None,
-    }
-}
-
-#[post("/api/v2/ideas", data = "<idea>")]
-pub fn new_idea_v2(
-    idea: Json<models::IdeaV2>,
-    state: State<state::IdeasState>,
-) -> Result<Created<Json<models::IdeaV2>>, rocket::http::Status> {
-    let mut new_idea = idea.into_inner();
-    new_idea.id = None;
-
-    match state::store_idea(&new_idea, state.inner()) {
-        Some(id) => Ok(Created(
-            rocket::uri!(idea_v2: format!("{:x}", id)).to_string(),
-            state::idea(id, state.inner()).map(|val| Json(val)),
-        )),
-        None => Err(rocket::http::Status::InternalServerError),
-    }
-}
-
-#[put("/api/v2/idea/<id>", data = "<idea>")]
-pub fn store_idea_v2(
-    id: String,
-    idea: Json<models::IdeaV2>,
-    state: State<state::IdeasState>,
-) -> Result<Json<models::IdeaV2>, rocket::http::Status> {
-    let mut new_idea = idea.into_inner();
-    new_idea.id = Some(id.clone());
-
-    match u128::from_str_radix(&id, 16).ok() {
-        Some(_id) => {
-            match state::store_idea(&new_idea, state.inner()) {
-                Some(id) => state::idea(id, state.inner()).map(|val| Json(val)).ok_or(rocket::http::Status::InternalServerError),
-                None => Err(rocket::http::Status::InternalServerError),
-            }
-        },
-        None => Err(rocket::http::Status::NotFound),
-    }
-}
-
-#[get("/api/v2/idea/random?<tag>&<complete>")]
-pub fn random_idea_v2(
-    tag: Option<String>,
-    complete: Option<bool>,
-    state: State<state::IdeasState>,
-) -> Option<Json<models::IdeaV2>> {
+fn random_idea_v2(
+    (query, state): (Query<QueryFilter>, Stator<state::IdeasState>),
+) -> Result<Json<models::IdeaV2>> {
     let predicate = |item: &models::Idea| {
-        tag.clone()
+        query
+            .tag
+            .clone()
             .map(|tag| item.tags.contains(&tag))
             .unwrap_or(true)
-            && complete
+            && query
+                .complete
                 .clone()
                 .map(|complete| item.completed == complete)
                 .unwrap_or(true)
     };
 
-    state::random_idea(predicate, state.inner()).map(|val| Json(val))
+    state::random_idea(predicate, &state)
+        .map(|val| Json(val))
+        .ok_or(error::ErrorNotFound("We could not find any ideas"))
+}
+
+fn idea_v2(
+    (info, state): (Path<IdFilter>, Stator<state::IdeasState>),
+) -> Result<Json<models::IdeaV2>> {
+    match u128::from_str_radix(&info.id, 16).ok() {
+        Some(id) => state::idea(id, &state)
+            .map(|val| Json(val))
+            .ok_or(error::ErrorNotFound(
+                "We could not find any idea with the ID you provided",
+            )),
+        None => Err(error::ErrorNotFound(
+            "We could not find any idea with the ID you provided",
+        )),
+    }
+}
+
+fn new_idea_v2<S>(
+    (mut new_idea, state, req): (
+        Json<models::IdeaV2>,
+        Stator<state::IdeasState>,
+        HttpRequest<S>,
+    ),
+) -> Result<HttpResponse> {
+    new_idea.id = None;
+
+    let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
+        error::ErrorInternalServerError(
+            "We could not create a new idea with the details you provided",
+        ),
+    )?;
+
+    Ok(HttpResponse::Created()
+        .header(
+            "Location",
+            req.url_for("/api/v1/idea/{id}", &vec![format!("{:x}", id)])?
+                .into_string(),
+        )
+        .json(state::idea::<models::IdeaV2>(id, &state)))
+}
+
+fn store_idea_v2(
+    (info, mut new_idea, state): (
+        Path<IdFilter>,
+        Json<models::IdeaV2>,
+        Stator<state::IdeasState>,
+    ),
+) -> Result<Json<models::IdeaV2>> {
+    new_idea.id = Some(info.id.clone());
+
+    match u128::from_str_radix(&info.id, 16).ok() {
+        Some(_id) => {
+            let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
+                error::ErrorInternalServerError("We could not store the idea you provided"),
+            )?;
+            let idea = state::idea(id, &state).ok_or(error::ErrorNotFound(
+                "We could not find an idea with the ID you provided",
+            ))?;
+
+            Ok(Json(idea))
+        }
+        None => Err(error::ErrorNotFound(
+            "We could not find an idea with the ID you provided",
+        )),
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+struct IdFilter {
+    id: String,
+}
+
+#[derive(Deserialize)]
+pub struct QueryFilter {
+    tag: Option<String>,
+    complete: Option<bool>,
 }

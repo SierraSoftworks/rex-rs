@@ -7,6 +7,7 @@ pub fn new_state() -> HealthState {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct HealthState {
     pub ok: bool,
     pub started_at: chrono::DateTime<chrono::Utc>,

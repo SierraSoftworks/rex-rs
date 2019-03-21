@@ -10,6 +10,7 @@ pub fn new_state() -> IdeasState {
     }
 }
 
+#[derive(Clone)]
 pub struct IdeasState {
     pub store: Arc<RwLock<BTreeMap<u128, models::Idea>>>,
 }

@@ -1,19 +1,23 @@
-use rocket::State;
-use rocket_contrib::json::Json;
-
 mod models;
 mod state;
 #[cfg(test)]
 mod test;
 
-pub use state::new_state;
+use actix_web::{App, Json, pred};
+use crate::stator::Stator;
 
-#[get("/api/v1/health")]
-pub fn health_v1(state: State<state::HealthState>) -> Json<models::HealthV1> {
-    Json(state::health(state.inner()))
+pub use self::state::new_state;
+
+pub fn configure(app: App<std::sync::Arc<::state::Container>>) -> App<std::sync::Arc<::state::Container>> {
+    app
+        .resource("/api/v1/health", |r| r.route().filter(pred::Get()).with(health_v1))
+        .resource("/api/v2/health", |r| r.route().filter(pred::Get()).with(health_v2))
 }
 
-#[get("/api/v2/health")]
-pub fn health_v2(state: State<state::HealthState>) -> Json<models::HealthV2> {
-    Json(state::health(state.inner()))
+pub fn health_v1(state: Stator<state::HealthState>) -> Json<models::HealthV1> {
+    Json(state::health(&state))
+}
+
+pub fn health_v2(state: Stator<state::HealthState>) -> Json<models::HealthV2> {
+    Json(state::health(&state))
 }

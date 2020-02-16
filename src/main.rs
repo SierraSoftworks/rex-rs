@@ -1,5 +1,3 @@
-#![feature(proc_macro_hygiene, decl_macro, impl_trait_in_bindings, const_fn)]
-
 extern crate actix_web;
 extern crate chrono;
 #[macro_use]
@@ -15,14 +13,12 @@ mod api;
 mod errors;
 mod health;
 mod ideas;
-mod stator;
 
-use actix_web::middleware::cors::Cors;
-use actix_web::{server, App, Error};
-use sentry_actix::SentryMiddleware;
-use std::sync::Arc;
+use actix_cors::Cors;
+use actix_web::{middleware, web, App, HttpServer};
 
-fn main() -> Result<(), Error> {
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
     let raven = sentry::init((
         "https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519",
         sentry::ClientOptions {
@@ -35,24 +31,19 @@ fn main() -> Result<(), Error> {
         sentry::integrations::panic::register_panic_handler();
     }
 
-    let mut state: state::Container = state::Container::new();
+    let ideas_state = web::Data::new(ideas::IdeasState::new());
+    let health_state = web::Data::new(health::HealthState::new());
 
-    state.set(health::new_state());
-    state.set(ideas::new_state());
-
-    state.freeze();
-
-    let state_arc = Arc::new(state);
-
-    server::new(move || {
-        App::with_state(state_arc.clone())
-            // .configure(|app| Cors::for_app(app).register())
+    HttpServer::new(move || {
+        App::new()
+            .app_data(ideas_state.clone())
+            .app_data(health_state.clone())
+            .wrap(middleware::Logger::default())
+            .wrap(Cors::new().send_wildcard().allowed_origin("All").finish())
             .configure(ideas::configure)
             .configure(health::configure)
-            .middleware(SentryMiddleware::new())
     })
-    .bind("127.0.0.1:8000")?
-    .run();
-
-    Ok(())
+    .bind("0.0.0.0:8000")?
+    .run()
+    .await
 }

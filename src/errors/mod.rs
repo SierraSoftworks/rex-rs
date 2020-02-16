@@ -1,14 +1,14 @@
 // use rocket_contrib::json::Json;
-// use sentry::{capture_message, with_scope, Level, Scope};
-// use serde_json::json;
-// use std::collections::HashMap;
+use sentry::{capture_message, with_scope, Level, Scope};
+use serde_json::json;
+use std::collections::HashMap;
 
-// #[derive(Serialize, Deserialize)]
-// pub struct Error {
-//     pub code: u16,
-//     pub error: String,
-//     pub description: String,
-// }
+#[derive(Serialize, Deserialize)]
+pub struct Error {
+    pub code: u16,
+    pub error: String,
+    pub description: String,
+}
 
 // #[catch(404)]
 // pub fn error_404(req: &rocket::Request) -> Json<Error> {

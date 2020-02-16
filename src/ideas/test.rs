@@ -1,3 +1,8 @@
+use super::{configure, models, IdeasState};
+#[cfg(test)]
+use actix_web::{middleware, test, web, App};
+use http::{Method, StatusCode};
+
 // use super::super::app;
 // use super::models;
 // use super::state;
@@ -18,62 +23,109 @@
 //     };
 // }
 
-// #[test]
-// fn new_idea_v1() {
-//     let client = Client::new(app()).expect("valid rocket instance");
-//     let state: &state::IdeasState = client.rocket().state().unwrap();
+#[actix_rt::test]
+async fn new_idea_v1_location() {
+    let state = web::Data::new(IdeasState::new());
 
-//     assert_eq!(
-//         state
-//             .store
-//             .read()
-//             .expect("get read lock on the state")
-//             .len(),
-//         0
-//     );
+    let mut app = test::init_service(
+        App::new()
+            .app_data(state.clone())
+            .wrap(middleware::Logger::default())
+            .configure(configure),
+    )
+    .await;
 
-//     let mut response = client
-//         .post("/api/v1/ideas")
-//         .header(ContentType::JSON)
-//         .body(
-//             json!({
-//                 "name": "Test Idea",
-//                 "description": "This is a test idea",
-//             })
-//             .to_string(),
-//         )
-//         .dispatch();
+    assert_eq!(
+        state
+            .store
+            .read()
+            .expect("get read lock on the state")
+            .len(),
+        0
+    );
 
-//     assert_eq!(response.status(), Status::Created);
-//     assert_eq!(response.content_type(), Some(ContentType::JSON));
-//     assert!(response.headers().get_one("Location").is_some());
-//     assert!(response
-//         .headers()
-//         .get_one("Location")
-//         .unwrap()
-//         .starts_with("/api/v1/idea/"));
+    let req = test::TestRequest::with_uri("/api/v1/ideas")
+        .method(Method::POST)
+        .set_json(&models::IdeaV1 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+        })
+        .to_request();
+    let response = test::call_service(&mut app, req).await;
 
-//     let id =
-//         String::from(&response.headers().get_one("Location").unwrap()["/api/v1/idea/".len()..])
-//             .clone();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    assert!(response.headers().get("Location").is_some());
 
-//     assert_eq!(
-//         state
-//             .store
-//             .read()
-//             .expect("get read lock on the state")
-//             .len(),
-//         1
-//     );
+    let location = response
+        .headers()
+        .get("Location")
+        .expect("a location header")
+        .to_str()
+        .expect("a non-empty location header");
 
-//     let new_idea: models::IdeaV1 =
-//         serde_json::from_str(&response.body_string().expect("valid body"))
-//             .expect("valid json response");
+    assert!(location.contains("/api/v1/idea/"));
 
-//     assert_eq!(new_idea.id, Some(id));
-//     assert_eq!(new_idea.name, "Test Idea".to_string());
-//     assert_eq!(new_idea.description, "This is a test idea".to_string());
-// }
+    let id = String::from(
+        &location[location.find("/api/v1/idea/").expect("index of path") + "/api/v1/idea/".len()..],
+    )
+    .clone();
+    assert_ne!(id, "");
+
+    assert_eq!(
+        state
+            .store
+            .read()
+            .expect("get read lock on the state")
+            .len(),
+        1
+    );
+}
+
+#[actix_rt::test]
+async fn new_idea_v1_content() {
+    let state = web::Data::new(IdeasState::new());
+
+    let mut app = test::init_service(
+        App::new()
+            .app_data(state.clone())
+            .wrap(middleware::Logger::default())
+            .configure(configure),
+    )
+    .await;
+    assert_eq!(
+        state
+            .store
+            .read()
+            .expect("get read lock on the state")
+            .len(),
+        0
+    );
+
+    let req = test::TestRequest::with_uri("/api/v1/ideas")
+        .method(Method::POST)
+        .set_json(&models::IdeaV1 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+        })
+        .to_request();
+
+    let response: models::IdeaV1 = test::read_response_json(&mut app, req).await;
+
+    assert_ne!(response.id, None);
+    assert_eq!(response.name, "Test Idea".to_string());
+    assert_eq!(response.description, "This is a test idea".to_string());
+
+    assert_eq!(
+        state
+            .store
+            .read()
+            .expect("get read lock on the state")
+            .len(),
+        1
+    );
+}
 
 // #[test]
 // fn idea_v1() {

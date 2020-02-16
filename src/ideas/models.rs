@@ -2,6 +2,10 @@ use super::super::api;
 use std::collections::HashSet;
 use uuid::Uuid;
 
+use actix_web::{Error, HttpRequest, HttpResponse, Responder};
+use futures::future::{ready, Ready};
+use http::Method;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Idea {
     pub id: u128,
@@ -46,6 +50,29 @@ impl api::StateView<Idea> for IdeaV1 {
     }
 }
 
+impl Responder for IdeaV1 {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Error>>;
+
+    fn respond_to(self, req: &HttpRequest) -> Self::Future {
+        if req.method() == Method::POST {
+            let location = req.url_for("idea_v1", &vec![self.id.clone().expect("an id to be set")]);
+
+            ready(Ok(HttpResponse::Created()
+                .content_type("application/json")
+                .header(
+                    "Location",
+                    location.expect("a location string").into_string(),
+                )
+                .json(&self)))
+        } else {
+            ready(Ok(HttpResponse::Ok()
+                .content_type("application/json")
+                .json(&self)))
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IdeaV2 {
     pub id: Option<String>,
@@ -76,6 +103,29 @@ impl api::StateView<Idea> for IdeaV2 {
             description: state.description.clone(),
             tags: state.tags.clone(),
             completed: Some(state.completed),
+        }
+    }
+}
+
+impl Responder for IdeaV2 {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Error>>;
+
+    fn respond_to(self, req: &HttpRequest) -> Self::Future {
+        if req.method() == Method::POST {
+            let location = req.url_for("idea_v2", &vec![self.id.clone().expect("an id to be set")]);
+
+            ready(Ok(HttpResponse::Created()
+                .content_type("application/json")
+                .header(
+                    "Location",
+                    location.expect("a location string").into_string(),
+                )
+                .json(&self)))
+        } else {
+            ready(Ok(HttpResponse::Ok()
+                .content_type("application/json")
+                .json(&self)))
         }
     }
 }

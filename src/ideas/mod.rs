@@ -1,122 +1,102 @@
 use std::vec::Vec;
 
-use actix_web::{error, pred, App, HttpRequest, HttpResponse, Json, Path, Query, Result};
+use actix_web::{error, get, post, put, web, Error, HttpRequest, HttpResponse};
 
 mod models;
 mod state;
 #[cfg(test)]
 mod test;
-use crate::stator::Stator;
 
-pub use self::state::new_state;
+pub use self::state::IdeasState;
 
-pub fn configure(
-    app: App<std::sync::Arc<::state::Container>>,
-) -> App<std::sync::Arc<::state::Container>> {
-    app.resource("/api/v1/ideas", |r| {
-        r.route().filter(pred::Get()).with(ideas_v1);
-        r.route().filter(pred::Post()).with(new_idea_v1);
-    })
-    .resource("/api/v1/idea/random", |r| {
-        r.route().filter(pred::Get()).with(random_idea_v1)
-    })
-    .resource("/api/v1/idea/{id}", |r| {
-        r.route().filter(pred::Get()).with(idea_v1);
-        r.route().filter(pred::Put()).with(store_idea_v1);
-    })
-    .resource("/api/v2/ideas", |r| {
-        r.route().filter(pred::Get()).with(ideas_v2);
-        r.route().filter(pred::Post()).with(new_idea_v2);
-    })
-    .resource("/api/v2/idea/random", |r| {
-        r.route().filter(pred::Get()).with(random_idea_v2);
-    })
-    .resource("/api/v2/idea/{id}", |r| {
-        r.route().filter(pred::Get()).with(idea_v2);
-        r.route().filter(pred::Put()).with(store_idea_v2);
-    })
+pub fn configure(cfg: &mut web::ServiceConfig) {
+    cfg.service(ideas_v1)
+        .service(random_idea_v1)
+        .service(idea_v1)
+        .service(new_idea_v1)
+        .service(store_idea_v1);
+
+    cfg.service(ideas_v2)
+        .service(random_idea_v2)
+        .service(idea_v2)
+        .service(new_idea_v2)
+        .service(store_idea_v2);
 }
 
-fn ideas_v1(state: Stator<state::IdeasState>) -> Result<Json<Vec<models::IdeaV1>>> {
-    state::ideas(&state)
-        .map(|val| Json(val))
+#[get("/api/v1/ideas")]
+async fn ideas_v1(
+    state: web::Data<state::IdeasState>,
+) -> Result<web::Json<Vec<models::IdeaV1>>, Error> {
+    state
+        .ideas()
+        .map(|val| web::Json(val))
         .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-fn random_idea_v1(state: Stator<state::IdeasState>) -> Result<Json<models::IdeaV1>> {
-    state::random_idea(|_| true, &state)
-        .map(|val| Json(val))
+#[get("/api/v1/idea/random")]
+async fn random_idea_v1(state: web::Data<state::IdeasState>) -> Result<models::IdeaV1, Error> {
+    state
+        .random_idea(|_| true)
         .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-fn idea_v1(
-    (info, state): (Path<IdFilter>, Stator<state::IdeasState>),
-) -> Result<Json<models::IdeaV1>> {
+#[get("/api/v1/idea/{id}")]
+async fn idea_v1(
+    (info, state): (web::Path<IdFilter>, web::Data<state::IdeasState>),
+) -> Result<models::IdeaV1, Error> {
     match u128::from_str_radix(&info.id, 16).ok() {
-        Some(id) => state::idea(id, &state)
-            .map(|val| Json(val))
-            .ok_or(error::ErrorNotFound(
-                "We could not find any idea with the ID you provided",
-            )),
+        Some(id) => state.idea(id).ok_or(error::ErrorNotFound(
+            "We could not find any idea with the ID you provided",
+        )),
         None => Err(error::ErrorNotFound(
             "We could not find any idea with the ID you provided",
         )),
     }
 }
 
-fn new_idea_v1<S>(
+#[post("/api/v1/ideas")]
+async fn new_idea_v1(
     (mut new_idea, state, req): (
-        Json<models::IdeaV1>,
-        Stator<state::IdeasState>,
-        HttpRequest<S>,
+        web::Json<models::IdeaV1>,
+        web::Data<state::IdeasState>,
+        HttpRequest,
     ),
-) -> Result<HttpResponse> {
+) -> Result<models::IdeaV1, Error> {
     new_idea.id = None;
 
-    let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
-        error::ErrorInternalServerError(
+    state
+        .store_idea(&new_idea.into_inner())
+        .ok_or(error::ErrorInternalServerError(
             "We could not create a new idea with the details you provided",
-        ),
-    )?;
-
-    Ok(HttpResponse::Created()
-        .header(
-            "Location",
-            req.url_for("/api/v1/idea/{id}", &vec![format!("{:x}", id)])?
-                .into_string(),
-        )
-        .json(state::idea::<models::IdeaV1>(id, &state)))
+        ))
 }
 
-fn store_idea_v1(
+#[put("/api/v1/idea/{id}")]
+async fn store_idea_v1(
     (info, mut new_idea, state): (
-        Path<IdFilter>,
-        Json<models::IdeaV1>,
-        Stator<state::IdeasState>,
+        web::Path<IdFilter>,
+        web::Json<models::IdeaV1>,
+        web::Data<state::IdeasState>,
     ),
-) -> Result<Json<models::IdeaV1>> {
+) -> Result<models::IdeaV1, Error> {
     new_idea.id = Some(info.id.clone());
 
     match u128::from_str_radix(&info.id, 16).ok() {
-        Some(_id) => {
-            let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
-                error::ErrorInternalServerError("We could not store the idea you provided"),
-            )?;
-            let idea = state::idea(id, &state).ok_or(error::ErrorNotFound(
+        Some(_id) => state
+            .store_idea(&new_idea.into_inner())
+            .ok_or(error::ErrorNotFound(
                 "We could not find an idea with the ID you provided",
-            ))?;
-
-            Ok(Json(idea))
-        }
+            )),
         None => Err(error::ErrorNotFound(
             "We could not find an idea with the ID you provided",
         )),
     }
 }
 
-fn ideas_v2(
-    (query, state): (Query<QueryFilter>, Stator<state::IdeasState>),
-) -> Result<Json<Vec<models::IdeaV2>>> {
+#[get("/api/v2/ideas")]
+async fn ideas_v2(
+    (query, state): (web::Query<QueryFilter>, web::Data<state::IdeasState>),
+) -> Result<web::Json<Vec<models::IdeaV2>>, Error> {
     let predicate = |item: &models::Idea| {
         query
             .tag
@@ -130,14 +110,16 @@ fn ideas_v2(
                 .unwrap_or(true)
     };
 
-    state::ideas_by(predicate, &state)
-        .map(|val| Json(val))
+    state
+        .ideas_by(predicate)
+        .map(|val| web::Json(val))
         .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-fn random_idea_v2(
-    (query, state): (Query<QueryFilter>, Stator<state::IdeasState>),
-) -> Result<Json<models::IdeaV2>> {
+#[get("/api/v2/idea/random")]
+async fn random_idea_v2(
+    (query, state): (web::Query<QueryFilter>, web::Data<state::IdeasState>),
+) -> Result<models::IdeaV2, Error> {
     let predicate = |item: &models::Idea| {
         query
             .tag
@@ -151,69 +133,59 @@ fn random_idea_v2(
                 .unwrap_or(true)
     };
 
-    state::random_idea(predicate, &state)
-        .map(|val| Json(val))
+    state
+        .random_idea(predicate)
         .ok_or(error::ErrorNotFound("We could not find any ideas"))
 }
 
-fn idea_v2(
-    (info, state): (Path<IdFilter>, Stator<state::IdeasState>),
-) -> Result<Json<models::IdeaV2>> {
+#[get("/api/v2/idea/{id}")]
+async fn idea_v2(
+    (info, state): (web::Path<IdFilter>, web::Data<state::IdeasState>),
+) -> Result<models::IdeaV2, Error> {
     match u128::from_str_radix(&info.id, 16).ok() {
-        Some(id) => state::idea(id, &state)
-            .map(|val| Json(val))
-            .ok_or(error::ErrorNotFound(
-                "We could not find any idea with the ID you provided",
-            )),
+        Some(id) => state.idea(id).ok_or(error::ErrorNotFound(
+            "We could not find any idea with the ID you provided",
+        )),
         None => Err(error::ErrorNotFound(
             "We could not find any idea with the ID you provided",
         )),
     }
 }
 
-fn new_idea_v2<S>(
+#[post("/api/v2/ideas")]
+async fn new_idea_v2(
     (mut new_idea, state, req): (
-        Json<models::IdeaV2>,
-        Stator<state::IdeasState>,
-        HttpRequest<S>,
+        web::Json<models::IdeaV2>,
+        web::Data<state::IdeasState>,
+        HttpRequest,
     ),
-) -> Result<HttpResponse> {
+) -> Result<models::IdeaV2, Error> {
     new_idea.id = None;
 
-    let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
-        error::ErrorInternalServerError(
+    state
+        .store_idea(&new_idea.into_inner())
+        .ok_or(error::ErrorInternalServerError(
             "We could not create a new idea with the details you provided",
-        ),
-    )?;
-
-    Ok(HttpResponse::Created()
-        .header(
-            "Location",
-            req.url_for("/api/v1/idea/{id}", &vec![format!("{:x}", id)])?
-                .into_string(),
-        )
-        .json(state::idea::<models::IdeaV2>(id, &state)))
+        ))
 }
 
-fn store_idea_v2(
+#[put("/api/v2/idea/{id}")]
+async fn store_idea_v2(
     (info, mut new_idea, state): (
-        Path<IdFilter>,
-        Json<models::IdeaV2>,
-        Stator<state::IdeasState>,
+        web::Path<IdFilter>,
+        web::Json<models::IdeaV2>,
+        web::Data<state::IdeasState>,
     ),
-) -> Result<Json<models::IdeaV2>> {
+) -> Result<models::IdeaV2, Error> {
     new_idea.id = Some(info.id.clone());
 
     match u128::from_str_radix(&info.id, 16).ok() {
         Some(_id) => {
-            let id = state::store_idea(&new_idea.into_inner(), &state).ok_or(
-                error::ErrorInternalServerError("We could not store the idea you provided"),
-            )?;
-            let idea = state::idea(id, &state).ok_or(error::ErrorNotFound(
-                "We could not find an idea with the ID you provided",
-            ))?;
-
-            Ok(Json(idea))
+            state
+                .store_idea(&new_idea.into_inner())
+                .ok_or(error::ErrorInternalServerError(
+                    "We could not find an idea with the ID you provided",
+                ))
         }
         None => Err(error::ErrorNotFound(
             "We could not find an idea with the ID you provided",

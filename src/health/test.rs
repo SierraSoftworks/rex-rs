@@ -1,44 +1,50 @@
-// use super::super::app;
-// use super::state;
-// use rocket::http::{ContentType, Status};
-// use rocket::local::Client;
-// use rocket_contrib::json;
+use super::{configure, models, HealthState};
+#[cfg(test)]
+use actix_web::{test, App};
 
-// #[test]
-// fn health_v1() {
-//     let client = Client::new(app()).expect("valid rocket instance");
-//     let mut response = client.get("/api/v1/health").dispatch();
+#[actix_rt::test]
+async fn health_v1_status() {
+    let mut app =
+        test::init_service(App::new().data(HealthState::new()).configure(configure)).await;
 
-//     assert_eq!(response.status(), Status::Ok);
-//     assert_eq!(response.content_type(), Some(ContentType::JSON));
-//     assert_eq!(
-//         response.body_string(),
-//         Some(
-//             json!({
-//                 "ok": true,
-//             })
-//             .to_string()
-//         )
-//     );
-// }
+    let req = test::TestRequest::with_uri("/api/v1/health").to_request();
+    let response = test::call_service(&mut app, req).await;
 
-// #[test]
-// fn health_v2() {
-//     let client = Client::new(app()).expect("valid rocket instance");
-//     let state: &state::HealthState = client.rocket().state().unwrap();
+    assert!(response.status().is_success());
+}
 
-//     let mut response = client.get("/api/v2/health").dispatch();
+#[actix_rt::test]
+async fn health_v1_content() {
+    let state = HealthState::new();
 
-//     assert_eq!(response.status(), Status::Ok);
-//     assert_eq!(response.content_type(), Some(ContentType::JSON));
-//     assert_eq!(
-//         response.body_string(),
-//         Some(
-//             json!({
-//                 "ok": true,
-//                 "started_at": state.started_at,
-//             })
-//             .to_string()
-//         )
-//     )
-// }
+    let mut app = test::init_service(App::new().data(state).configure(configure)).await;
+
+    let req = test::TestRequest::with_uri("/api/v1/health").to_request();
+    let response: models::HealthV1 = test::read_response_json(&mut app, req).await;
+
+    assert_eq!(response.ok, true);
+}
+
+#[actix_rt::test]
+async fn health_v2_status() {
+    let mut app =
+        test::init_service(App::new().data(HealthState::new()).configure(configure)).await;
+
+    let req = test::TestRequest::with_uri("/api/v2/health").to_request();
+    let response = test::call_service(&mut app, req).await;
+
+    assert!(response.status().is_success());
+}
+
+#[actix_rt::test]
+async fn health_v2_content() {
+    let state = HealthState::new();
+
+    let mut app = test::init_service(App::new().data(state).configure(configure)).await;
+
+    let req = test::TestRequest::with_uri("/api/v2/health").to_request();
+    let response: models::HealthV2 = test::read_response_json(&mut app, req).await;
+
+    assert_eq!(response.ok, true);
+    assert_eq!(response.started_at, state.started_at);
+}

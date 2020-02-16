@@ -3,21 +3,20 @@ mod state;
 #[cfg(test)]
 mod test;
 
-use actix_web::{App, Json, pred};
-use crate::stator::Stator;
+use actix_web::{get, web};
 
-pub use self::state::new_state;
+pub use self::state::HealthState;
 
-pub fn configure(app: App<std::sync::Arc<::state::Container>>) -> App<std::sync::Arc<::state::Container>> {
-    app
-        .resource("/api/v1/health", |r| r.route().filter(pred::Get()).with(health_v1))
-        .resource("/api/v2/health", |r| r.route().filter(pred::Get()).with(health_v2))
+pub fn configure(cfg: &mut web::ServiceConfig) {
+    cfg.service(health_v1).service(health_v2);
 }
 
-pub fn health_v1(state: Stator<state::HealthState>) -> Json<models::HealthV1> {
-    Json(state::health(&state))
+#[get("/api/v1/health")]
+pub async fn health_v1(state: web::Data<state::HealthState>) -> models::HealthV1 {
+    state.health()
 }
 
-pub fn health_v2(state: Stator<state::HealthState>) -> Json<models::HealthV2> {
-    Json(state::health(&state))
+#[get("/api/v2/health")]
+pub async fn health_v2(state: web::Data<state::HealthState>) -> models::HealthV2 {
+    state.health()
 }

@@ -16,6 +16,15 @@ pub struct TableStorage {
     collections: Arc<CloudTable>,
 }
 
+const URI_CHARACTERS: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'<')
+    .add(b'>')
+    .add(b'%')
+    .add(b'#')
+    .add(b'&');
+
 impl TableStorage {
     pub fn new(connection_string: &str) -> Self {
         let client = TableClient::from_connection_string(connection_string).expect("a valid connection string");
@@ -60,8 +69,9 @@ impl TableStorage {
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
+        let safe_query = TableStorage::escape_query(query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if query.is_empty() { None } else { Some(query.as_str()) }, &mut continuation).await
+        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await
             .map_err(|err| {
                 error!("Failed to query Azure Table Storage: {:?}", err);
                 APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
@@ -82,8 +92,9 @@ impl TableStorage {
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
+        let safe_query = TableStorage::escape_query(query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if query.is_empty() { None } else { Some(query.as_str()) }, &mut continuation).await
+        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await
             .map_err(|err| {
                 error!("Failed to query Azure Table Storage: {:?}", err);
                 APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
@@ -138,6 +149,10 @@ impl TableStorage {
         }
 
         query
+    }
+
+    fn escape_query(query: String) -> String {
+        percent_encoding::percent_encode(query.as_bytes(), URI_CHARACTERS).to_string()
     }
 }
 

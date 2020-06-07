@@ -18,7 +18,7 @@ pub struct GlobalState {
 }
 
 impl GlobalState {
-    #[cfg(any(test, memory_storage))]
+    #[cfg(any(test, memory_storage, not(any(table_storage))))]
     pub fn new() -> Self {
         Self {
             store: crate::store::Store::new().start(),

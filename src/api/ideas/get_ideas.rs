@@ -6,8 +6,12 @@ use super::{models, QueryFilter, CollectionFilter};
 #[get("/api/v1/ideas")]
 async fn get_ideas_v1(
     state: web::Data<GlobalState>,
+    token: AuthToken
 ) -> Result<web::Json<Vec<models::IdeaV1>>, APIError> {
-    state.store.send(GetIdeas { collection: 0, is_completed: None, tag: None }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
+        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+
+    state.store.send(GetIdeas { collection: oid, is_completed: None, tag: None }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
 #[get("/api/v2/ideas")]

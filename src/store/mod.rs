@@ -1,11 +1,14 @@
 use super::api;
 use actix_web::Result;
 
+#[cfg(any(test, not(feature = "table_storage")))]
 mod memory;
-mod tablestorage;
 
-#[cfg(any(test, memory_storage, not(any(table_storage))))]
+#[cfg(any(test, not(feature = "table_storage")))]
 pub type Store = memory::MemoryStore;
 
-#[cfg(table_storage)]
+#[cfg(all(not(test), feature = "table_storage"))]
+mod tablestorage;
+
+#[cfg(all(not(test), feature = "table_storage"))]
 pub type Store = tablestorage::TableStorage;

@@ -18,7 +18,6 @@ mod store;
 use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
 use actix_web_prom::PrometheusMetrics;
-use actix_web_httpauth::middleware::HttpAuthentication;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -42,7 +41,6 @@ async fn main() -> std::io::Result<()> {
             .data(state.clone())
             .wrap(metrics.clone())
             .wrap(middleware::Logger::default())
-            .wrap(HttpAuthentication::bearer(api::auth_validator))
             .wrap(api::Auth{})
             .wrap(Cors::new().send_wildcard().finish())
             .configure(api::configure)

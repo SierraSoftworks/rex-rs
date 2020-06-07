@@ -7,7 +7,6 @@ edition = "2018"
 [features]
 default = []
 
-memory_storage = []
 table_storage = []
 
 [dependencies]

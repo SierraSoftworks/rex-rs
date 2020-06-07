@@ -26,8 +26,10 @@ const URI_CHARACTERS: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
     .add(b'&');
 
 impl TableStorage {
-    pub fn new(connection_string: &str) -> Self {
-        let client = TableClient::from_connection_string(connection_string).expect("a valid connection string");
+    pub fn new() -> Self {
+        let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
+
+        let client = TableClient::from_connection_string(&connection_string).expect("a valid connection string");
         let ideas_table = CloudTable::new(client.clone(), "ideas");
         let role_assignments_table = CloudTable::new(client.clone(), "roleassignments");
         let collections_table = CloudTable::new(client, "collections");

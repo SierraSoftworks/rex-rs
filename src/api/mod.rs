@@ -10,8 +10,6 @@ mod utils;
 
 use actix_web::web;
 
-pub use self::auth::auth_validator;
-
 pub use error::APIError;
 pub use auth::{AuthToken, Auth};
 pub use utils::ensure_user_collection;

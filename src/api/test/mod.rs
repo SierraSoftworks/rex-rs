@@ -53,7 +53,8 @@ pub fn auth_token() -> String {
         scp: "".into(),
         sub: "testy@example.com".into(),
         roles: vec![],
-        unique_name: "testy@example.com".into()
+        unique_name: "testy@example.com".into(),
+        ..Default::default()
     });
 
     let content = token.encode(&biscuit::jws::Secret::bytes_from_str("test")).unwrap().unwrap_encoded().to_string();

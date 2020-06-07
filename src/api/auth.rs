@@ -1,5 +1,5 @@
-use actix_web::{Error, dev::{Extensions, ServiceRequest, Payload, ServiceResponse}, HttpMessage, HttpRequest, FromRequest};
-use actix_web_httpauth::extractors::bearer;
+use actix_web::{Error, dev::{Extensions, ServiceRequest, Payload, ServiceResponse}, http::header::Header, HttpMessage, HttpRequest, FromRequest};
+use actix_web_httpauth::{headers::authorization::{Bearer, Authorization}};
 use biscuit::{CompactJson};
 use oidc::token::Jws;
 use oidc::{issuer, Client};
@@ -12,8 +12,11 @@ lazy_static! {
     static ref CLIENT: Arc<Client> = Arc::new(get_client());
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Default)]
 pub struct AuthToken {
+    #[serde(skip)]
+    pub raw_token: String,
+
     pub aud: String,
     pub exp: i64,
     pub iat: i64,
@@ -51,7 +54,20 @@ impl FromRequest for AuthToken {
 
     #[inline]
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        ready(AuthToken::get_token(&mut *req.extensions_mut()).ok_or(APIError::unauthorized()))
+        let token = AuthToken::get_token(&mut *req.extensions_mut()).ok_or(APIError::unauthorized())
+            .and_then(|token| {
+                let mut full_token = Jws::new_encoded(&token.raw_token);
+                let client = CLIENT.clone();
+
+                client
+                    .decode_token(&mut full_token)
+                    .and_then(|()| client.validate_token(&full_token, None, None))
+                    .map_err(|_e| APIError::unauthorized())?;
+
+                Ok(token)
+            });
+
+        ready(token)
     }
 }
 
@@ -97,27 +113,15 @@ where
     }
 
     fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        req.headers().get("authorization")
-            .ok_or_else(||{
-                debug!("No authorization header present on request.");
-                APIError::unauthorized()
-            })
-            .and_then(|t| t.to_str().map_err(|err| {
-                debug!("Unable to convert authorization header into a string: {}", err);
-                APIError::unauthorized()
-            }))
-            .and_then(|t| t.splitn(2, " ").nth(1).ok_or_else(|| {
-                debug!("Authorization header did not contain the required Bearer <token> components");
-                APIError::unauthorized()
-            }))
-            .map(|p| Jws::new_encoded(p))
-            .and_then(|token: Jws<AuthToken, biscuit::Empty>| token.unverified_payload().map_err(|err| {
-                warn!("Authorization token could not be parsed correctly: {}", err);
-                APIError::unauthorized()
-            }))
-            .map(|t| AuthToken::set_token(t, &req))
+        Authorization::<Bearer>::parse(&req)
+            .map_err(|_e| APIError::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again."))
+            .map(|auth| auth.into_scheme())
+            .map(|creds| Jws::new_encoded(creds.token()))
+            .and_then(|ticket: Jws<AuthToken, biscuit::Empty>| ticket.unverified_payload()
+                .map_err(|_e| APIError::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again.")))
+            .map(|token| AuthToken::set_token(token, &req))
             .unwrap_or(());
-
+            
         let fut = self.service.call(req);
 
         Box::pin(async move {
@@ -125,22 +129,6 @@ where
             Ok(res)
         })
     }
-}
-
-pub async fn auth_validator(
-    req: ServiceRequest,
-    creds: bearer::BearerAuth,
-) -> Result<ServiceRequest, Error> {
-    let mut token = Jws::new_encoded(creds.token());
-
-    let client = CLIENT.clone();
-
-    client
-        .decode_token(&mut token)
-        .and_then(|()| client.validate_token(&token, None, None))
-        .map(|_| req)
-        .map_err(|_e| 
-            APIError::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again.").into())
 }
 
 fn get_client() -> Client {

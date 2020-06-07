@@ -1,67 +1,53 @@
-#![feature(proc_macro_hygiene, decl_macro, impl_trait_in_bindings)]
-
-#[macro_use]
-extern crate rocket;
-#[macro_use]
-extern crate serde;
+extern crate actix_web;
 extern crate chrono;
+#[macro_use] extern crate serde;
 extern crate rand;
-extern crate rocket_cors;
-#[macro_use] extern crate sentry;
 extern crate serde_json;
 extern crate uuid;
+#[macro_use] extern crate log;
+#[macro_use] extern crate sentry;
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate prometheus;
+
+#[macro_use] mod macros;
 
 mod api;
-mod errors;
-mod health;
-mod ideas;
+mod models;
+mod store;
 
-use rocket_cors::Error;
-use std::str::FromStr;
+use actix_cors::Cors;
+use actix_web::{middleware, App, HttpServer};
+use actix_web_prom::PrometheusMetrics;
+use actix_web_httpauth::middleware::HttpAuthentication;
 
-fn app() -> rocket::Rocket {
-    rocket::ignite()
-        .mount(
-            "/",
-            routes![
-                health::health_v1,
-                health::health_v2,
-                ideas::ideas_v1,
-                ideas::idea_v1,
-                ideas::new_idea_v1,
-                ideas::store_idea_v1,
-                ideas::random_idea_v1,
-                ideas::ideas_v2,
-                ideas::idea_v2,
-                ideas::new_idea_v2,
-                ideas::store_idea_v2,
-                ideas::random_idea_v2,
-            ],
-        )
-        .register(catchers![
-            errors::error_404,
-            errors::error_422,
-            errors::error_500,
-        ])
-        .manage(health::new_state())
-        .manage(ideas::new_state())
-}
-
-fn main() -> Result<(), Error> {
-    let raven = sentry::init(("https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519", sentry::ClientOptions {
-        release: release_name!(),
-        ..Default::default()
-    }));
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    let raven = sentry::init((
+        "https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519",
+        sentry::ClientOptions {
+            release: release_name!(),
+            ..Default::default()
+        },
+    ));
 
     if raven.is_enabled() {
         sentry::integrations::panic::register_panic_handler();
     }
 
-    let cors_options = rocket_cors::Cors {
-        ..Default::default()
-    };
+    let state = models::GlobalState::new();
+    let metrics = PrometheusMetrics::new_with_registry(prometheus::default_registry().clone(), "rex", Some("/api/v1/metrics"), None).unwrap();
 
-    app().attach(cors_options).launch();
-
-    Ok(())
+    HttpServer::new(move || {
+        App::new()
+            .data(state.clone())
+            .wrap(metrics.clone())
+            .wrap(middleware::Logger::default())
+            .wrap(HttpAuthentication::bearer(api::auth_validator))
+            .wrap(api::Auth{})
+            .wrap(Cors::new().send_wildcard().finish())
+            .configure(api::configure)
+    })
+    .bind("0.0.0.0:8000")?
+    .run()
+    .await
 }

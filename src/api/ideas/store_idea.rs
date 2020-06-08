@@ -61,8 +61,37 @@ async fn store_idea_v2(
     }).await?.map(|idea| idea.clone().into())
 }
 
-#[put("/api/v3/collection/{collection}/idea/{id}")]
+#[put("/api/v3/idea/{id}")]
 async fn store_idea_v3(
+    (info, new_idea, state, token): (
+        web::Path<IdFilter>,
+        web::Json<models::IdeaV3>,
+        web::Data<GlobalState>,
+        AuthToken,
+    ),
+) -> Result<models::IdeaV3, APIError> {
+    let idea: Idea = new_idea.into_inner().into();
+    
+    let id = u128::from_str_radix(&info.id, 16)
+        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
+
+    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
+        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+
+    ensure_user_collection(&state, &token).await?;
+
+    state.store.send(StoreIdea {
+        id: id,
+        collection: oid,
+        name: idea.name,
+        description: idea.description,
+        tags: idea.tags,
+        completed: idea.completed,
+    }).await?.map(|idea| idea.clone().into())
+}
+
+#[put("/api/v3/collection/{collection}/idea/{id}")]
+async fn store_collection_idea_v3(
     (info, new_idea, state, token): (
         web::Path<CollectionIdFilter>,
         web::Json<models::IdeaV3>,
@@ -165,6 +194,37 @@ mod tests {
 
     #[actix_rt::test]
     async fn store_idea_v3() {
+        test_log_init();
+
+        let state = GlobalState::new();
+        let mut app = get_test_app(state).await;
+
+        let req = test::TestRequest::with_uri("/api/v3/idea/00000000000000000000000000000001")
+            .method(Method::PUT)
+            .header("Authorization", auth_token())
+            .set_json(&IdeaV3 {
+                id: None,
+                collection: None,
+                name: "Test Idea".to_string(),
+                description: "This is a test idea".to_string(),
+                tags: Some(hashset!("test")),
+                completed: None
+            })
+            .to_request();
+
+        let mut response = test::call_service(&mut app, req).await;
+        assert_status(&mut response, StatusCode::OK).await;
+
+        let content: IdeaV3 = get_content(&mut response).await;
+        assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
+        assert_eq!(content.name, "Test Idea".to_string());
+        assert_eq!(content.description, "This is a test idea".to_string());
+        assert_eq!(content.tags, Some(hashset!("test")));
+        assert_eq!(content.completed, Some(false));
+    }
+
+    #[actix_rt::test]
+    async fn store_collection_idea_v3() {
         test_log_init();
 
         let state = GlobalState::new();

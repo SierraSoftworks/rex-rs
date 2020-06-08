@@ -34,8 +34,24 @@ async fn remove_idea_v2(
     Ok(web::HttpResponse::NoContent().finish())
 }
 
-#[delete("/api/v3/collection/{collection}/idea/{id}")]
+#[delete("/api/v3/idea/{id}")]
 async fn remove_idea_v3(
+    (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
+) -> Result<web::HttpResponse, APIError> {
+    
+    let id = u128::from_str_radix(&info.id, 16)
+        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
+
+    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
+        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+        
+    state.store.send(RemoveIdea { collection: oid, id: id }).await??;
+    
+    Ok(web::HttpResponse::NoContent().finish())
+}
+
+#[delete("/api/v3/collection/{collection}/idea/{id}")]
+async fn remove_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::HttpResponse, APIError> {
     
@@ -124,6 +140,33 @@ mod tests {
 
     #[actix_rt::test]
     async fn remove_idea_v3() {
+        test_log_init();
+
+        let state = GlobalState::new();
+        state.store.send(StoreIdea {
+            id: 1,
+            collection: 0,
+            ..Default::default()
+        }).await.expect("the actor should run").expect("the idea should be stored");
+
+        let mut app = get_test_app(state.clone()).await;
+
+        let req = test::TestRequest::with_uri("/api/v3/idea/00000000000000000000000000000001")
+            .method(Method::DELETE)
+            .header("Authorization", auth_token())
+            .to_request();
+
+        let mut response = test::call_service(&mut app, req).await;
+        assert_status(&mut response, StatusCode::NO_CONTENT).await;
+
+        state.store.send(GetIdea {
+            collection: 0,
+            id: 1
+        }).await.expect("the actor should have run").expect_err("The idea should not exist anymore");
+    }
+
+    #[actix_rt::test]
+    async fn remove_collection_idea_v3() {
         test_log_init();
 
         let state = GlobalState::new();

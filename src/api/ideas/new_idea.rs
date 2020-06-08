@@ -45,8 +45,29 @@ async fn new_idea_v2(
     }).await?.map(|idea| idea.clone().into())
 }
 
-#[post("/api/v3/collection/{collection}/ideas")]
+#[post("/api/v3/ideas")]
 async fn new_idea_v3(
+    (new_idea, state, token): (web::Json<models::IdeaV3>, web::Data<GlobalState>, AuthToken),
+) -> Result<models::IdeaV3, APIError> {
+    let idea: Idea = new_idea.into_inner().into();
+    
+    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
+        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+
+    ensure_user_collection(&state, &token).await?;
+
+    state.store.send(StoreIdea {
+        id: new_id(),
+        collection: oid,
+        name: idea.name,
+        description: idea.description,
+        tags: idea.tags,
+        completed: false,
+    }).await?.map(|idea| idea.clone().into())
+}
+
+#[post("/api/v3/collection/{collection}/ideas")]
+async fn new_collection_idea_v3(
     (new_idea, path, state, token): (web::Json<models::IdeaV3>, web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV3, APIError> {
     let idea: Idea = new_idea.into_inner().into();
@@ -57,7 +78,9 @@ async fn new_idea_v3(
     let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
         .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
         
-    ensure_user_collection(&state, &token).await?;
+    if cid == uid {
+        ensure_user_collection(&state, &token).await?;
+    }
 
     let role = state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
 
@@ -153,6 +176,44 @@ mod tests {
 
     #[actix_rt::test]
     async fn new_idea_v3() {
+        test_log_init();
+
+        let state = GlobalState::new();
+        let mut app = get_test_app(state.clone()).await;
+
+        let req = test::TestRequest::with_uri("/api/v3/ideas")
+            .method(Method::POST)
+            .header("Authorization", auth_token())
+            .set_json(&IdeaV3 {
+                id: None,
+                collection: None,
+                name: "Test Idea".to_string(),
+                description: "This is a test idea".to_string(),
+                tags: Some(hashset!("test")),
+                completed: None
+            })
+            .to_request();
+
+        let mut response = test::call_service(&mut app, req).await;
+        assert_status(&mut response, StatusCode::CREATED).await;
+        assert_location_header(response.headers(), "/api/v3/idea/");
+
+        let content: IdeaV3 = get_content(&mut response).await;
+        assert_ne!(content.id, None);
+        assert_eq!(content.collection, Some("00000000000000000000000000000000".into()));
+        assert_eq!(content.name, "Test Idea".to_string());
+        assert_eq!(content.description, "This is a test idea".to_string());
+        assert_eq!(content.tags, Some(hashset!("test")));
+        assert_eq!(content.completed, Some(false));
+
+        state.store.send(GetIdea {
+            collection: 0,
+            id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
+        }).await.expect("the actor should have run").expect("The idea should exist in the store");
+    }
+
+    #[actix_rt::test]
+    async fn new_collection_idea_v3() {
         test_log_init();
 
         let state = GlobalState::new();

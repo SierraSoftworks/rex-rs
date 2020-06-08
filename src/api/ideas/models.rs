@@ -201,10 +201,12 @@ impl Responder for IdeaV3 {
 
     fn respond_to(self, req: &HttpRequest) -> Self::Future {
         if req.method() == Method::POST {
-            let location = req.url_for("get_idea_v3", &vec![
-                self.collection.clone().expect("a collection id"),
-                self.id.clone().expect("an idea id")
-            ]);
+            let location = if req.uri().path().contains("/collection/") {
+                req.url_for("get_collection_idea_v3", &vec![
+                    self.collection.clone().expect("a collection id"),
+                    self.id.clone().expect("an idea id")
+                ]) 
+            } else { req.url_for("get_idea_v3", vec![self.id.clone().expect("an idea id")]) };
 
             ready(Ok(HttpResponse::Created()
                 .content_type("application/json")

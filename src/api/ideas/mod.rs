@@ -26,11 +26,17 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(remove_idea::remove_idea_v2);
 
     cfg.service(get_ideas::get_ideas_v3)
+        .service(get_ideas::get_collection_ideas_v3)
         .service(get_random_idea::get_random_idea_v3)
+        .service(get_random_idea::get_random_collection_idea_v3)
         .service(get_idea::get_idea_v3)
+        .service(get_idea::get_collection_idea_v3)
         .service(new_idea::new_idea_v3)
+        .service(new_idea::new_collection_idea_v3)
         .service(store_idea::store_idea_v3)
-        .service(remove_idea::remove_idea_v3);
+        .service(store_idea::store_collection_idea_v3)
+        .service(remove_idea::remove_idea_v3)
+        .service(remove_idea::remove_collection_idea_v3);
 }
 
 #[derive(Deserialize, Serialize)]

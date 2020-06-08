@@ -1,3 +1,5 @@
+#[macro_use] mod macros;
+
 mod auth;
 mod error;
 mod collections;

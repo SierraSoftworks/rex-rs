@@ -7,19 +7,17 @@ use super::{CollectionUserFilter};
 async fn remove_role_assignment_v3(
     (info, state, token): (web::Path<CollectionUserFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::HttpResponse, APIError> {
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "RoleAssignments.Write");
     
-    let id = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
+    let tuid = parse_uuid!(info.user, user ID);
 
-    let uid = u128::from_str_radix(&info.user, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
-        
-    let role = state.store.send(GetRoleAssignment { collection_id: id, principal_id: oid }).await??;
+    let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
     match role.role {
         Role::Owner => {
-            state.store.send(RemoveRoleAssignment { collection_id: id, principal_id: uid }).await??;
+            state.store.send(RemoveRoleAssignment { collection_id: cid, principal_id: tuid }).await??;
 
             Ok(web::HttpResponse::NoContent().finish())
         },

@@ -9,17 +9,19 @@ async fn new_collection_v3(
         web::Json<models::CollectionV3>,
         web::Data<GlobalState>, AuthToken),
 ) -> Result<models::CollectionV3, APIError> {
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Collections.Write");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     let collection = state.store.send(StoreCollection {
-        principal_id: oid,
+        principal_id: uid,
         collection_id: new_id(),
         name: collection.name.clone(),
     }).await??;
 
     state.store.send(StoreRoleAssignment {
-        principal_id: oid,
+        principal_id: uid,
         collection_id: collection.id,
         role: Role::Owner
     }).await??;

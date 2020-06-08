@@ -7,15 +7,15 @@ use super::{models, CollectionFilter};
 async fn get_role_assignments_v3(
     (state, info, token): (web::Data<GlobalState>, web::Path<CollectionFilter>, AuthToken),
 ) -> Result<web::Json<Vec<models::RoleAssignmentV3>>, APIError> {
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "RoleAssignments.Write");
     
-    let id = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-        
-    let role = state.store.send(GetRoleAssignment { collection_id: id, principal_id: oid }).await??;
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
+
+    let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
     match role.role {
-        Role::Owner => state.store.send(GetRoleAssignments { collection_id: id }).await?.map(|roles| web::Json(roles.iter().map(|i| i.clone().into()).collect())),
+        Role::Owner => state.store.send(GetRoleAssignments { collection_id: cid }).await?.map(|roles| web::Json(roles.iter().map(|i| i.clone().into()).collect())),
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."))
     }
 }

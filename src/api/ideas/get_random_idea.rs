@@ -5,28 +5,34 @@ use super::{models, CollectionFilter, QueryFilter};
 
 #[get("/api/v1/idea/random")]
 async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> Result<models::IdeaV1, APIError> {
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
-    state.store.send(GetRandomIdea { collection: oid, is_completed: None, tag: None }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }).await?.map(|idea| idea.clone().into())
 }
 
 #[get("/api/v2/idea/random")]
 async fn get_random_idea_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV2, APIError> {
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
-    state.store.send(GetRandomIdea { collection: oid, is_completed: query.complete, tag: query.tag.clone() }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }).await?.map(|idea| idea.clone().into())
 }
 
 #[get("/api/v3/idea/random")]
 async fn get_random_idea_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV3, APIError> {
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }).await??;
@@ -36,13 +42,13 @@ async fn get_random_idea_v3(
 
 #[get("/api/v3/collection/{collection}/idea/random")]
 async fn get_random_collection_idea_v3(
-    (path, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
+    (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV3, APIError> {
-    let cid = u128::from_str_radix(&path.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The collection ID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
     
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
 

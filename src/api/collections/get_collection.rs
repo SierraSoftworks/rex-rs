@@ -7,13 +7,13 @@ use super::{models, CollectionFilter};
 async fn get_collection_v3(
     (info, state, token): (web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::CollectionV3, APIError> {
-    let id = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Collections.Read");
 
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
-       
-    state.store.send(GetCollection { id, principal_id: oid }).await?.map(|collection| collection.clone().into())
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
+
+    state.store.send(GetCollection { id: cid, principal_id: uid }).await?.map(|collection| collection.clone().into())
 }
 
 #[cfg(test)]

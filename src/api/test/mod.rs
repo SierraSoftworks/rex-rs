@@ -49,9 +49,9 @@ pub fn auth_token() -> String {
         iat: 0,
         name: "Testy McTesterson".into(),
         oid: "00000000-0000-0000-0000-000000000000".into(),
-        scp: "".into(),
+        scp: "Ideas.Read Ideas.Write Collections.Read Collections.Write RoleAssignments.Write".into(),
         sub: "testy@example.com".into(),
-        roles: vec![],
+        roles: vec!["Administrator".into()],
         unique_name: "testy@example.com".into(),
         ..Default::default()
     });

@@ -7,15 +7,15 @@ use super::{CollectionFilter};
 async fn remove_collection_v3(
     (info, state, token): (web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::HttpResponse, APIError> {
-    let id = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Collections.Write");
+    
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
 
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
-        
-    state.store.send(RemoveCollection { id, principal_id: oid }).await??;
+    state.store.send(RemoveCollection { id: cid, principal_id: uid }).await??;
 
-    state.store.send(RemoveRoleAssignment { collection_id: id, principal_id: oid }).await??;
+    state.store.send(RemoveRoleAssignment { collection_id: cid, principal_id: uid }).await??;
 
     Ok(web::HttpResponse::NoContent().finish())
 }

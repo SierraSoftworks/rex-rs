@@ -8,8 +8,10 @@ async fn get_ideas_v1(
     state: web::Data<GlobalState>,
     token: AuthToken
 ) -> Result<web::Json<Vec<models::IdeaV1>>, APIError> {
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     state.store.send(GetIdeas { collection: uid, is_completed: None, tag: None }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
@@ -18,8 +20,10 @@ async fn get_ideas_v1(
 async fn get_ideas_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::Json<Vec<models::IdeaV2>>, APIError> {
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     state.store.send(GetIdeas {
         collection: uid,
@@ -32,8 +36,10 @@ async fn get_ideas_v2(
 async fn get_ideas_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::Json<Vec<models::IdeaV3>>, APIError> {
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }).await??;
@@ -47,13 +53,13 @@ async fn get_ideas_v3(
 
 #[get("/api/v3/collection/{collection}/ideas")]
 async fn get_collection_ideas_v3(
-    (path, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
+    (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<web::Json<Vec<models::IdeaV3>>, APIError> {
-    let cid = u128::from_str_radix(&path.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The collection ID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
     
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;

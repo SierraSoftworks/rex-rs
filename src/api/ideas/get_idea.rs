@@ -7,11 +7,11 @@ use super::{models, IdFilter, CollectionIdFilter};
 async fn get_idea_v1(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV1, APIError> {
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
     
     state.store.send(GetIdea { collection: uid, id: id }).await?.map(|idea| idea.clone().into())
 }
@@ -20,11 +20,11 @@ async fn get_idea_v1(
 async fn get_idea_v2(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV2, APIError> {
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     state.store.send(GetIdea { collection: uid, id: id }).await?.map(|idea| idea.clone().into())
 }
@@ -33,11 +33,11 @@ async fn get_idea_v2(
 async fn get_idea_v3(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV3, APIError> {
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
+    
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     ensure_user_collection(&state, &token).await?;
     
@@ -48,14 +48,12 @@ async fn get_idea_v3(
 async fn get_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),
 ) -> Result<models::IdeaV3, APIError> {
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let cid = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The collection ID you provided could not be parsed. Please check it and try again.")))?;
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Read");
     
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let id = parse_uuid!(info.id, idea ID);
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     ensure_user_collection(&state, &token).await?;
 

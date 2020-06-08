@@ -12,19 +12,18 @@ async fn store_idea_v1(
         AuthToken,
     ),
 ) -> Result<models::IdeaV1, APIError> {
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Write");
+    
     let idea: Idea = new_idea.into_inner().into();
-
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
         id: id,
-        collection: oid,
+        collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
@@ -41,19 +40,18 @@ async fn store_idea_v2(
         AuthToken,
     ),
 ) -> Result<models::IdeaV2, APIError> {
-    let idea: Idea = new_idea.into_inner().into();
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Write");
     
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let idea: Idea = new_idea.into_inner().into();
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
         id: id,
-        collection: oid,
+        collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
@@ -70,19 +68,18 @@ async fn store_idea_v3(
         AuthToken,
     ),
 ) -> Result<models::IdeaV3, APIError> {
-    let idea: Idea = new_idea.into_inner().into();
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Write");
     
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let oid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let idea: Idea = new_idea.into_inner().into();
+    let id = parse_uuid!(info.id, idea ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
         id: id,
-        collection: oid,
+        collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
@@ -99,16 +96,13 @@ async fn store_collection_idea_v3(
         AuthToken,
     ),
 ) -> Result<models::IdeaV3, APIError> {
-    let idea: Idea = new_idea.into_inner().into();
+    require_role!(token, "Administrator", "User");
+    require_scope!(token, "Ideas.Write");
     
-    let id = u128::from_str_radix(&info.id, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The idea ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let cid = u128::from_str_radix(&info.collection, 16)
-        .or(Err(APIError::new(400, "Bad Request", "The collection ID you provided could not be parsed. Please check it and try again.")))?;
-
-    let uid = u128::from_str_radix(token.oid.replace("-", "").as_str(), 16)
-        .or(Err(APIError::new(400, "Bad Request", "The auth token OID you provided could not be parsed. Please check it and try again.")))?;
+    let idea: Idea = new_idea.into_inner().into();
+    let id = parse_uuid!(info.id, idea ID);
+    let cid = parse_uuid!(info.collection, collection ID);
+    let uid = parse_uuid!(token.oid, auth token oid);
         
     ensure_user_collection(&state, &token).await?;
 

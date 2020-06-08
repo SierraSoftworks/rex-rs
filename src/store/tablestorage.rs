@@ -154,7 +154,7 @@ impl From<TableEntity<TableStorageIdea>> for Idea {
             id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
             collection: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
             name: entity.payload.name.clone(),
-            tags: hashset!([entity.payload.tags.split(",")]),
+            tags: hashset!([entity.payload.tags.split(",").filter(|t| !t.is_empty())]),
             description: entity.payload.description.clone(),
             completed: entity.payload.completed
         }

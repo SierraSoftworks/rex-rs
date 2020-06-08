@@ -25,31 +25,18 @@ async fn store_collection_v3(
 #[cfg(test)]
 mod tests {
     use super::models::*;
-    use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn store_collection_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state.clone()).await;
+        let content: CollectionV3 = test_request!(PUT "/api/v3/collection/00000000000000000000000000000001", CollectionV3 {
+            id: None,
+            user_id: None,
+            name: "Test Collection".into(),
+        } => OK with content);
 
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000001")
-            .method(Method::PUT)
-            .set_json(&CollectionV3 {
-                id: None,
-                user_id: None,
-                name: "Test Collection".into(),
-            })
-            .header("Authorization", auth_token()).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-        
-        let content: CollectionV3 = get_content(&mut response).await;
         assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.user_id, Some("00000000000000000000000000000000".into()));
         assert_eq!(content.name, "Test Collection".to_string());

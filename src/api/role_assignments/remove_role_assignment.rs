@@ -28,35 +28,26 @@ async fn remove_role_assignment_v3(
 #[cfg(test)]
 mod tests {
     use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn remove_role_assignment_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 0,
-            role: Role::Owner,
-        }).await.expect("the actor should run").expect("the role assignment should be stored");
+        test_state!(state = [
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 0,
+                role: Role::Owner,
+            },
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 2,
+                role: Role::Viewer,
+            }
+        ]);
 
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 2,
-            role: Role::Viewer,
-        }).await.expect("the actor should run").expect("the role assignment should be stored");
-
-        let mut app = get_test_app(state.clone()).await;
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000002")
-            .method(Method::DELETE)
-            .header("Authorization", auth_token()).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::NO_CONTENT).await;
+        test_request!(DELETE "/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000002" => NO_CONTENT | state = state);
 
         state.store.send(GetRoleAssignment {
             collection_id: 1,

@@ -127,30 +127,18 @@ async fn store_collection_idea_v3(
 mod tests {
     use crate::api::ideas::models::*;
     use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn store_idea_v1() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state).await;
+        let content: IdeaV1 = test_request!(PUT "/api/v1/idea/00000000000000000000000000000001", IdeaV1 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+        } => OK with content);
 
-        let req = test::TestRequest::with_uri("/api/v1/idea/00000000000000000000000000000001")
-            .method(Method::PUT)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV1 {
-                id: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-            }).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-
-        let content: IdeaV1 = get_content(&mut response).await;
         assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
@@ -160,25 +148,14 @@ mod tests {
     async fn store_idea_v2() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state).await;
+        let content: IdeaV2 = test_request!(PUT "/api/v2/idea/00000000000000000000000000000001", IdeaV2 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => OK with content);
 
-        let req = test::TestRequest::with_uri("/api/v2/idea/00000000000000000000000000000001")
-            .method(Method::PUT)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV2 {
-                id: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-
-        let content: IdeaV2 = get_content(&mut response).await;
         assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
@@ -190,27 +167,17 @@ mod tests {
     async fn store_idea_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state).await;
+        let content: IdeaV3 = test_request!(PUT "/api/v3/idea/00000000000000000000000000000001", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => OK with content);
 
-        let req = test::TestRequest::with_uri("/api/v3/idea/00000000000000000000000000000001")
-            .method(Method::PUT)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV3 {
-                id: None,
-                collection: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-
-        let content: IdeaV3 = get_content(&mut response).await;
         assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
+        assert_eq!(content.collection, Some("00000000000000000000000000000000".into()));
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
         assert_eq!(content.tags, Some(hashset!("test")));
@@ -221,39 +188,29 @@ mod tests {
     async fn store_collection_idea_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state.clone()).await;
+        test_state!(state = [
+            StoreCollection {
+                collection_id: 7,
+                principal_id: 0,
+                name: "Test Collection".into(),
+                ..Default::default()
+            },
+            StoreRoleAssignment {
+                collection_id: 7,
+                principal_id: 0,
+                role: Role::Owner,
+            }
+        ]);
 
-        state.store.send(StoreCollection {
-            collection_id: 7,
-            principal_id: 0,
-            name: "Test Collection".into(),
-            ..Default::default()
-        }).await.expect("the actor should run").expect("the collection should be stored");
+        let content: IdeaV3 = test_request!(PUT "/api/v3/collection/00000000000000000000000000000007/idea/00000000000000000000000000000001", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => OK with content | state = state);
 
-        state.store.send(StoreRoleAssignment {
-            collection_id: 7,
-            principal_id: 0,
-            role: Role::Owner,
-        }).await.expect("the actor should run").expect("the role assignment should be stored");
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000007/idea/00000000000000000000000000000001")
-            .method(Method::PUT)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV3 {
-                id: None,
-                collection: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-
-        let content: IdeaV3 = get_content(&mut response).await;
         assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.collection, Some("00000000000000000000000000000007".into()));
         assert_eq!(content.name, "Test Idea".to_string());

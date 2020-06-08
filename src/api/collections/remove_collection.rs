@@ -23,35 +23,27 @@ async fn remove_collection_v3(
 #[cfg(test)]
 mod tests {
     use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn remove_collection_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        state.store.send(StoreCollection {
-            collection_id: 1,
-            principal_id: 0,
-            name: "Test Collection".into(),
-            ..Default::default()
-        }).await.expect("the actor should run").expect("the collection should be stored");
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 0,
-            role: Role::Owner,
-        }).await.expect("the actor should run").expect("the role assignment should be stored");
+        test_state!(state = [
+            StoreCollection {
+                collection_id: 1,
+                principal_id: 0,
+                name: "Test Collection".into(),
+                ..Default::default()
+            },
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 0,
+                role: Role::Owner,
+            }
+        ]);
 
-        let mut app = get_test_app(state.clone()).await;
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000001")
-            .method(Method::DELETE)
-            .header("Authorization", auth_token()).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::NO_CONTENT).await;
+        test_request!(DELETE "/api/v3/collection/00000000000000000000000000000001" => NO_CONTENT | state = state);
 
         state.store.send(GetCollection {
             id: 1,

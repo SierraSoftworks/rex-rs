@@ -29,36 +29,26 @@ async fn get_role_assignment_v3(
 mod tests {
     use super::models::*;
     use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn get_role_assignment_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 0,
-            role: Role::Owner,
-        }).await.expect("the actor should run").expect("the idea should be stored");
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 2,
-            role: Role::Viewer,
-        }).await.expect("the actor should run").expect("the idea should be stored");
+        test_state!(state = [
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 0,
+                role: Role::Owner,
+            },
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 2,
+                role: Role::Viewer,
+            }
+        ]);
 
-        let mut app = get_test_app(state.clone()).await;
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000002")
-            .method(Method::GET)
-            .header("Authorization", auth_token()).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::OK).await;
-        
-        let content: RoleAssignmentV3 = get_content(&mut response).await;
+        let content: RoleAssignmentV3 = test_request!(GET "/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000002" => OK with content | state = state);
         assert_eq!(content.collection_id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.user_id, Some("00000000000000000000000000000002".into()));
         assert_eq!(content.role, "Viewer".to_string());
@@ -68,24 +58,20 @@ mod tests {
     async fn get_role_assignment_v3_self() {
         test_log_init();
 
-        let state = GlobalState::new();
-        state.store.send(StoreRoleAssignment {
-            collection_id: 1,
-            principal_id: 0,
-            role: Role::Owner,
-            ..Default::default()
-        }).await.expect("the actor should run").expect("the idea should be stored");
+        test_state!(state = [
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 0,
+                role: Role::Owner,
+            },
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 2,
+                role: Role::Viewer,
+            }
+        ]);
 
-        let mut app = get_test_app(state.clone()).await;
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000000")
-            .method(Method::GET)
-            .header("Authorization", auth_token()).to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_eq!(response.status(), StatusCode::OK);
-        
-        let content: RoleAssignmentV3 = get_content(&mut response).await;
+        let content: RoleAssignmentV3 = test_request!(GET "/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000000" => OK with content | state = state);
         assert_eq!(content.collection_id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.user_id, Some("00000000000000000000000000000000".into()));
         assert_eq!(content.role, "Owner".to_string());

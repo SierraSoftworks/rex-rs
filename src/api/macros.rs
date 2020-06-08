@@ -7,7 +7,7 @@ macro_rules! parse_uuid {
 }
 
 #[macro_export]
-macro_rules! require_role{
+macro_rules! require_role {
     (_cond: $r:ident ->) => (());
     (_cond: $r:ident -> $role:expr) => {
         $r == $role
@@ -25,10 +25,142 @@ macro_rules! require_role{
 }
 
 #[macro_export]
-macro_rules! require_scope{
+macro_rules! require_scope {
     ($token:expr, $scope:expr) => {
         if !$token.scp.split(" ").any(|s| s == $scope) {
             return Err(APIError::new(403, "Forbidden", "Your client has not been granted permission to access this resource. Please request the necessary access scopes and try again."));
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! test_state {
+    (:: $state:ident = []) => (());
+    (:: $state:ident = [ $item:expr ]) => {
+        $state.store.send($item).await.expect("the actor should be run").expect("the operation should succeed");
+    };
+
+    (:: $state:ident = [ $item:expr, $($rest:expr),* ]) => {
+        test_state!(:: $state = [ $item ]);
+        test_state!(:: $state = [ $($rest),* ]);
+    };
+
+    ($state:ident = [ $($init:expr),* ]) => {
+        let $state = crate::models::GlobalState::new();
+
+        test_state!(:: $state = [ $($init),* ]);
+    }
+}
+
+#[macro_export]
+macro_rules! test_request {
+
+    ($method:ident $path:expr => $status:ident | state = $state:ident) => {
+        {
+            let mut app = crate::api::test::get_test_app($state.clone()).await;
+            let req = actix_web::test::TestRequest::with_uri($path)
+                .method(http::Method::$method)
+                .header("Authorization", crate::api::test::auth_token())
+                .to_request();
+
+            let mut response = actix_web::test::call_service(&mut app, req).await;
+            crate::api::test::assert_status(&mut response, http::StatusCode::$status).await;
+
+            response
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident | state = $state:ident) => {
+        {
+            let mut app = crate::api::test::get_test_app($state.clone()).await;
+            let req = actix_web::test::TestRequest::with_uri($path)
+                .method(http::Method::$method)
+                .set_json(&$body)
+                .header("Authorization", crate::api::test::auth_token())
+                .to_request();
+
+            let mut response = actix_web::test::call_service(&mut app, req).await;
+            crate::api::test::assert_status(&mut response, http::StatusCode::$status).await;
+
+            response
+        }
+    };
+
+    ($method:ident $path:expr => $status:ident with content | state = $state:ident) => {
+        {
+            let mut response = test_request!($method $path => $status | state = $state);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident with content | state = $state:ident) => {
+        {
+            let mut response = test_request!($method $path, $body => $status | state = $state);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr => $status:ident with location =~ $location:expr, content | state = $state:ident) => {
+        {
+            let mut response = test_request!($method $path => $status | state = $state);
+            crate::api::test::assert_location_header(response.headers(), $location);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident with location =~ $location:expr, content | state = $state:ident) => {
+        {
+            let mut response = test_request!($method $path, $body => $status | state = $state);
+            crate::api::test::assert_location_header(response.headers(), $location);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    /* --------------- NO GLOBAL STATE ------------------ */
+    
+    ($method:ident $path:expr => $status:ident) => {
+        {
+            let state = crate::models::GlobalState::new();
+            
+            test_request!($method $path => $status | state = state)
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident) => {
+        {
+            let state = crate::models::GlobalState::new();
+            
+            test_request!($method $path, $body => $status | state = state)
+        }
+    };
+
+    ($method:ident $path:expr => $status:ident with content) => {
+        {
+            let mut response = test_request!($method $path => $status);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident with content) => {
+        {
+            let mut response = test_request!($method $path, $body => $status);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr => $status:ident with location =~ $location:expr, content) => {
+        {
+            let mut response = test_request!($method $path => $status);
+            assert_location_header(response.headers(), $location);
+            crate::api::test::get_content(&mut response).await
+        }
+    };
+
+    ($method:ident $path:expr, $body:expr => $status:ident with location =~ $location:expr, content) => {
+        {
+            let mut response = test_request!($method $path, $body => $status);
+            assert_location_header(response.headers(), $location);
+            crate::api::test::get_content(&mut response).await
         }
     };
 }

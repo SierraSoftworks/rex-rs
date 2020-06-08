@@ -105,31 +105,20 @@ async fn new_collection_idea_v3(
 mod tests {
     use crate::api::ideas::models::*;
     use crate::models::*;
-    use actix_web::test;
-    use http::{Method, StatusCode};
     use crate::api::test::*;
 
     #[actix_rt::test]
     async fn new_idea_v1() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state.clone()).await;
+        test_state!(state = []);
 
-        let req = test::TestRequest::with_uri("/api/v1/ideas")
-            .method(Method::POST)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV1 {
-                id: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-            }).to_request();
+        let content: IdeaV1 = test_request!(POST "/api/v1/ideas", IdeaV1 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+        } => CREATED with location =~ "/api/v1/idea/", content | state = state);
 
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::CREATED).await;
-        assert_location_header(response.headers(), "/api/v1/idea/");
-
-        let content: IdeaV1 = get_content(&mut response).await;
         assert_ne!(content.id, None);
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
@@ -144,26 +133,16 @@ mod tests {
     async fn new_idea_v2() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state.clone()).await;
+        test_state!(state = []);
 
-        let req = test::TestRequest::with_uri("/api/v2/ideas")
-            .method(Method::POST)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV2 {
-                id: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
+        let content: IdeaV2 = test_request!(POST "/api/v2/ideas", IdeaV2 {
+            id: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => CREATED with location =~ "/api/v2/idea/", content | state = state);
 
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::CREATED).await;
-        assert_location_header(response.headers(), "/api/v2/idea/");
-
-        let content: IdeaV2 = get_content(&mut response).await;
         assert_ne!(content.id, None);
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
@@ -180,27 +159,17 @@ mod tests {
     async fn new_idea_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
-        let mut app = get_test_app(state.clone()).await;
+        test_state!(state = []);
 
-        let req = test::TestRequest::with_uri("/api/v3/ideas")
-            .method(Method::POST)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV3 {
-                id: None,
-                collection: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
+        let content: IdeaV3 = test_request!(POST "/api/v3/ideas", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => CREATED with location =~ "/api/v3/idea/", content | state = state);
 
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::CREATED).await;
-        assert_location_header(response.headers(), "/api/v3/idea/");
-
-        let content: IdeaV3 = get_content(&mut response).await;
         assert_ne!(content.id, None);
         assert_eq!(content.collection, Some("00000000000000000000000000000000".into()));
         assert_eq!(content.name, "Test Idea".to_string());
@@ -218,41 +187,29 @@ mod tests {
     async fn new_collection_idea_v3() {
         test_log_init();
 
-        let state = GlobalState::new();
+        test_state!(state = [
+            StoreCollection {
+                collection_id: 7,
+                principal_id: 0,
+                name: "Test Collection".into(),
+                ..Default::default()
+            },
+            StoreRoleAssignment {
+                collection_id: 7,
+                principal_id: 0,
+                role: Role::Owner,
+            }
+        ]);
 
-        state.store.send(StoreCollection {
-            collection_id: 7,
-            principal_id: 0,
-            name: "Test Collection".into(),
-            ..Default::default()
-        }).await.expect("the actor should run").expect("the collection should be stored");
+        let content: IdeaV3 = test_request!(POST "/api/v3/collection/00000000000000000000000000000007/ideas", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea".to_string(),
+            tags: Some(hashset!("test")),
+            completed: None
+        } => CREATED with location =~ "/api/v3/collection/00000000000000000000000000000007/idea/", content | state = state);
 
-        state.store.send(StoreRoleAssignment {
-            collection_id: 7,
-            principal_id: 0,
-            role: Role::Owner,
-        }).await.expect("the actor should run").expect("the role assignment should be stored");
-
-        let mut app = get_test_app(state.clone()).await;
-
-        let req = test::TestRequest::with_uri("/api/v3/collection/00000000000000000000000000000007/ideas")
-            .method(Method::POST)
-            .header("Authorization", auth_token())
-            .set_json(&IdeaV3 {
-                id: None,
-                collection: None,
-                name: "Test Idea".to_string(),
-                description: "This is a test idea".to_string(),
-                tags: Some(hashset!("test")),
-                completed: None
-            })
-            .to_request();
-
-        let mut response = test::call_service(&mut app, req).await;
-        assert_status(&mut response, StatusCode::CREATED).await;
-        assert_location_header(response.headers(), "/api/v3/collection/00000000000000000000000000000007/idea/");
-
-        let content: IdeaV3 = get_content(&mut response).await;
         assert_ne!(content.id, None);
         assert_eq!(content.collection, Some("00000000000000000000000000000007".into()));
         assert_eq!(content.name, "Test Idea".to_string());

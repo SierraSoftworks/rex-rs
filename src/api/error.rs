@@ -40,14 +40,32 @@ impl fmt::Display for APIError {
     }
 }
 
+impl From<azure_sdk_core::errors::AzureError> for APIError {
+    fn from(err: azure_sdk_core::errors::AzureError) -> Self {
+        error!("We were unable to call Table Storage: {}", err);
+
+        let event = sentry::integrations::failure::event_from_error(&err.into());
+
+        sentry::capture_event(sentry::protocol::Event {
+            message: Some(format!("Failed to interact with Azure Table Storage").into()),
+            level: sentry::protocol::Level::Error,
+            ..event
+        });
+
+        Self::new(500, "Internal Server Error", "We ran into a problem, this has been reported and will be looked at.")
+    }
+}
+
 impl From<actix::MailboxError> for APIError {
     fn from(err: actix::MailboxError) -> Self {
         error!("We were unable to call an actor: {}", err);
 
+        let event = sentry::integrations::failure::event_from_error(&err.into());
+
         sentry::capture_event(sentry::protocol::Event {
-            message: Some(format!("Failed to send message to Actix Actor: {}", err).into()),
+            message: Some(format!("Failed to send message to Actix Actor").into()),
             level: sentry::protocol::Level::Error,
-            ..Default::default()
+            ..event
         });
 
         Self::new(500, "Internal Server Error", "We ran into a problem, this has been reported and will be looked at.")

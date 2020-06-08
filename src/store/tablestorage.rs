@@ -51,11 +51,7 @@ impl TableStorage {
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
             None
-        ).await
-            .map_err(|err| {
-                error!("Failed to query Azure Table Storage: {:?}", err);
-                APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
-            })?;
+        ).await?;
 
         result
             .ok_or(not_found_err)
@@ -73,12 +69,7 @@ impl TableStorage {
         let mut entries: Vec<TableEntity<ST>> = vec![];
         let safe_query = TableStorage::escape_query(query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await
-            .map_err(|err| {
-                error!("Failed to query Azure Table Storage: {:?}", err);
-                APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
-            })? {
-
+        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
             entries.append(&mut results);
         }
 
@@ -96,12 +87,7 @@ impl TableStorage {
         let mut entries: Vec<TableEntity<ST>> = vec![];
         let safe_query = TableStorage::escape_query(query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await
-            .map_err(|err| {
-                error!("Failed to query Azure Table Storage: {:?}", err);
-                APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
-            })? {
-
+        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
             entries.append(&mut results);
         }
 
@@ -112,11 +98,7 @@ impl TableStorage {
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
         T: From<TableEntity<ST>> {
-        let result = table.insert_or_update_entity(item).await
-                .map_err(|err| {
-                    error!("Failed to query Azure Table Storage: {:?}", err);
-                    APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
-                })?;
+        let result = table.insert_or_update_entity(item).await?;
 
         Ok(result.into())
     }
@@ -125,11 +107,7 @@ impl TableStorage {
         table.delete(
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
-            None).await
-                .map_err(|err| {
-                    error!("Failed to query Azure Table Storage: {:?}", err);
-                    APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later.")
-                })?;
+            None).await?;
 
         Ok(())
     }

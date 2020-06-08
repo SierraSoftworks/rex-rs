@@ -31,6 +31,7 @@ async fn main() -> std::io::Result<()> {
 
     if raven.is_enabled() {
         sentry::integrations::panic::register_panic_handler();
+        sentry::integrations::env_logger::init(None, Default::default());
     }
 
     let state = models::GlobalState::new();
@@ -44,7 +45,17 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::new().send_wildcard().finish())
             .configure(api::configure)
     })
-    .bind("0.0.0.0:8000")?
-    .run()
-    .await
+        .bind("0.0.0.0:8000")?
+        .run()
+        .await
+        .map_err(|err| {
+            error!("The server exited unexpectedly: {}", err);
+            sentry::capture_event(sentry::protocol::Event {
+                message: Some(format!("Server Exited Unexpectedly: {}", err).into()),
+                level: sentry::protocol::Level::Fatal,
+                ..Default::default()
+            });
+
+            err
+        })
 }

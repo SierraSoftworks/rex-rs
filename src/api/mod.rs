@@ -11,7 +11,7 @@ mod utils;
 use actix_web::web;
 
 pub use error::APIError;
-pub use auth::{AuthToken, Auth};
+pub use auth::AuthToken;
 pub use utils::ensure_user_collection;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {

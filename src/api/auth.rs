@@ -1,12 +1,11 @@
-use actix_web::{Error, dev::{Extensions, ServiceRequest, Payload, ServiceResponse}, http::header::Header, HttpMessage, HttpRequest, FromRequest};
-use actix_web_httpauth::{headers::authorization::{Bearer, Authorization}};
+use actix_web::{dev::Payload, HttpRequest, FromRequest};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use biscuit::{CompactJson};
 use oidc::token::Jws;
 use oidc::{issuer, Client};
-use std::{sync::Arc, pin::Pin, task::{Poll, Context}};
+use std::sync::Arc;
 use super::APIError;
-use futures::{Future, future::{ready, Ready}};
-use actix_service::{Transform, Service};
+use futures::{FutureExt, future::{ready, Ready}};
 
 lazy_static! {
     static ref CLIENT: Arc<Client> = Arc::new(get_client());
@@ -14,9 +13,6 @@ lazy_static! {
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Default)]
 pub struct AuthToken {
-    #[serde(skip)]
-    pub raw_token: String,
-
     pub aud: String,
     pub exp: i64,
     pub iat: i64,
@@ -29,21 +25,26 @@ pub struct AuthToken {
 }
 
 impl AuthToken {
-    fn set_token(token: AuthToken, req: &ServiceRequest) {
-        let mut exts = req.extensions_mut();
-
-        debug!("Adding AuthToken to the request context: aud={} oid={}", token.aud, token.oid);
-        exts.insert(token);
-    }
-
-    fn get_token(extensions: &mut Extensions) -> Option<Self> {
-        let token_box: Option<&AuthToken> = extensions.get();
-
-        if token_box.is_none() {
-            warn!("Attempted to fetch AuthToken for a request which did not have an associated auth token.");
+    fn from_request_internal(req: &HttpRequest, payload: &mut Payload) -> Result<AuthToken, APIError> {
+        let get_creds = BearerAuth::from_request(req, payload).now_or_never();
+        let creds = get_creds
+            .ok_or(APIError::unauthorized())?
+            .map_err(|_| APIError::unauthorized())?;
+        
+        #[cfg(not(test))]
+        {
+            let mut ticket = Jws::new_encoded(creds.token());
+            let client = CLIENT.clone();
+            client
+                .decode_token(&mut ticket)
+                .and_then(|()| client.validate_token(&ticket, None, None))
+                .map_err(|_e| APIError::unauthorized())?;
         }
-
-        token_box.map(|t| t.clone())
+        
+        let ticket: Jws<AuthToken, biscuit::Empty> = Jws::new_encoded(creds.token());
+        let token = ticket.unverified_payload().map_err(|_| APIError::unauthorized())?;
+        
+        Ok(token)
     }
 }
 
@@ -53,83 +54,12 @@ impl FromRequest for AuthToken {
     type Config = ();
 
     #[inline]
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let token = AuthToken::get_token(&mut *req.extensions_mut()).ok_or(APIError::unauthorized())
-            .and_then(|token| {
-                let mut full_token = Jws::new_encoded(&token.raw_token);
-                let client = CLIENT.clone();
-
-                client
-                    .decode_token(&mut full_token)
-                    .and_then(|()| client.validate_token(&full_token, None, None))
-                    .map_err(|_e| APIError::unauthorized())?;
-
-                Ok(token)
-            });
-
-        ready(token)
+    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
+        ready(AuthToken::from_request_internal(req, payload))
     }
 }
 
 impl CompactJson for AuthToken {}
-
-pub struct Auth;
-
-impl<S, B> Transform<S> for Auth
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S::Future: 'static,
-    B: 'static,
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type InitError = ();
-    type Transform = AuthTokenMiddleware<S>;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
-
-    fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(AuthTokenMiddleware { service }))
-    }
-}
-
-pub struct AuthTokenMiddleware<S> {
-    service: S,
-}
-
-impl <S,B> Service for AuthTokenMiddleware<S>
-where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
-    S:: Future: 'static,
-    B: 'static
-{
-    type Request = ServiceRequest;
-    type Response = ServiceResponse<B>;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.service.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
-        Authorization::<Bearer>::parse(&req)
-            .map_err(|_e| APIError::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again."))
-            .map(|auth| auth.into_scheme())
-            .map(|creds| Jws::new_encoded(creds.token()))
-            .and_then(|ticket: Jws<AuthToken, biscuit::Empty>| ticket.unverified_payload()
-                .map_err(|_e| APIError::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again.")))
-            .map(|token| AuthToken::set_token(token, &req))
-            .unwrap_or(());
-            
-        let fut = self.service.call(req);
-
-        Box::pin(async move {
-            let res = fut.await?;
-            Ok(res)
-        })
-    }
-}
 
 fn get_client() -> Client {
     return Client::discover(

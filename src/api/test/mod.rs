@@ -14,7 +14,6 @@ pub async fn get_test_app(state: GlobalState) -> impl actix_web::dev::Service<Re
     test::init_service(
         App::new()
             .data(state.clone())
-            .wrap(crate::api::Auth{})
             .configure(configure),
     )
     .await

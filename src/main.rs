@@ -41,7 +41,6 @@ async fn main() -> std::io::Result<()> {
             .data(state.clone())
             .wrap(metrics.clone())
             .wrap(middleware::Logger::default())
-            .wrap(api::Auth{})
             .wrap(Cors::new().send_wildcard().finish())
             .configure(api::configure)
     })

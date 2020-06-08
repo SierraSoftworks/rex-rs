@@ -26,10 +26,10 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 100Mi
+              memory: 20Mi
             limits:
               cpu: 500m
-              memory: 500Mi
+              memory: 50Mi
           env:
             - name: ENVIRONMENT
               valueFrom:

@@ -6,6 +6,7 @@ mod collections;
 mod ideas;
 mod health;
 mod role_assignments;
+mod users;
 mod utils;
 
 #[cfg(test)] pub mod test;
@@ -21,4 +22,5 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     collections::configure(cfg);
     role_assignments::configure(cfg);
     ideas::configure(cfg);
+    users::configure(cfg);
 }

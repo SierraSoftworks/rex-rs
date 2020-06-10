@@ -1,4 +1,3 @@
-use super::*;
 use std::{collections::BTreeMap, sync::Arc};
 use crate::models::*;
 use crate::api::APIError;
@@ -11,6 +10,7 @@ pub struct MemoryStore {
     ideas: Arc<RwLock<BTreeMap<u128, BTreeMap<u128, Idea>>>>,
     collections: Arc<RwLock<BTreeMap<u128, BTreeMap<u128, Collection>>>>,
     role_assignments: Arc<RwLock<BTreeMap<u128, BTreeMap<u128, RoleAssignment>>>>,
+    users: Arc<RwLock<BTreeMap<u128, User>>>,
 }
 
 impl MemoryStore {
@@ -20,6 +20,7 @@ impl MemoryStore {
             ideas: Arc::new(RwLock::new(BTreeMap::new())),
             collections: Arc::new(RwLock::new(BTreeMap::new())),
             role_assignments: Arc::new(RwLock::new(BTreeMap::new())),
+            users: Arc::new(RwLock::new(BTreeMap::new())),
         }
     }
 }
@@ -48,7 +49,7 @@ impl Handler<GetIdea> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get(&msg.collection)
-            .ok_or(api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
+            .ok_or(APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .and_then(|c| 
                 c.get(&msg.id).map(|i| i.clone())
                 .ok_or(APIError::new(404, "Not Found", "The idea ID you provided could not be found. Please check it and try again.")))
@@ -65,7 +66,7 @@ impl Handler<GetIdeas> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get(&msg.collection)
-            .ok_or(api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
+            .ok_or(APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .map(|items| items.iter().filter(|(_, i)| {
                 match msg.is_completed.clone() {
                     Some(is_completed) => {
@@ -99,7 +100,7 @@ impl Handler<GetRandomIdea> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get(&msg.collection)
-            .ok_or(api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
+            .ok_or(APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .and_then(|items| items.iter().filter(|(_, i)| {
                 match msg.is_completed.clone() {
                     Some(is_completed) => {
@@ -161,7 +162,7 @@ impl Handler<RemoveIdea> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get_mut(&msg.collection)
-            .ok_or(api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
+            .ok_or(APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .and_then(|c|
                 c.remove(&msg.id)
                 .map(|_| ())
@@ -179,7 +180,7 @@ impl Handler<GetCollection> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get(&msg.principal_id)
-            .ok_or(api::APIError::new(404, "Not Found", "The principal ID you provided could not be found. This likely means that you do not yet have any collections."))
+            .ok_or(APIError::new(404, "Not Found", "The principal ID you provided could not be found. This likely means that you do not yet have any collections."))
             .and_then(|c| 
                 c.get(&msg.id).map(|i| i.clone())
                 .ok_or(APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")))
@@ -195,7 +196,7 @@ impl Handler<GetCollections> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get(&msg.principal_id)
-            .ok_or(api::APIError::new(404, "Not Found", "The principal ID you provided could not be found. This probably means that you do not yet have any collections."))
+            .ok_or(APIError::new(404, "Not Found", "The principal ID you provided could not be found. This probably means that you do not yet have any collections."))
             .map(|items| items.iter()
                 .map(|(_id, collection)| collection.clone()).collect())
     }
@@ -232,13 +233,13 @@ impl Handler<RemoveCollection> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         is.get_mut(&msg.principal_id)
-            .ok_or(api::APIError::new(404, "Not Found", "The principal ID you provided could not be found. This likely means that you do not yet have any collections."))
+            .ok_or(APIError::new(404, "Not Found", "The principal ID you provided could not be found. This likely means that you do not yet have any collections."))
             .and_then(|c|
                 c.remove(&msg.id)
                 .map(|_| ())
                 .ok_or_else(|| {
                     debug!("Could not find a collection entry for {} in the current user's collection list ({}).", msg.id, msg.principal_id);
-                    api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
+                    APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
                 }))
     }
 }
@@ -270,7 +271,7 @@ impl Handler<GetRoleAssignments> for MemoryStore {
         is.get(&msg.collection_id)
             .ok_or_else(|| {
                 debug!("Could not find a collection entry for {} in role assignments.", msg.collection_id);
-                api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
+                APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
             })
             .map(|items| items.iter()
                 .map(|(_id, collection)| collection.clone()).collect())
@@ -310,7 +311,7 @@ impl Handler<RemoveRoleAssignment> for MemoryStore {
         is.get_mut(&msg.collection_id)
         .ok_or_else(|| {
             debug!("Could not find a collection entry for {} in role assignments.", msg.collection_id);
-            api::APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
+            APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
         })
             .and_then(|c|
                 c.remove(&msg.principal_id)
@@ -319,5 +320,37 @@ impl Handler<RemoveRoleAssignment> for MemoryStore {
                     debug!("Could not find an entry for the user {} in the collection role assignments table for {}", msg.principal_id, msg.collection_id);
                     APIError::new(404, "Not Found", "The principal ID you provided could not be found. This likely means that you do not yet have any collections.")
                 }))
+    }
+}
+
+impl Handler<GetUser> for MemoryStore {
+    type Result = Result<User, APIError>;
+
+    fn handle(&mut self, msg: GetUser, _: &mut Self::Context) -> Self::Result {
+        let users = self.users.read()
+            .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
+
+        users.get(&msg.email_hash)
+            .ok_or(APIError::new(404, "Not Found", "No user could be found with the email hash you provided. Please check it and try again."))
+            .map(|u| u.clone())
+    }
+}
+
+impl Handler<StoreUser> for MemoryStore {
+    type Result = Result<User, APIError>;
+
+    fn handle(&mut self, msg: StoreUser, _: &mut Self::Context) -> Self::Result {
+        let mut users = self.users.write()
+            .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
+
+        let user = User {
+            principal_id: msg.principal_id,
+            email_hash: msg.email_hash,
+            first_name: msg.first_name.clone()
+        };
+
+        users.insert(msg.email_hash, user.clone());
+
+        Ok(user)
     }
 }

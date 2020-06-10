@@ -4,7 +4,7 @@ mod collection;
 mod idea;
 mod role_assignment;
 mod health;
-mod stateview;
+mod user;
 
 use actix::prelude::*;
 
@@ -12,7 +12,7 @@ pub use collection::*;
 pub use health::*;
 pub use idea::*;
 pub use role_assignment::*;
-pub use stateview::*;
+pub use user::*;
 
 pub fn new_id() -> u128 {
     let id = uuid::Uuid::new_v4();

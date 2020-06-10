@@ -168,5 +168,10 @@ mod tests {
         assert_eq!(content.description, "This is a test idea".to_string());
         assert_eq!(content.tags, Some(hashset!("test")));
         assert_eq!(content.completed, Some(false));
+
+        let user = state.store.send(GetUser { email_hash: u128::from_str_radix("05c1de2f5c5e7933bee97a499e818c5e", 16).expect("a valid hash") })
+            .await.expect("the actor to have run").expect("the user should exist");
+        assert_eq!(user.first_name, "Testy");
+        assert_eq!(user.principal_id, 0);
     }
 }

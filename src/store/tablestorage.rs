@@ -14,6 +14,7 @@ pub struct TableStorage {
     ideas: Arc<CloudTable>,
     role_assignments: Arc<CloudTable>,
     collections: Arc<CloudTable>,
+    users: Arc<CloudTable>,
 }
 
 const URI_CHARACTERS: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
@@ -32,7 +33,8 @@ impl TableStorage {
         let client = TableClient::from_connection_string(&connection_string).expect("a valid connection string");
         let ideas_table = CloudTable::new(client.clone(), "ideas");
         let role_assignments_table = CloudTable::new(client.clone(), "roleassignments");
-        let collections_table = CloudTable::new(client, "collections");
+        let collections_table = CloudTable::new(client.clone(), "collections");
+        let users_table = CloudTable::new(client, "users");
 
         Self {
             started_at: chrono::Utc::now(),
@@ -189,6 +191,25 @@ impl From<TableEntity<TableStorageRoleAssignment>> for RoleAssignment {
             collection_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
             principal_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
             role: entity.payload.role.as_str().into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct TableStorageUser {
+    #[serde(rename="PrincipalId")]
+    pub principal_id: String,
+
+    #[serde(rename="FirstName")]
+    pub first_name: String,
+}
+
+impl From<TableEntity<TableStorageUser>> for User {
+    fn from(entity: TableEntity<TableStorageUser>) -> Self {
+        Self {
+            email_hash: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
+            principal_id: u128::from_str_radix(&entity.payload.principal_id, 16).unwrap_or_default(),
+            first_name: entity.payload.first_name.as_str().into(),
         }
     }
 }
@@ -359,3 +380,16 @@ actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_a
 }); 
 
 actor_handler!(RemoveRoleAssignment|msg: remove_single from role_assignments where pk=msg.collection_id, rk=msg.principal_id);
+
+actor_handler!(GetUser|msg => User: get_single from users(TableStorageUser) where pk=msg.email_hash, rk=msg.email_hash; not found = "The user you are looking for could not be found. Please check that you have entered their email address correctly and try again.");
+
+actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) TableEntity {
+    partition_key: format!("{:0>32x}", msg.email_hash),
+    row_key: format!("{:0>32x}", msg.email_hash),
+    payload: TableStorageUser {
+        principal_id: format!("{:0>32x}", msg.principal_id),
+        first_name: msg.first_name.clone(),
+    },
+    etag: None,
+    timestamp: None
+});

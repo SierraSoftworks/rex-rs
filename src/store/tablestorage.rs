@@ -1,4 +1,3 @@
-use super::*;
 use crate::models::*;
 use crate::api::APIError;
 use std::{fmt::Debug, sync::{Arc}};
@@ -42,6 +41,7 @@ impl TableStorage {
             ideas: Arc::new(ideas_table),
             collections: Arc::new(collections_table),
             role_assignments: Arc::new(role_assignments_table),
+            users: Arc::new(users_table),
         }
     }
 
@@ -154,7 +154,7 @@ impl From<TableEntity<TableStorageIdea>> for Idea {
     fn from(entity: TableEntity<TableStorageIdea>) -> Self {
         Self {
             id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
-            collection: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
+            collection_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
             name: entity.payload.name.clone(),
             tags: hashset!([entity.payload.tags.split(",").filter(|t| !t.is_empty())]),
             description: entity.payload.description.clone(),
@@ -172,8 +172,8 @@ struct TableStorageCollection {
 impl From<TableEntity<TableStorageCollection>> for Collection {
     fn from(entity: TableEntity<TableStorageCollection>) -> Self {
         Self {
-            id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
-            principal_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
+            collection_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
+            user_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
             name: entity.payload.name.clone(),
         }
     }
@@ -189,7 +189,7 @@ impl From<TableEntity<TableStorageRoleAssignment>> for RoleAssignment {
     fn from(entity: TableEntity<TableStorageRoleAssignment>) -> Self {
         Self {
             collection_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
-            principal_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
+            user_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
             role: entity.payload.role.as_str().into(),
         }
     }

@@ -212,7 +212,7 @@ impl Handler<StoreCollection> for MemoryStore {
 
         let collection = Collection {
             collection_id: msg.collection_id,
-            principal_id: msg.principal_id,
+            user_id: msg.principal_id,
             name: msg.name.clone(),
         };
         

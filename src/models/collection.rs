@@ -5,7 +5,7 @@ use super::new_id;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Collection {
     pub collection_id: u128,
-    pub principal_id: u128,
+    pub user_id: u128,
     pub name: String,
 }
 
@@ -31,7 +31,7 @@ impl From<Collection> for CollectionV3 {
     fn from(idea: Collection) -> Self {
         Self {
             id: Some(format!("{:0>32x}", idea.collection_id)),
-            user_id: Some(format!("{:0>32x}", idea.principal_id)),
+            user_id: Some(format!("{:0>32x}", idea.user_id)),
             name: idea.name.clone(),
         }
     }
@@ -40,7 +40,7 @@ impl From<Collection> for CollectionV3 {
 impl Into<Collection> for CollectionV3 {
     fn into(self) -> Collection {
         Collection {
-            principal_id: self.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            user_id: self.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
             collection_id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(|| new_id()),
             name: self.name.clone(),
         }

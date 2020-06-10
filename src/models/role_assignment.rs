@@ -1,6 +1,5 @@
 use actix::prelude::*;
 use crate::api::APIError;
-use super::new_id;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum Role {
@@ -40,7 +39,7 @@ impl Into<String> for Role {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RoleAssignment {
-    pub principal_id: u128,
+    pub user_id: u128,
     pub collection_id: u128,
     pub role: Role,
 }
@@ -71,7 +70,7 @@ json_responder!(RoleAssignmentV3 => (req, model) -> req.url_for("get_role_assign
 impl From<RoleAssignment> for RoleAssignmentV3 {
     fn from(idea: RoleAssignment) -> Self {
         Self {
-            user_id: Some(format!("{:0>32x}", idea.principal_id)),
+            user_id: Some(format!("{:0>32x}", idea.user_id)),
             collection_id: Some(format!("{:0>32x}", idea.collection_id)),
             role: idea.role.into(),
         }
@@ -81,14 +80,8 @@ impl From<RoleAssignment> for RoleAssignmentV3 {
 impl Into<RoleAssignment> for RoleAssignmentV3 {
     fn into(self) -> RoleAssignment {
         RoleAssignment {
-            principal_id: match &self.user_id {
-                Some(id) => u128::from_str_radix(&id, 16).unwrap_or_else(|_| new_id()),
-                None => new_id(),
-            },
-            collection_id: match &self.collection_id {
-                Some(id) => u128::from_str_radix(&id, 16).unwrap_or(0),
-                None => 0,
-            },
+            user_id: self.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            collection_id: self.collection_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
             role: self.role.as_str().into(),
         }
     }

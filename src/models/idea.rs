@@ -6,7 +6,7 @@ use super::new_id;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Idea {
     pub id: u128,
-    pub collection: u128,
+    pub collection_id: u128,
     pub name: String,
     pub description: String,
     pub tags: HashSet<String>,
@@ -46,11 +46,8 @@ impl From<Idea> for IdeaV1 {
 impl Into<Idea> for IdeaV1 {
     fn into(self) -> Idea {
         Idea {
-            id: match &self.id {
-                Some(id) => u128::from_str_radix(id, 16).unwrap_or_else(|_| new_id()),
-                None => new_id(),
-            },
-            collection: 0,
+            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            collection_id: 0,
             name: self.name.clone(),
             description: self.description.clone(),
             tags: HashSet::new(),
@@ -85,11 +82,8 @@ impl From<Idea> for IdeaV2 {
 impl Into<Idea> for IdeaV2 {
     fn into(self) -> Idea {
         Idea {
-            id: match &self.id {
-                Some(id) => u128::from_str_radix(id, 16).unwrap_or_else(|_| new_id()),
-                None => new_id(),
-            },
-            collection: 0,
+            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            collection_id: 0,
             name: self.name.clone(),
             description: self.description.clone(),
             tags: self.tags.clone().unwrap_or_else(|| HashSet::new()),
@@ -121,7 +115,7 @@ impl From<Idea> for IdeaV3 {
     fn from(idea: Idea) -> Self {
         Self {
             id: Some(format!("{:0>32x}", idea.id)),
-            collection: Some(format!("{:0>32x}", idea.collection)),
+            collection: Some(format!("{:0>32x}", idea.collection_id)),
             name: idea.name.clone(),
             description: idea.description.clone(),
             tags: if idea.tags.len() > 0 { Some(idea.tags.clone()) } else { None },
@@ -133,14 +127,8 @@ impl From<Idea> for IdeaV3 {
 impl Into<Idea> for IdeaV3 {
     fn into(self) -> Idea {
         Idea {
-            id: match &self.id {
-                Some(id) => u128::from_str_radix(id, 16).unwrap_or_else(|_| new_id()),
-                None => new_id(),
-            },
-            collection: match &self.collection {
-                Some(id) => u128::from_str_radix(id, 16).unwrap_or(0),
-                None => 0,
-            },
+            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(|| new_id()),
+            collection_id: self.collection.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
             name: self.name.clone(),
             description: self.description.clone(),
             tags: self.tags.clone().unwrap_or_else(|| HashSet::new()),

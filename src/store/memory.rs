@@ -138,7 +138,7 @@ impl Handler<StoreIdea> for MemoryStore {
 
         let idea = Idea {
             id: msg.id,
-            collection: msg.collection,
+            collection_id: msg.collection,
             name: msg.name.clone(),
             description: msg.description.clone(),
             tags: msg.tags.clone(),
@@ -211,14 +211,14 @@ impl Handler<StoreCollection> for MemoryStore {
             .map_err(|_| APIError::new(500, "Internal Server Error", "The service is currently unavailable, please try again later."))?;
 
         let collection = Collection {
-            id: msg.collection_id,
+            collection_id: msg.collection_id,
             principal_id: msg.principal_id,
             name: msg.name.clone(),
         };
         
         is.entry(msg.principal_id)
             .or_insert_with(|| BTreeMap::new())
-            .insert(collection.id, collection.clone());
+            .insert(collection.collection_id, collection.clone());
 
         Ok(collection)
     }
@@ -288,13 +288,13 @@ impl Handler<StoreRoleAssignment> for MemoryStore {
 
         let role_assignment = RoleAssignment {
             collection_id: msg.collection_id,
-            principal_id: msg.principal_id,
+            user_id: msg.principal_id,
             role: msg.role.clone(),
         };
         
         is.entry(msg.collection_id)
             .or_insert_with(|| BTreeMap::new())
-            .insert(role_assignment.principal_id, role_assignment.clone());
+            .insert(role_assignment.user_id, role_assignment.clone());
 
         Ok(role_assignment)
     }

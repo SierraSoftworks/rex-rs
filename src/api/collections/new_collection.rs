@@ -21,7 +21,7 @@ async fn new_collection_v3(
 
     state.store.send(StoreRoleAssignment {
         principal_id: uid,
-        collection_id: collection.id,
+        collection_id: collection.collection_id,
         role: Role::Owner
     }).await??;
     

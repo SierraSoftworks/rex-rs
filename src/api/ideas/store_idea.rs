@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn store_idea_v3() {
+    async fn store_idea_v3_new() {
         test_log_init();
 
         let content: IdeaV3 = test_request!(PUT "/api/v3/idea/00000000000000000000000000000001", IdeaV3 {
@@ -184,7 +184,39 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn store_collection_idea_v3() {
+    async fn store_idea_v3_existing() {
+        test_log_init();
+
+        test_state!(state = [
+            StoreIdea {
+                id: 1,
+                collection: 0,
+                name: "Test Idea".into(),
+                description: "This is a test idea".into(),
+                tags: hashset!("test"),
+                ..Default::default()
+            }
+        ]);
+
+        let content: IdeaV3 = test_request!(PUT "/api/v3/idea/00000000000000000000000000000001", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea with an updated description".to_string(),
+            tags: Some(hashset!("test")),
+            completed: Some(true)
+        } => OK with content | state = state);
+
+        assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
+        assert_eq!(content.collection, Some("00000000000000000000000000000000".into()));
+        assert_eq!(content.name, "Test Idea".to_string());
+        assert_eq!(content.description, "This is a test idea with an updated description".to_string());
+        assert_eq!(content.tags, Some(hashset!("test")));
+        assert_eq!(content.completed, Some(true));
+    }
+
+    #[actix_rt::test]
+    async fn store_collection_idea_v3_new() {
         test_log_init();
 
         test_state!(state = [
@@ -216,5 +248,48 @@ mod tests {
         assert_eq!(content.description, "This is a test idea".to_string());
         assert_eq!(content.tags, Some(hashset!("test")));
         assert_eq!(content.completed, Some(false));
+    }
+
+    #[actix_rt::test]
+    async fn store_collection_idea_v3_existing() {
+        test_log_init();
+
+        test_state!(state = [
+            StoreCollection {
+                collection_id: 7,
+                principal_id: 0,
+                name: "Test Collection".into(),
+                ..Default::default()
+            },
+            StoreRoleAssignment {
+                collection_id: 7,
+                principal_id: 0,
+                role: Role::Owner,
+            },
+            StoreIdea {
+                id: 1,
+                collection: 7,
+                name: "Test Idea".into(),
+                description: "This is a test idea".into(),
+                tags: hashset!("test"),
+                ..Default::default()
+            }
+        ]);
+
+        let content: IdeaV3 = test_request!(PUT "/api/v3/collection/00000000000000000000000000000007/idea/00000000000000000000000000000001", IdeaV3 {
+            id: None,
+            collection: None,
+            name: "Test Idea".to_string(),
+            description: "This is a test idea with an updated description".to_string(),
+            tags: Some(hashset!("test")),
+            completed: Some(true)
+        } => OK with content | state = state);
+
+        assert_eq!(content.id, Some("00000000000000000000000000000001".into()));
+        assert_eq!(content.collection, Some("00000000000000000000000000000007".into()));
+        assert_eq!(content.name, "Test Idea".to_string());
+        assert_eq!(content.description, "This is a test idea with an updated description".to_string());
+        assert_eq!(content.tags, Some(hashset!("test")));
+        assert_eq!(content.completed, Some(true));
     }
 }

@@ -1,3 +1,5 @@
+#[macro_use] mod macros;
+
 mod collection;
 mod idea;
 mod role_assignment;
@@ -11,6 +13,11 @@ pub use health::*;
 pub use idea::*;
 pub use role_assignment::*;
 pub use stateview::*;
+
+pub fn new_id() -> u128 {
+    let id = uuid::Uuid::new_v4();
+    u128::from_be_bytes(*id.as_bytes())
+}
 
 #[derive(Clone)]
 pub struct GlobalState {

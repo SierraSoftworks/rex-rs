@@ -1,12 +1,12 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError, ensure_user_collection};
 use crate::models::*;
-use super::{models, IdFilter, CollectionIdFilter};
+use super::{IdFilter, CollectionIdFilter};
 
 #[get("/api/v1/idea/{id}")]
 async fn get_idea_v1(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV1, APIError> {
+) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -19,7 +19,7 @@ async fn get_idea_v1(
 #[get("/api/v2/idea/{id}")]
 async fn get_idea_v2(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV2, APIError> {
+) -> Result<IdeaV2, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -32,7 +32,7 @@ async fn get_idea_v2(
 #[get("/api/v3/idea/{id}")]
 async fn get_idea_v3(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -47,7 +47,7 @@ async fn get_idea_v3(
 #[get("/api/v3/collection/{collection}/idea/{id}")]
 async fn get_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -64,7 +64,6 @@ async fn get_collection_idea_v3(
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

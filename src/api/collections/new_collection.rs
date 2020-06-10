@@ -1,14 +1,13 @@
 use actix_web::{post, web};
 use super::{AuthToken, APIError};
 use crate::models::*;
-use super::models;
 
 #[post("/api/v3/collections")]
 async fn new_collection_v3(
     (collection, state, token): (
-        web::Json<models::CollectionV3>,
+        web::Json<CollectionV3>,
         web::Data<GlobalState>, AuthToken),
-) -> Result<models::CollectionV3, APIError> {
+) -> Result<CollectionV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Write");
     
@@ -31,8 +30,8 @@ async fn new_collection_v3(
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::api::test::*;
+    use crate::models::*;
 
     #[actix_rt::test]
     async fn new_collection_v3() {

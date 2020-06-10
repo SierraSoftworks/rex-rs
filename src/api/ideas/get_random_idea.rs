@@ -1,10 +1,10 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError, ensure_user_collection};
 use crate::models::*;
-use super::{models, CollectionFilter, QueryFilter};
+use super::{CollectionFilter, QueryFilter};
 
 #[get("/api/v1/idea/random")]
-async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> Result<models::IdeaV1, APIError> {
+async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -16,7 +16,7 @@ async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> 
 #[get("/api/v2/idea/random")]
 async fn get_random_idea_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV2, APIError> {
+) -> Result<IdeaV2, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -28,7 +28,7 @@ async fn get_random_idea_v2(
 #[get("/api/v3/idea/random")]
 async fn get_random_idea_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -43,7 +43,7 @@ async fn get_random_idea_v3(
 #[get("/api/v3/collection/{collection}/idea/random")]
 async fn get_random_collection_idea_v3(
     (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
@@ -57,7 +57,6 @@ async fn get_random_collection_idea_v3(
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

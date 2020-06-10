@@ -1,12 +1,11 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError};
 use crate::models::*;
-use super::{models};
 
 #[get("/api/v3/collections")]
 async fn get_collections_v3(
     (state, token): (web::Data<GlobalState>, AuthToken),
-) -> Result<web::Json<Vec<models::CollectionV3>>, APIError> {
+) -> Result<web::Json<Vec<CollectionV3>>, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Read");
 
@@ -17,7 +16,6 @@ async fn get_collections_v3(
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

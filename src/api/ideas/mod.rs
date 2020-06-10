@@ -2,7 +2,6 @@
 use actix_web::web;
 use super::{AuthToken, APIError, ensure_user_collection};
 
-mod models;
 mod new_idea;
 mod get_ideas;
 mod get_idea;

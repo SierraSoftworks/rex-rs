@@ -1,8 +1,5 @@
-mod models;
-
 use actix_web::{get, web};
 use crate::models::*;
-use models::*;
 
 use super::APIError;
 
@@ -23,7 +20,6 @@ pub async fn health_v2(state: web::Data<GlobalState>) ->Result<HealthV2, APIErro
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::models::*;
     use crate::api::test::*;
     

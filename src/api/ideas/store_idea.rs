@@ -1,17 +1,17 @@
 use actix_web::{put, web};
 use super::{AuthToken, APIError, ensure_user_collection};
 use crate::models::*;
-use super::{models, IdFilter, CollectionIdFilter};
+use super::{IdFilter, CollectionIdFilter};
 
 #[put("/api/v1/idea/{id}")]
 async fn store_idea_v1(
     (info, new_idea, state, token): (
         web::Path<IdFilter>,
-        web::Json<models::IdeaV1>,
+        web::Json<IdeaV1>,
         web::Data<GlobalState>,
         AuthToken,
     ),
-) -> Result<models::IdeaV1, APIError> {
+) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -35,11 +35,11 @@ async fn store_idea_v1(
 async fn store_idea_v2(
     (info, new_idea, state, token): (
         web::Path<IdFilter>,
-        web::Json<models::IdeaV2>,
+        web::Json<IdeaV2>,
         web::Data<GlobalState>,
         AuthToken,
     ),
-) -> Result<models::IdeaV2, APIError> {
+) -> Result<IdeaV2, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -63,11 +63,11 @@ async fn store_idea_v2(
 async fn store_idea_v3(
     (info, new_idea, state, token): (
         web::Path<IdFilter>,
-        web::Json<models::IdeaV3>,
+        web::Json<IdeaV3>,
         web::Data<GlobalState>,
         AuthToken,
     ),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -91,11 +91,11 @@ async fn store_idea_v3(
 async fn store_collection_idea_v3(
     (info, new_idea, state, token): (
         web::Path<CollectionIdFilter>,
-        web::Json<models::IdeaV3>,
+        web::Json<IdeaV3>,
         web::Data<GlobalState>,
         AuthToken,
     ),
-) -> Result<models::IdeaV3, APIError> {
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -125,7 +125,6 @@ async fn store_collection_idea_v3(
 
 #[cfg(test)]
 mod tests {
-    use crate::api::ideas::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

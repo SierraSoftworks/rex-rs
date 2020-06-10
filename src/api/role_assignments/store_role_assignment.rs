@@ -1,14 +1,14 @@
 use actix_web::{put, web};
 use super::{AuthToken, APIError};
 use crate::models::*;
-use super::{models, CollectionUserFilter};
+use super::CollectionUserFilter;
 
 #[put("/api/v3/collection/{collection}/user/{user}")]
 async fn store_role_assignment_v3(
     (info, collection, state, token): (web::Path<CollectionUserFilter>,
-        web::Json<models::RoleAssignmentV3>,
+        web::Json<RoleAssignmentV3>,
         web::Data<GlobalState>, AuthToken),
-) -> Result<models::RoleAssignmentV3, APIError> {
+) -> Result<RoleAssignmentV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "RoleAssignments.Write");
     
@@ -31,7 +31,6 @@ async fn store_role_assignment_v3(
 
 #[cfg(test)]
 mod tests {
-    use super::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

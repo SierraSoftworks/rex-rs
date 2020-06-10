@@ -1,7 +1,7 @@
 use actix_web::{delete, web};
 use super::{AuthToken, APIError};
 use crate::models::*;
-use super::{CollectionUserFilter};
+use super::CollectionUserFilter;
 
 #[delete("/api/v3/collection/{collection}/user/{user}")]
 async fn remove_role_assignment_v3(

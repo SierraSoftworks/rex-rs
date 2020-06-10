@@ -1,12 +1,12 @@
 use actix_web::{post, web};
 use super::{AuthToken, APIError, ensure_user_collection};
 use crate::models::*;
-use super::{models, CollectionFilter};
+use super::CollectionFilter;
 
 #[post("/api/v1/ideas")]
 async fn new_idea_v1(
-    (new_idea, state, token): (web::Json<models::IdeaV1>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV1, APIError> {
+    (new_idea, state, token): (web::Json<IdeaV1>, web::Data<GlobalState>, AuthToken),
+) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -27,8 +27,8 @@ async fn new_idea_v1(
 
 #[post("/api/v2/ideas")]
 async fn new_idea_v2(
-    (new_idea, state, token): (web::Json<models::IdeaV2>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV2, APIError> {
+    (new_idea, state, token): (web::Json<IdeaV2>, web::Data<GlobalState>, AuthToken),
+) -> Result<IdeaV2, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -49,8 +49,8 @@ async fn new_idea_v2(
 
 #[post("/api/v3/ideas")]
 async fn new_idea_v3(
-    (new_idea, state, token): (web::Json<models::IdeaV3>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+    (new_idea, state, token): (web::Json<IdeaV3>, web::Data<GlobalState>, AuthToken),
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -71,8 +71,8 @@ async fn new_idea_v3(
 
 #[post("/api/v3/collection/{collection}/ideas")]
 async fn new_collection_idea_v3(
-    (new_idea, info, state, token): (web::Json<models::IdeaV3>, web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<models::IdeaV3, APIError> {
+    (new_idea, info, state, token): (web::Json<IdeaV3>, web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
+) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -103,7 +103,6 @@ async fn new_collection_idea_v3(
 
 #[cfg(test)]
 mod tests {
-    use crate::api::ideas::models::*;
     use crate::models::*;
     use crate::api::test::*;
 

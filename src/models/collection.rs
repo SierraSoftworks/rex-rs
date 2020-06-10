@@ -1,5 +1,6 @@
 use actix::prelude::*;
 use crate::api::APIError;
+use super::new_id;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Collection {
@@ -8,42 +9,46 @@ pub struct Collection {
     pub name: String,
 }
 
-#[derive(Debug, Default)]
-pub struct GetCollection {
-    pub id: u128,
-    pub principal_id: u128,
-}
+actor_message!(GetCollection(id: u128, principal_id: u128) -> Collection);
 
-impl Message for GetCollection {
-    type Result = Result<Collection, APIError>;
-}
+actor_message!(GetCollections(principal_id: u128) -> Vec<Collection>);
 
-#[derive(Debug, Default)]
-pub struct GetCollections {
-    pub principal_id: u128,
-}
+actor_message!(StoreCollection(collection_id: u128, principal_id: u128, name: String) -> Collection);
 
-impl Message for GetCollections {
-    type Result = Result<Vec<Collection>, APIError>;
-}
+actor_message!(RemoveCollection(id: u128, principal_id: u128) -> ());
 
-#[derive(Debug, Default)]
-pub struct StoreCollection {
-    pub collection_id: u128,
-    pub principal_id: u128,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CollectionV3 {
+    pub id: Option<String>,
+    #[serde(rename = "userId")]
+    pub user_id: Option<String>,
     pub name: String,
 }
 
-impl Message for StoreCollection {
-    type Result = Result<Collection, APIError>;
+json_responder!(CollectionV3 => (req, model) -> req.url_for("get_collection_v3", vec![model.id.clone().expect("a collection id")]));
+
+impl From<Collection> for CollectionV3 {
+    fn from(idea: Collection) -> Self {
+        Self {
+            id: Some(format!("{:0>32x}", idea.id)),
+            user_id: Some(format!("{:0>32x}", idea.principal_id)),
+            name: idea.name.clone(),
+        }
+    }
 }
 
-#[derive(Debug, Default)]
-pub struct RemoveCollection {
-    pub id: u128,
-    pub principal_id: u128,
-}
-
-impl Message for RemoveCollection {
-    type Result = Result<(), APIError>;
+impl Into<Collection> for CollectionV3 {
+    fn into(self) -> Collection {
+        Collection {
+            principal_id: match &self.user_id {
+                Some(id) => u128::from_str_radix(&id, 16).unwrap_or_else(|_| new_id()),
+                None => new_id(),
+            },
+            id: match &self.id {
+                Some(id) => u128::from_str_radix(&id, 16).unwrap_or(0),
+                None => 0,
+            },
+            name: self.name.clone(),
+        }
+    }
 }

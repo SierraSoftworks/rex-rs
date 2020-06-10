@@ -1,7 +1,7 @@
 use actix_web::{delete, web};
 use super::{AuthToken, APIError};
 use crate::models::*;
-use super::{CollectionFilter};
+use super::CollectionFilter;
 
 #[delete("/api/v3/collection/{collection}")]
 async fn remove_collection_v3(

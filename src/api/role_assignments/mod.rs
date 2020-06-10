@@ -6,8 +6,6 @@ mod remove_role_assignment;
 use actix_web::web;
 use super::{AuthToken, APIError};
 
-mod models;
-
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg 
         .service(get_role_assignment::get_role_assignment_v3)

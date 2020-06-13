@@ -15,6 +15,10 @@ async fn store_role_assignment_v3(
     let cid = parse_uuid!(info.collection, collection ID);
     let uid = parse_uuid!(token.oid, auth token oid);
     let tuid = parse_uuid!(info.user, user ID);
+
+    if tuid == uid {
+        return Err(APIError::new(400, "Bad Request", "You cannot modify your own role assignment. Please request that another collection owner performs this task for you."))
+    }
     
     let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
     match role.role {
@@ -55,5 +59,24 @@ mod tests {
         assert_eq!(content.collection_id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.user_id, Some("00000000000000000000000000000002".into()));
         assert_eq!(content.role, "Owner".to_string());
+    }
+
+    #[actix_rt::test]
+    async fn store_role_assignment_v3_self() {
+        test_log_init();
+
+        test_state!(state = [
+            StoreRoleAssignment {
+                collection_id: 1,
+                principal_id: 0,
+                role: Role::Owner,
+            }
+        ]);
+
+        test_request!(PUT "/api/v3/collection/00000000000000000000000000000001/user/00000000000000000000000000000000", RoleAssignmentV3{
+            collection_id: None,
+            user_id: None,
+            role: "Viewer".into(),
+        } => BAD_REQUEST | state = state);
     }
 }

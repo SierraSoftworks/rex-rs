@@ -15,14 +15,36 @@ async fn store_role_assignment_v3(
     let cid = parse_uuid!(info.collection, collection ID);
     let uid = parse_uuid!(token.oid, auth token oid);
     let tuid = parse_uuid!(info.user, user ID);
+    
+    let original_collection = state.store.send(GetCollection {
+        id: cid,
+        principal_id: uid
+    }).await??;
 
     if tuid == uid {
         return Err(APIError::new(400, "Bad Request", "You cannot modify your own role assignment. Please request that another collection owner performs this task for you."))
     }
-    
+
     let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
     match role.role {
         Role::Owner => {
+            match state.store.send(GetCollection {
+                principal_id: tuid,
+                id: cid
+            }).await? {
+                Ok(_) => {},
+                Err(err) if err.code == 404 => {
+                    state.store.send(StoreCollection {
+                        principal_id: tuid,
+                        collection_id: cid,
+                        name: original_collection.name
+                    }).await??;
+                },
+                Err(err) => {
+                    return Err(err)
+                }
+            }
+
             state.store.send(StoreRoleAssignment {
                 principal_id: tuid,
                 collection_id: cid,
@@ -43,6 +65,11 @@ mod tests {
         test_log_init();
 
         test_state!(state = [
+            StoreCollection {
+                collection_id: 1,
+                principal_id: 0,
+                name: "Test Collection".into()
+            },
             StoreRoleAssignment {
                 collection_id: 1,
                 principal_id: 0,
@@ -59,6 +86,12 @@ mod tests {
         assert_eq!(content.collection_id, Some("00000000000000000000000000000001".into()));
         assert_eq!(content.user_id, Some("00000000000000000000000000000002".into()));
         assert_eq!(content.role, "Owner".to_string());
+
+        let collection = state.store.send(GetCollection {
+            id: 1,
+            principal_id: 2
+        }).await.expect("the actor should run").expect("the user should have the new collection");
+        assert_eq!(collection.name, "Test Collection");
     }
 
     #[actix_rt::test]
@@ -66,6 +99,11 @@ mod tests {
         test_log_init();
 
         test_state!(state = [
+            StoreCollection {
+                collection_id: 1,
+                principal_id: 0,
+                name: "Test Collection".into()
+            },
             StoreRoleAssignment {
                 collection_id: 1,
                 principal_id: 0,

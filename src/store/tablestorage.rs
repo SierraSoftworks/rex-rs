@@ -334,7 +334,7 @@ actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) Ta
     payload: TableStorageIdea {
         name: msg.name.clone(),
         description: msg.description.clone(),
-        tags: msg.tags.iter().fold("".to_string(), |j, i| j + i.as_str()),
+        tags: msg.tags.iter().fold("".to_string(), |j, i| j + "," + i.as_str()),
         completed: msg.completed,
     },
     etag: None,

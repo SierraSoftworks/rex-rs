@@ -26,13 +26,9 @@ async fn main() -> std::io::Result<()> {
         sentry::ClientOptions {
             release: release_name!(),
             ..Default::default()
-        },
+        }
+        .add_integration(sentry::integrations::log::LogIntegration::default()),
     ));
-
-    if raven.is_enabled() {
-        sentry::integrations::panic::register_panic_handler();
-        sentry::integrations::env_logger::init(None, Default::default());
-    }
 
     let state = models::GlobalState::new();
     let metrics = PrometheusMetrics::new_with_registry(prometheus::default_registry().clone(), "rex", Some("/api/v1/metrics"), None).unwrap();

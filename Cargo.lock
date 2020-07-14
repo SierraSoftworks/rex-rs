@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "azure_sdk_core"
-version = "0.43.3"
+version = "0.43.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "RustyXML 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -420,7 +420,7 @@ name = "azure_sdk_storage_core"
 version = "0.43.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "azure_sdk_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azure_sdk_core 0.43.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -447,7 +447,7 @@ name = "azure_sdk_storage_table"
 version = "0.40.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "azure_sdk_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azure_sdk_core 0.43.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "azure_sdk_storage_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2119,7 +2119,7 @@ dependencies = [
  "actix-web-httpauth 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web-prom 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "async-trait 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "azure_sdk_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "azure_sdk_core 0.43.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "azure_sdk_storage_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "azure_sdk_storage_table 0.40.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "biscuit 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3313,7 +3313,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum autocfg 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 "checksum autocfg 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f8aac770f1885fd7e387acedd76065302551364496e46b3dd00860b2f8359b9d"
 "checksum awc 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d7601d4d1d7ef2335d6597a41b5fe069f6ab799b85f53565ab390e7b7065aac5"
-"checksum azure_sdk_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)" = "22bd912108bf1708b26c8b0b5a214dc22c61a142f44d7d2c9172df3a412c3cfa"
+"checksum azure_sdk_core 0.43.6 (registry+https://github.com/rust-lang/crates.io-index)" = "f321bff62b7a7dd4cb350a61889bf85a9c3cd5d8bffc102ff0ebcfdc83dcae48"
 "checksum azure_sdk_storage_core 0.43.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d7649196fa43d671e80976ae4280d746005c8fd7d95a1eb9d29b6b455f0739f4"
 "checksum azure_sdk_storage_table 0.40.5 (registry+https://github.com/rust-lang/crates.io-index)" = "8a3d52939e48688541cb17e7b23b1e21838bcf14633634f2113738ef26def8d3"
 "checksum backtrace 0.3.44 (registry+https://github.com/rust-lang/crates.io-index)" = "e4036b9bf40f3cf16aba72a3d65e8a520fc4bafcdc7079aea8f848c58c5b5536"

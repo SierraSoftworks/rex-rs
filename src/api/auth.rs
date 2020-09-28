@@ -1,4 +1,4 @@
-use actix_web::{dev::Payload, HttpRequest, FromRequest};
+use actix_web::{FromRequest, HttpRequest, dev::Payload};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use biscuit::{CompactJson};
 use oidc::token::Jws;

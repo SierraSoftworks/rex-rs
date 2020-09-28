@@ -10,7 +10,7 @@ default = []
 table_storage = []
 
 [dependencies]
-actix = "0.9"
+actix = "0.10"
 actix-cors = "0.2"
 actix-http = "1.0"
 actix-rt = "1.1"

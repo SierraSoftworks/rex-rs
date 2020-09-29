@@ -68,9 +68,9 @@ dependencies = [
 
 [[package]]
 name = "actix-cors"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48de0a29c99c8a5068c1c5492f6e477ef1843cc5e3c53daa0191562b71950632"
+checksum = "d88ea83af46935098feec2e19a28c919b54eb3cbf0e239b330298e2e69d4b76b"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -456,9 +456,9 @@ dependencies = [
 
 [[package]]
 name = "azure_sdk_storage_core"
-version = "0.43.3"
+version = "0.44.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7649196fa43d671e80976ae4280d746005c8fd7d95a1eb9d29b6b455f0739f4"
+checksum = "cb629e0baf7591591f3279211f081cc60db1a765e69379980a1e2b4c61fc27c9"
 dependencies = [
  "azure_sdk_core",
  "base64 0.12.3",
@@ -484,9 +484,9 @@ dependencies = [
 
 [[package]]
 name = "azure_sdk_storage_table"
-version = "0.40.5"
+version = "0.41.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a3d52939e48688541cb17e7b23b1e21838bcf14633634f2113738ef26def8d3"
+checksum = "c21524dfa8bb1d57bf6357288292aeff44e1f826e06672458536216d6ea8ae75"
 dependencies = [
  "azure_sdk_core",
  "azure_sdk_storage_core",

@@ -3,6 +3,7 @@ use crate::api::APIError;
 use std::{fmt::Debug, sync::Arc, convert::TryInto};
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
+use azure_sdk_storage_core::key_client::KeyClient;
 use azure_sdk_storage_table::{CloudTable, Continuation, TableClient, TableEntity};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -31,13 +32,15 @@ lazy_static! {
         ).unwrap();
 }
 
+type TableReference = Arc<CloudTable<KeyClient>>;
+
 pub struct TableStorage {
     started_at: chrono::DateTime<chrono::Utc>,
 
-    ideas: Arc<CloudTable>,
-    role_assignments: Arc<CloudTable>,
-    collections: Arc<CloudTable>,
-    users: Arc<CloudTable>,
+    ideas: TableReference,
+    role_assignments: TableReference,
+    collections: TableReference,
+    users: TableReference,
 }
 
 const URI_CHARACTERS: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
@@ -62,14 +65,14 @@ impl TableStorage {
         Self {
             started_at: chrono::Utc::now(),
 
-            ideas: Arc::new(ideas_table),
-            collections: Arc::new(collections_table),
-            role_assignments: Arc::new(role_assignments_table),
-            users: Arc::new(users_table),
+            ideas: TableReference::new(ideas_table),
+            collections: TableReference::new(collections_table),
+            role_assignments: TableReference::new(role_assignments_table),
+            users: TableReference::new(users_table),
         }
     }
 
-    async fn get_single<ST, T>(table: Arc<CloudTable>, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
+    async fn get_single<ST, T>(table: TableReference, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: DeserializeOwned + Clone,
         T: From<TableEntity<ST>> {
@@ -89,7 +92,7 @@ impl TableStorage {
             .map(|r| r.into())
     }
 
-    async fn get_all<ST, T, P>(table: Arc<CloudTable>, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
+    async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
         P: Fn(&TableEntity<ST>) -> bool,
@@ -110,7 +113,7 @@ impl TableStorage {
         Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone().into()).collect())
     }
 
-    async fn get_random<ST, T, P>(table: Arc<CloudTable>, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
+    async fn get_random<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
         P: Fn(&TableEntity<ST>) -> bool,
@@ -131,7 +134,7 @@ impl TableStorage {
         entries.iter().filter(|&e| filter(e)).choose(&mut rand::thread_rng()).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
-    async fn store_single<ST, T>(table: Arc<CloudTable>, type_name: &str, item: TableEntity<ST>) -> Result<T, APIError> 
+    async fn store_single<ST, T>(table: TableReference, type_name: &str, item: TableEntity<ST>) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
         T: From<TableEntity<ST>> {
@@ -144,7 +147,7 @@ impl TableStorage {
         Ok(result.into())
     }
 
-    async fn remove_single(table: Arc<CloudTable>, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
+    async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
         STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "remove_single"]).inc();
         table.delete(
             &format!("{:0>32x}", partition_key), 

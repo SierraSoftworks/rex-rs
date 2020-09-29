@@ -21,7 +21,7 @@ actix-web-prom = "0.5"
 async-trait = "0.1.31"
 azure_sdk_core = "0.43.6"
 azure_sdk_storage_core = "0.43.3"
-azure_sdk_storage_table = "0.40.5"
+azure_sdk_storage_table = "0.41.3"
 biscuit = "0.3"
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.7"

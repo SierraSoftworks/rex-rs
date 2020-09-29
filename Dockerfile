@@ -1,6 +1,8 @@
-FROM rust:1
+FROM rust:1-buster
 
 WORKDIR /src
+
+RUN apt-get update && apt-get install -y libssl1.1
 
 # Pre-build all dependencies
 RUN USER=root cargo init --bin --name rex

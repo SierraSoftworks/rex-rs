@@ -1,11 +1,35 @@
 use crate::models::*;
 use crate::api::APIError;
-use std::{fmt::Debug, sync::{Arc}};
+use std::{fmt::Debug, sync::Arc, convert::TryInto};
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
 use azure_sdk_storage_table::{CloudTable, Continuation, TableClient, TableEntity};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use prometheus;
+
+lazy_static! {
+    static ref STORAGE_READS_COUNTER: prometheus::IntCounterVec =
+        prometheus::register_int_counter_vec!(
+            "rex_storage_reads_total",
+            "The number of entities read from storage, by type.",
+            &["type"]
+        ).unwrap();
+
+    static ref STORAGE_WRITES_COUNTER: prometheus::IntCounterVec =
+        prometheus::register_int_counter_vec!(
+            "rex_storage_writes_total",
+            "The number of entities written to storage, by type.",
+            &["type"]
+        ).unwrap();
+
+    static ref STORAGE_OPERATIONS_COUNTER: prometheus::IntCounterVec =
+        register_int_counter_vec!(
+            "rex_storage_operations_total",
+            "The number of storage operations which have been executed, by type.",
+            &["type", "operation"]
+        ).unwrap();
+}
 
 pub struct TableStorage {
     started_at: chrono::DateTime<chrono::Utc>,
@@ -45,71 +69,89 @@ impl TableStorage {
         }
     }
 
-    async fn get_single<ST, T>(table: Arc<CloudTable>, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
+    async fn get_single<ST, T>(table: Arc<CloudTable>, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: DeserializeOwned + Clone,
         T: From<TableEntity<ST>> {
+
+        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_single"]).inc();
+
         let result = table.get::<ST>(
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
             None
         ).await?;
 
+        STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc();
+
         result
             .ok_or(not_found_err)
             .map(|r| r.into())
     }
 
-    async fn get_all<ST, T, P>(table: Arc<CloudTable>, query: String, filter: P) -> Result<Vec<T>, APIError>
+    async fn get_all<ST, T, P>(table: Arc<CloudTable>, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
         P: Fn(&TableEntity<ST>) -> bool,
         T: From<TableEntity<ST>>
     {
+        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_all"]).inc();
+
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
         let safe_query = TableStorage::escape_query(query);
 
         while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
+            STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc_by(results.len().try_into().unwrap_or(1));
             entries.append(&mut results);
         }
 
         Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone().into()).collect())
     }
 
-    async fn get_random<ST, T, P>(table: Arc<CloudTable>, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
+    async fn get_random<ST, T, P>(table: Arc<CloudTable>, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
         P: Fn(&TableEntity<ST>) -> bool,
         T: From<TableEntity<ST>>
     {
+        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_random"]).inc();
+
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
         let safe_query = TableStorage::escape_query(query);
 
         while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
+            STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc_by(results.len().try_into().unwrap_or(1));
             entries.append(&mut results);
         }
 
         entries.iter().filter(|&e| filter(e)).choose(&mut rand::thread_rng()).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
-    async fn store_single<ST, T>(table: Arc<CloudTable>, item: TableEntity<ST>) -> Result<T, APIError> 
+    async fn store_single<ST, T>(table: Arc<CloudTable>, type_name: &str, item: TableEntity<ST>) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
         T: From<TableEntity<ST>> {
+        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "store_single"]).inc();
+        
         let result = table.insert_or_update_entity(item).await?;
+        
+        STORAGE_WRITES_COUNTER.with_label_values(&[type_name]).inc();
 
         Ok(result.into())
     }
 
-    async fn remove_single(table: Arc<CloudTable>, partition_key: u128, row_key: u128) -> Result<(), APIError> {
+    async fn remove_single(table: Arc<CloudTable>, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
+        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "remove_single"]).inc();
         table.delete(
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
             None).await?;
+        
+        STORAGE_WRITES_COUNTER.with_label_values(&[type_name]).inc();
 
         Ok(())
     }
@@ -228,10 +270,11 @@ macro_rules! actor_handler {
             let table = self.$table.clone();
             let work = TableStorage::get_single::<$st, $res>(
                 table,
+                "$table",
                 $pk,
                 $rk,
                 APIError::new(404, "Not Found", $err));
-            Box::new(fut::wrap_future(work))
+            Box::pin(fut::wrap_future(work))
         });
     };
 
@@ -244,11 +287,12 @@ macro_rules! actor_handler {
 
             let work = TableStorage::get_all::<$st, $res, _>(
                 table,
+                "$table",
                 query,
                 move |$fid| $filter
             );
 
-            Box::new(fut::wrap_future(work))
+            Box::pin(fut::wrap_future(work))
         });
     };
 
@@ -261,12 +305,13 @@ macro_rules! actor_handler {
 
             let work = TableStorage::get_random::<$st, $res, _>(
                 table,
+                "$table",
                 query,
                 move |$fid| $filter,
                 APIError::new(404, "Not Found", $err)
             );
 
-            Box::new(fut::wrap_future(work))
+            Box::pin(fut::wrap_future(work))
         });
     };
 
@@ -275,9 +320,10 @@ macro_rules! actor_handler {
             let table = self.$table.clone();
             let work = TableStorage::remove_single(
                 table,
+                "$table",
                 $pk,
                 $rk);
-            Box::new(fut::wrap_future(work))
+            Box::pin(fut::wrap_future(work))
         });
     };
     
@@ -287,10 +333,11 @@ macro_rules! actor_handler {
             let item = $item;
             let work = TableStorage::store_single::<$st, $res>(
                 table,
+                "$table",
                 item
             );
 
-            Box::new(fut::wrap_future(work))
+            Box::pin(fut::wrap_future(work))
         });
     };
 }

@@ -21,7 +21,7 @@ use actix_web_prom::PrometheusMetrics;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    let raven = sentry::init((
+    let _raven = sentry::init((
         "https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519",
         sentry::ClientOptions {
             release: release_name!(),

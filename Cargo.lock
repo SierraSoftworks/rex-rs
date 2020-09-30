@@ -456,9 +456,9 @@ dependencies = [
 
 [[package]]
 name = "azure_sdk_storage_core"
-version = "0.44.3"
+version = "0.44.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb629e0baf7591591f3279211f081cc60db1a765e69379980a1e2b4c61fc27c9"
+checksum = "93730b33cf379bacf5e56b5765f98a1f1ee27b2d530a2f8f027f4e806c53b4fd"
 dependencies = [
  "azure_sdk_core",
  "base64 0.12.3",

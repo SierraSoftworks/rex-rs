@@ -431,9 +431,9 @@ dependencies = [
 
 [[package]]
 name = "azure_sdk_core"
-version = "0.43.6"
+version = "0.43.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f321bff62b7a7dd4cb350a61889bf85a9c3cd5d8bffc102ff0ebcfdc83dcae48"
+checksum = "57d8dd27eee0644b886305eca21c48425403a8bb87ec57f52f516093504fa3a5"
 dependencies = [
  "RustyXML",
  "base64 0.12.3",

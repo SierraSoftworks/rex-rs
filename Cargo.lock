@@ -68,14 +68,16 @@ dependencies = [
 
 [[package]]
 name = "actix-cors"
-version = "0.4.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d88ea83af46935098feec2e19a28c919b54eb3cbf0e239b330298e2e69d4b76b"
+checksum = "778c96f5953144b8986fafee72b3809642c1b5050a2552a97dc02247f00b4155"
 dependencies = [
- "actix-service",
  "actix-web",
  "derive_more",
  "futures-util",
+ "log",
+ "once_cell",
+ "tinyvec 1.0.1",
 ]
 
 [[package]]

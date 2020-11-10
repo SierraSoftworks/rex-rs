@@ -576,6 +576,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "biscuit"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "359ca61641a4d4afcb8a1eefa59d17e84808fd9dc10dcc753a7b8def542bbb8c"
+dependencies = [
+ "chrono",
+ "data-encoding",
+ "num",
+ "once_cell",
+ "ring",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url 2.1.1",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1883,7 +1900,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "990e550a72ff89b7978318549add7470b18c1f2cf4f9526466269487fe0b2b13"
 dependencies = [
  "base64 0.10.1",
- "biscuit",
+ "biscuit 0.3.1",
  "chrono",
  "failure",
  "inth-oauth2",
@@ -2451,7 +2468,7 @@ dependencies = [
  "azure_sdk_core",
  "azure_sdk_storage_core",
  "azure_sdk_storage_table",
- "biscuit",
+ "biscuit 0.4.2",
  "chrono",
  "env_logger",
  "futures 0.3.8",

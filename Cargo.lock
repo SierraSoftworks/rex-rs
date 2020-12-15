@@ -60,7 +60,7 @@ dependencies = [
  "derive_more",
  "either",
  "futures-util",
- "http 0.2.1",
+ "http 0.2.2",
  "log",
  "trust-dns-proto",
  "trust-dns-resolver",
@@ -105,7 +105,7 @@ dependencies = [
  "futures-util",
  "fxhash",
  "h2 0.2.6",
- "http 0.2.1",
+ "http 0.2.2",
  "httparse",
  "indexmap",
  "itoa",
@@ -142,7 +142,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd1f7dbda1645bf7da33554db60891755f6c01c1b2169e2f4c492098d30c235"
 dependencies = [
  "bytestring",
- "http 0.2.1",
+ "http 0.2.2",
  "log",
  "regex",
  "serde",
@@ -441,7 +441,7 @@ dependencies = [
  "chrono",
  "failure",
  "futures 0.3.8",
- "http 0.2.1",
+ "http 0.2.2",
  "hyper 0.13.8",
  "hyper-rustls",
  "log",
@@ -465,7 +465,7 @@ dependencies = [
  "bytes 0.5.6",
  "chrono",
  "futures 0.3.8",
- "http 0.2.1",
+ "http 0.2.2",
  "hyper 0.13.8",
  "hyper-rustls",
  "log",
@@ -492,7 +492,7 @@ dependencies = [
  "azure_sdk_storage_core",
  "chrono",
  "futures 0.3.8",
- "http 0.2.1",
+ "http 0.2.2",
  "hyper 0.13.8",
  "log",
  "quick-error",
@@ -1206,7 +1206,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http 0.2.1",
+ "http 0.2.2",
  "indexmap",
  "slab",
  "tokio 0.2.22",
@@ -1262,9 +1262,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28d569972648b2c512421b5f2a405ad6ac9666547189d0c5477a3f200f3e02f9"
+checksum = "84129d298a6d57d246960ff8eb831ca4af3f96d29e2e28848dae275408658e26"
 dependencies = [
  "bytes 0.5.6",
  "fnv",
@@ -1290,7 +1290,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13d5ff830006f7646652e057693569bfe0d51760c0085a071769d142a205111b"
 dependencies = [
  "bytes 0.5.6",
- "http 0.2.1",
+ "http 0.2.2",
 ]
 
 [[package]]
@@ -1352,7 +1352,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2 0.2.6",
- "http 0.2.1",
+ "http 0.2.2",
  "http-body 0.3.1",
  "httparse",
  "httpdate",
@@ -2406,7 +2406,7 @@ dependencies = [
  "encoding_rs",
  "futures-core",
  "futures-util",
- "http 0.2.1",
+ "http 0.2.2",
  "http-body 0.3.1",
  "hyper 0.13.8",
  "hyper-tls 0.4.3",
@@ -2461,7 +2461,7 @@ dependencies = [
  "chrono",
  "env_logger",
  "futures 0.3.8",
- "http 0.2.1",
+ "http 0.2.2",
  "lazy_static",
  "log",
  "md5",

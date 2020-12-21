@@ -2520,7 +2520,7 @@ dependencies = [
  "percent-encoding 2.1.0",
  "prometheus",
  "rand 0.8.0",
- "reqwest 0.9.24",
+ "reqwest 0.10.8",
  "sentry",
  "serde",
  "serde_json",

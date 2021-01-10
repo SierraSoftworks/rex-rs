@@ -1,6 +1,6 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{api::ensure_user_collection, models::*};
 
 #[get("/api/v3/collections")]
 async fn get_collections_v3(
@@ -10,6 +10,8 @@ async fn get_collections_v3(
     require_scope!(token, "Collections.Read");
 
     let uid = parse_uuid!(token.oid(), auth token oid);
+
+    ensure_user_collection(&state, &token).await?;
         
     state.store.send(GetCollections { principal_id: uid }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }

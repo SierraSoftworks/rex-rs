@@ -13,6 +13,9 @@
         "route": "{*route}",
         "methods": ["GET"]
       },
+      "responseOverrides": {
+        "response.statusCode": "200"
+      },
       "backendUri": "%INTERFACE_BACKEND_URI%/{route}"
     }
   }

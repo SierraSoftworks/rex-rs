@@ -19,6 +19,10 @@ use actix_cors::Cors;
 use actix_web::{middleware, App, HttpServer};
 use actix_web_prom::PrometheusMetrics;
 
+fn get_listening_port() -> u16 {
+    std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT").map(|v| v.parse().unwrap_or(8000)).unwrap_or(8000)
+}
+
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     let _raven = sentry::init((
@@ -41,7 +45,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::new().send_wildcard().finish())
             .configure(api::configure)
     })
-        .bind("0.0.0.0:8000")?
+        .bind(format!("0.0.0.0:{}", get_listening_port()))?
         .run()
         .await
         .map_err(|err| {

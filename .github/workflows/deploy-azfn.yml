@@ -1,0 +1,82 @@
+name: Deploy Azure Function
+on:
+  push:
+    branches: [ main, feature/azure-function ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  HANDLER_NAME: rex
+  AZURE_FUNCTIONAPP_NAME: rex-sierrasoftworks
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get Rust Stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  build:
+    needs: test
+    if: github.event_name == 'push'
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Build Handler
+        run:
+          docker run --rm -t -v $PWD:/volume clux/muslrust cargo build --release
+
+      - run: cp target/x86_64-unknown-linux-musl/release/$HANDLER_NAME ./handler
+
+      - name: Save handler artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: handler
+          path: handler
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push'
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Fetch handler artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: handler
+
+      - run: mv ./handler ./$HANDLER_NAME
+      
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Run Azure Functions Action'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          respect-funcignore: 'true'
+      

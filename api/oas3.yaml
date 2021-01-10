@@ -1,0 +1,2003 @@
+openapi: 3.0.0
+info:
+  title: Rex
+  description: Rex is a tool for keeping track of ideas for things to do and
+    providing, on demand, a random one.
+  license:
+    name: MIT
+    url: https://sierrasoftworks.com/licenses/MIT
+  version: 3.0.
+
+servers:
+  - url: https://rex.sierrasoftworks.com
+  - url: http://localhost:8000
+
+tags:
+  - name: health
+    description: APIs used to determine the health of a Rex instance.
+  - name: ideas
+    description: APIs used to manage and retrieve ideas.
+  - name: collections
+    description: APIs used to manage collections of ideas.
+  - name: diagnostics
+    description: APIs used to triage and diagnose problems with the service.
+paths:
+  /api/v1/auth:
+    get:
+      tags:
+        - diagnostics
+
+      summary: Get Authentication Claims (v1)
+      description: Gets the claims that the submitted authorization token offers.
+      operationId: auth_info_v1
+      responses:
+        200:
+          description: List of claims.
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                example:
+                  name: Testy McTesterson
+                  scp: user_impersonation
+                  role: User
+
+        401:
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/health:
+    get:
+      tags:
+        - health
+
+      summary: Get Health (v1)
+      description: Gets the current health status of the Rex instance.
+      operationId: health_v1
+      deprecated: true
+      responses:
+        200:
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV1"
+              example:
+                ok: true
+        500:
+          description: The service is unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV1"
+              example:
+                ok: false
+
+  /api/v2/health:
+    get:
+      tags:
+        - health
+
+      summary: Get Health (v2)
+      description: Gets the current health status of the Rex instance.
+      operationId: health_v2
+      responses:
+        200:
+          description: The service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV2"
+              example:
+                ok: true
+                started_at: "2019-03-14T23:17:27.210333300Z"
+        500:
+          description: The service is unhealthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthV2"
+              example:
+                ok: false
+                started_at: "2019-03-14T23:17:27.210333300Z"
+
+  /api/v1/ideas:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Ideas (v1)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_v1
+      deprecated: true
+
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV1"
+            text/xml:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV1"
+                xml:
+                  name: Ideas
+                  wrapped: true
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: New Idea (v1)
+      description: Creates a new idea on the server.
+      operationId: new_idea_v1
+      deprecated: true
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV1"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV1"
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/idea/random:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Random Idea (v1)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_v1
+      deprecated: true
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/idea/{id}:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Idea (v1)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_v1
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Store Idea (v1)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_v1
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV1"
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV1"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Remove Idea (v1)
+      description: Removes a specific idea from the server based on its ID.
+      operationId: remove_idea_v1
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to remove.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        204:
+          description: Idea removed.
+        404:
+          description: The idea could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v2/ideas:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Ideas (v2)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_v2
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV2"
+            text/xml:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV2"
+                xml:
+                  name: Ideas
+                  wrapped: true
+
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: New Idea (v2)
+      description: Creates a new idea on the server.
+      operationId: new_idea_v2
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v2/idea/random:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Random Idea (v2)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_v2
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v2/idea/{id}:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Idea (v2)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_v2
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Store Idea (v2)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_v2
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV2"
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV2"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Remove Idea (v2)
+      description: Removes a specific idea from the server based on its ID.
+      operationId: remove_idea_v2
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to remove.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        204:
+          description: Idea removed.
+        404:
+          description: The idea could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/ideas:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Ideas (v3)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_v3
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV3"
+                xml:
+                  name: Ideas
+                  wrapped: true
+
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: New Idea (v3)
+      description: Creates a new idea on the server.
+      operationId: new_idea_v3
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/idea/random:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Random Idea (v3)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_v3
+      parameters:
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/idea/{id}:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Idea (v3)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Store Idea (v2)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Remove Idea (v3)
+      description: Removes a specific idea from the server based on its ID.
+      operationId: remove_idea_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to remove.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+      responses:
+        204:
+          description: Idea removed.
+        404:
+          description: The idea could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}/ideas:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Ideas (v3)
+      description: Gets the list of ideas registered with the server.
+      operationId: ideas_by_collection_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection from which to fetch ideas.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: List of ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                type: array
+                description: The list of ideas registered with the server.
+                items:
+                  $ref: "#/components/schemas/IdeaV3"
+                xml:
+                  name: Ideas
+                  wrapped: true
+
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: New Idea (v3)
+      description: Creates a new idea on the server.
+      operationId: new_idea_by_collection_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection in which to create the idea.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+      responses:
+        201:
+          description: Idea was created.
+          headers:
+            Location:
+              description: The relative path at which you can find the newly created object.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}/idea/random:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Random Idea (v3)
+      description: Gets a single randomly selected idea from the server.
+      operationId: random_idea_by_collection_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection from which to retrieve the idea.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+        - name: tag
+          in: query
+          description: An optional tag which can be used to limit the resulting ideas.
+          required: false
+          schema:
+            type: string
+          example: test
+        - name: complete
+          in: query
+          description: An optional filter which may be used to constrain which ideas are returned.
+          required: false
+          schema:
+            type: boolean
+          example: false
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}/idea/{id}:
+    get:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Read]
+
+      summary: Get Idea (v3)
+      description: Gets a specific idea from the server based on its ID.
+      operationId: idea_by_collection_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection from which to retrieve the idea.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      responses:
+        200:
+          description: Randomly selected idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Store Idea (v3)
+      description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
+      operationId: store_idea_by_collection_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection in which to store the idea.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      requestBody:
+        description: The idea to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/IdeaV3"
+      responses:
+        200:
+          description: Stored idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/IdeaV3"
+        404:
+          description: The server could not find any ideas, please submit one and try again.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - ideas
+      security:
+        - AzureAD: [Ideas.Write]
+
+      summary: Remove Idea (v3)
+      description: Removes a specific idea from the server based on its ID.
+      operationId: remove_idea_by_collection_v3
+      parameters:
+        - name: id
+          in: path
+          description: The unique ID of the idea you wish to remove.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: "225c5957d7f450baec75a67ede427e9"
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection in which to store the idea.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      responses:
+        204:
+          description: Idea removed.
+        404:
+          description: The idea could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collections:
+    get:
+      tags:
+        - collections
+      security:
+        - AzureAD: [Collections.Read]
+
+      summary: Get Collections (v3)
+      description: Gets the list of collections that this user can access.
+      operationId: collections_v3
+      responses:
+        200:
+          description: List of collections.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionV3"
+            text/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionV3"
+                xml:
+                  name: Collections
+                  wrapped: true
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - collections
+      security:
+        - AzureAD: [Collections.Write]
+
+      summary: New Collection (v3)
+      description: Creates a new collection with the provided name.
+      operationId: new_collection_v3
+      requestBody:
+        description: The collection to add to the server.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionV3"
+          text/xml:
+            schema:
+              $ref: "#/components/schemas/CollectionV3"
+      responses:
+        201:
+          description: Collection has been created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/CollectionV3"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}:
+    get:
+      tags:
+        - collections
+      security:
+        - AzureAD: [Collections.Read]
+
+      summary: Get Collection (v3)
+      description: Gets a collection that a user can access by its ID.
+      operationId: collection_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      responses:
+        200:
+          description: Collection found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/CollectionV3"
+        404:
+          description: Collection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - collections
+      security:
+        - AzureAD: [Collections.Write]
+
+      summary: Remove Collection (v3)
+      description: Removes a collection from a user's list using its ID.
+      operationId: remove_collection_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to remove.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      responses:
+        204:
+          description: Collection removed.
+        400:
+          description: Collection has no other owners and cannot be removed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 400
+                error: Bad Request
+                description: You cannot remove a collection without promoting another user as an owner of the collection.
+        404:
+          description: Collection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}/users:
+    get:
+      tags:
+        - collections
+      security:
+        - AzureAD: [RoleAssignments.Write]
+
+      summary: Get Collection Role Assignments (v3)
+      description: Gets the list of users which can access this collection and their role assignments.
+      operationId: role_assignments_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to retrieve users for.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+      responses:
+        200:
+          description: List of role assignments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleAssignmentV3"
+            text/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleAssignmentV3"
+                xml:
+                  name: RoleAssignments
+                  wrapped: true
+        404:
+          description: Collection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v3/collection/{collectionId}/user/{userId}:
+    get:
+      tags:
+        - collections
+      security:
+        - AzureAD: [RoleAssignments.Write]
+
+      summary: Get User Role Assignment (v3)
+      description: Gets the details of a user's role assignment within a collection.
+      operationId: role_assignment_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to retrieve the user from.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+        - name: userId
+          in: path
+          description: The unique ID of the user to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: c0baec767ed2557f957d2545ae427e9
+      responses:
+        200:
+          description: User role assignment details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAssignmentV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/RoleAssignmentV3"
+        404:
+          description: Collection or role assignment not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - collections
+      security:
+        - AzureAD: [RoleAssignments.Write]
+
+      summary: Update User Role Assignment (v3)
+      description: Update the role assignment associated with a user on a given collection.
+      operationId: update_role_assignment_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to retrieve the user from.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+        - name: userId
+          in: path
+          description: The unique ID of the user to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: c0baec767ed2557f957d2545ae427e9
+      requestBody:
+        description: The role assignment to apply for this user when accessing the collection.
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/RoleAssignmentV3'
+          text/xml:
+            schema: 
+              $ref: '#/components/schemas/RoleAssignmentV3'
+      responses:
+        200:
+          description: User role assignment details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAssignmentV3"
+            text/xml:
+              schema:
+                $ref: "#/components/schemas/RoleAssignmentV3"
+        404:
+          description: Collection not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags:
+        - collections
+      security:
+        - AzureAD: [RoleAssignments.Write]
+
+      summary: Remove User Role Assignment (v3)
+      description: Removes a user's role assignment from a collection.
+      operationId: remove_role_assignment_v3
+      parameters:
+        - name: collectionId
+          in: path
+          description: The unique ID of the collection to retrieve the user from.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: 957d25c0baec7557f45a67ed2e427e9
+        - name: userId
+          in: path
+          description: The unique ID of the user to retrieve.
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{32}$
+            example: c0baec767ed2557f957d2545ae427e9
+      responses:
+        204:
+          description: Role assignment removed.
+        404:
+          description: Collection or role assignment not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: 404
+                error: Not Found
+                description: The resource you were looking for could not be found, please check your request and try again.
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  securitySchemes:
+    AzureAD:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://login.microsoftonline.com/a26571f1-22b3-4756-ac7b-39ca684fab48/oauth2/v2.0/authorize
+          scopes:
+            "Ideas.Read": Allows the reading of ideas.
+            "Ideas.Write": Allows the creation, modification and deletion of ideas.
+            "Collections.Read": Allows the reading of collection information.
+            "Collections.Write": Allows the creation, modification and removal of collections.
+            "RoleAssignments.Write": Allows the creation, modification and removal of role assignments for collections.
+
+  responses:
+    Unauthorized:
+      description: You have not provided a valid authentication token.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: Bearer
+          required: true
+    Forbidden:
+      description: Your access token does not grant you the required role or scopes needed to access this resource.
+    InternalServerError:
+      description: The server failed to process your request successfully.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: 500
+            error: Internal Server Error
+            description: The server encountered an error while processing your request, please try again later.
+
+  schemas:
+    HealthV1:
+      deprecated: true
+      required:
+        - ok
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Whether the service is healthy or not.
+          readOnly: true
+          example: true
+          xml:
+            name: OK
+      xml:
+        name: Health
+
+    HealthV2:
+      required:
+        - ok
+        - started_at
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Whether the service is healthy or not.
+          readOnly: true
+          example: true
+          xml:
+            name: OK
+        started_at:
+          type: string
+          description: The ISO 8601 datetime at which the service was started.
+          format: datetime
+          readOnly: true
+          example: "2019-03-14T23:17:27.210333300Z"
+          xml:
+            name: StartedAt
+      xml:
+        name: Health
+
+    IdeaV1:
+      deprecated: true
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this idea internally.
+          readOnly: true
+          example: "225c5957d7f450baec75a67ede427e9"
+          xml:
+            attribute: true
+        name:
+          type: string
+          description: The short name used to identify this idea.
+          example: Test Idea
+          xml:
+            name: Name
+        description:
+          type: string
+          description:
+            A longer description providing more information about this
+            idea.
+          example: This is a test idea.
+          xml:
+            name: Description
+      xml:
+        name: Idea
+
+    IdeaV2:
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this idea internally.
+          readOnly: true
+          example: "225c5957d7f450baec75a67ede427e9"
+          xml:
+            attribute: true
+        name:
+          type: string
+          description: The short name used to identify this idea.
+          example: Test Idea
+          xml:
+            name: Name
+        description:
+          type: string
+          description:
+            A longer description providing more information about this
+            idea.
+          example: This is a test idea.
+          xml:
+            name: Description
+        tags:
+          maxItems: 10
+          minItems: 0
+          type: array
+          description: The list of tags you wish to associate with an idea
+          items:
+            maxLength: 50
+            type: string
+            description: A short string tag describing this idea
+            example: Winter
+            xml:
+              name: Tag
+          xml:
+            name: Tags
+            wrapped: true
+        completed:
+          type: boolean
+          description: Whether this idea has been completed or not.
+          default: false
+          xml:
+            attribute: true
+      xml:
+        name: Idea
+
+    IdeaV3:
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this idea internally.
+          readOnly: true
+          example: "225c5957d7f450baec75a67ede427e9"
+          xml:
+            attribute: true
+        collection:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify the collection that this idea belongs to.
+          readOnly: true
+          example: "957d25c0baec7557f45a67ed2e427e9"
+          xml:
+            attribute: true
+        name:
+          type: string
+          description: The short name used to identify this idea.
+          example: Test Idea
+          xml:
+            name: Name
+        description:
+          type: string
+          description:
+            A longer description providing more information about this
+            idea.
+          example: This is a test idea.
+          xml:
+            name: Description
+        tags:
+          maxItems: 10
+          minItems: 0
+          type: array
+          description: The list of tags you wish to associate with an idea
+          items:
+            maxLength: 50
+            type: string
+            description: A short string tag describing this idea
+            example: Winter
+            xml:
+              name: Tag
+          xml:
+            name: Tags
+            wrapped: true
+        completed:
+          type: boolean
+          description: Whether this idea has been completed or not.
+          default: false
+          xml:
+            attribute: true
+      xml:
+        name: Idea
+
+    CollectionV3:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify this collection internally.
+          readOnly: true
+          example: "957d25c0baec7557f45a67ed2e427e9"
+          xml:
+            name: id
+            attribute: true
+        userId:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify the user that this collection entry belongs to.
+          readOnly: true
+          example: "c0baec767ed2557f957d2545ae427e9"
+          xml:
+            name: user-id
+            attribute: true
+        name:
+          type: string
+          description: The name that the user has given to this collection. This may vary on a per-user basis.
+          example: In the Mountains
+          xml:
+            name: Name
+      xml:
+        name: Collection
+
+    UserV3:
+      type: object
+      required:
+        - id
+        - emailHash
+        - firstName
+      properties:
+        id:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify the user internally.
+          readOnly: true
+          example: "c0baec767ed2557f957d2545ae427e9"
+          xml:
+            name: id
+            attribute: true
+        emailHash:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique has which represents the user's email address in Gravatar compatible format.
+          readOnly: true
+          example: "7ed2557cc760d2545ae42ef9ba577e9"
+          xml:
+            name: email-hash
+            attribute: true
+        firstName:
+          type: string
+          description: The name that the user wishes to use on the service.
+          readOnly: true
+          example: Bob
+          xml:
+            name: FirstName
+      xml:
+        name: User
+
+    RoleAssignmentV3:
+      type: object
+      required:
+        - userId
+        - collectionId
+        - role
+      properties:
+        userId:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify the user that this role assignment applies to.
+          example: "c0baec767ed2557f957d2545ae427e9"
+          xml:
+            name: user-id
+            attribute: true
+        collectionId:
+          pattern: ^[a-z0-9]{32}$
+          type: string
+          description: A unique ID used to identify the collection that this role assignment applies to.
+          example: "957d25c0baec7557f45a67ed2e427e9"
+          xml:
+            name: collection-id
+            attribute: true
+        role:
+          type: string
+          description: The role that the user has been granted on this collection.
+          example: Owner
+          enum:
+            - Owner
+            - Contributor
+            - Viewer
+          xml:
+            name: role
+            attribute: true
+      xml:
+        name: RoleAssignment
+
+    Error:
+      type: object
+      description: An error describing a problem that the server has encountered or identified.
+      required:
+        - code
+        - error
+        - message
+      properties:
+        code:
+          type: number
+          format: integer
+          minimum: 100
+          maximum: 599
+          description: The HTTP status code corresponding to this error.
+        error:
+          type: string
+          description: The human readable description of the HTTP status code.
+        description:
+          type: string
+          description: A human readable description of the exact error that occurred.

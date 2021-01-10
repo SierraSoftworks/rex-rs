@@ -1,7 +1,7 @@
 name: Deploy Azure Function
 on:
   push:
-    branches: [ main, feature/azure-function ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 

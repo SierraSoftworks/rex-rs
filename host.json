@@ -20,7 +20,7 @@
     "customHandler": {
         "enableForwardingHttpRequest": true,
         "description": {
-            "defaultExecutablePath": "rex.exe",
+            "defaultExecutablePath": "rex",
             "workingDirectory": "",
             "arguments": []
         }

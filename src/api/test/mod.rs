@@ -1,10 +1,13 @@
 use crate::api::configure;
 use crate::models::*;
 use actix_web::{test, web, App};
-use oidc::token::Jws;
+use chrono::{Duration, Utc};
+use openidconnect::{Audience, EndUserName, IssuerUrl, LocalizedClaim, StandardClaims, SubjectIdentifier, core::{CoreHmacKey, CoreJwsSigningAlgorithm}};
 use web::BytesMut;
 use serde::{de::DeserializeOwned};
 use futures::StreamExt;
+
+use super::auth::{AuthAdditionalClaims, AuthIdToken, AuthIdTokenClaims};
 
 pub fn test_log_init() {
     let _ = env_logger::builder().is_test(true).filter_level(log::LevelFilter::Debug).try_init();
@@ -37,28 +40,32 @@ pub fn assert_location_header(header: &actix_web::http::HeaderMap, prefix: &str)
 }
 
 pub fn auth_token() -> String {
-    let token = Jws::new_decoded(biscuit::jws::Header {
-        registered: biscuit::jws::RegisteredHeader {
-            algorithm: biscuit::jwa::SignatureAlgorithm::HS256,
-            ..Default::default()
-        },
-        private: biscuit::Empty{},
-    }, crate::api::AuthToken {
-        aud: "https://test.example.com".into(),
-        exp: 0,
-        iat: 0,
-        name: "Testy McTesterson".into(),
-        oid: "00000000-0000-0000-0000-000000000000".into(),
-        scp: "Ideas.Read Ideas.Write Collections.Read Collections.Write RoleAssignments.Write".into(),
-        sub: "testy@example.com".into(),
-        roles: vec!["Administrator".into()],
-        unique_name: "testy@example.com".into(),
-        ..Default::default()
-    });
+    let mut localized_name = LocalizedClaim::new();
+    localized_name.insert(None, EndUserName::new("Testy McTesterson".to_string()));
 
-    let content = token.encode(&biscuit::jws::Secret::bytes_from_str("test")).unwrap().unwrap_encoded().to_string();
+    let token = AuthIdToken::new(
+        AuthIdTokenClaims::new(
+            IssuerUrl::new("https://auth.example.com".to_string()).expect("Issuer should always parse correctly."),
+            vec![Audience::new("https://test.example.com".to_string())],
+            Utc::now() + Duration::seconds(300),
+            Utc::now(),
+            StandardClaims::new(
+                SubjectIdentifier::new("testy@example.com".to_string()),
+            ).set_name(Some(localized_name)),
+            AuthAdditionalClaims {
+                oid: "00000000-0000-0000-0000-000000000000".into(),
+                scp: "Ideas.Read Ideas.Write Collections.Read Collections.Write RoleAssignments.Write Users.Read".into(),
+                roles: vec!["Administrator".into()],
+                unique_name: "testy@example.com".into(),
+            }
+        ),
+        &CoreHmacKey::new("test"),
+        CoreJwsSigningAlgorithm::HmacSha256,
+        None,
+        None,
+    ).expect("The token should be generated correctly");
 
-    "Bearer ".to_string() + content.as_str()
+    format!("Bearer {}", token.to_string())
 }
 
 pub async fn assert_status(resp: &mut actix_web::dev::ServiceResponse, expected_status: http::StatusCode) {

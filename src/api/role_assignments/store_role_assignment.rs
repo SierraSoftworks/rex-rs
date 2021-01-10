@@ -13,7 +13,7 @@ async fn store_role_assignment_v3(
     require_scope!(token, "RoleAssignments.Write");
     
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
     let tuid = parse_uuid!(info.user, user ID);
     
     let original_collection = state.store.send(GetCollection {

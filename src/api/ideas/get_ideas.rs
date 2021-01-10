@@ -11,7 +11,7 @@ async fn get_ideas_v1(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     state.store.send(GetIdeas { collection: uid, is_completed: None, tag: None }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
@@ -23,7 +23,7 @@ async fn get_ideas_v2(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     state.store.send(GetIdeas {
         collection: uid,
@@ -39,7 +39,7 @@ async fn get_ideas_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }).await??;
@@ -59,7 +59,7 @@ async fn get_collection_ideas_v3(
     require_scope!(token, "Ideas.Read");
     
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;

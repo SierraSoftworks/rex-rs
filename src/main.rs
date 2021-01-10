@@ -7,7 +7,7 @@ extern crate uuid;
 #[macro_use] extern crate log;
 #[macro_use] extern crate sentry;
 #[macro_use] extern crate lazy_static;
-#[macro_use] extern crate prometheus;
+extern crate prometheus;
 
 #[macro_use] mod macros;
 
@@ -16,8 +16,10 @@ mod models;
 mod store;
 
 use actix_cors::Cors;
-use actix_web::{middleware, App, HttpServer};
+use actix_web::{App, HttpServer};
 use actix_web_prom::PrometheusMetrics;
+use tracing_log::LogTracer;
+use tracing_actix_web::TracingLogger;
 
 fn get_listening_port() -> u16 {
     std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT").map(|v| v.parse().unwrap_or(8000)).unwrap_or(8000)
@@ -25,6 +27,14 @@ fn get_listening_port() -> u16 {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    let (_tracer, _uninstall) = opentelemetry_application_insights::new_pipeline(
+        std::env::var("APPINSIGHTS_INSTRUMENTATIONKEY").unwrap_or_default()
+    )
+        .with_client(reqwest::Client::new())
+        .install();
+        
+    LogTracer::init().unwrap_or_default();
+
     let _raven = sentry::init((
         "https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519",
         sentry::ClientOptions {
@@ -41,7 +51,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(state.clone())
             .wrap(metrics.clone())
-            .wrap(middleware::Logger::default())
+            .wrap(TracingLogger)
             .wrap(Cors::new().send_wildcard().finish())
             .configure(api::configure)
     })

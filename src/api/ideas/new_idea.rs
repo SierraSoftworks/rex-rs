@@ -11,7 +11,7 @@ async fn new_idea_v1(
     require_scope!(token, "Ideas.Write");
     
     let idea: Idea = new_idea.into_inner().into();
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -33,7 +33,7 @@ async fn new_idea_v2(
     require_scope!(token, "Ideas.Write");
     
     let idea: Idea = new_idea.into_inner().into();
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -55,7 +55,7 @@ async fn new_idea_v3(
     require_scope!(token, "Ideas.Write");
     
     let idea: Idea = new_idea.into_inner().into();
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -78,7 +78,7 @@ async fn new_collection_idea_v3(
     
     let idea: Idea = new_idea.into_inner().into();
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     if cid == uid {
         ensure_user_collection(&state, &token).await?;

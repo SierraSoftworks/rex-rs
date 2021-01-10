@@ -11,7 +11,7 @@ async fn get_role_assignments_v3(
     require_scope!(token, "RoleAssignments.Write");
     
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
     match role.role {

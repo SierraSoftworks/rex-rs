@@ -17,7 +17,7 @@ async fn store_idea_v1(
     
     let idea: Idea = new_idea.into_inner().into();
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -45,7 +45,7 @@ async fn store_idea_v2(
     
     let idea: Idea = new_idea.into_inner().into();
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -73,7 +73,7 @@ async fn store_idea_v3(
     
     let idea: Idea = new_idea.into_inner().into();
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
 
@@ -102,7 +102,7 @@ async fn store_collection_idea_v3(
     let idea: Idea = new_idea.into_inner().into();
     let id = parse_uuid!(info.id, idea ID);
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     ensure_user_collection(&state, &token).await?;
 

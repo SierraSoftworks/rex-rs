@@ -18,7 +18,7 @@ macro_rules! require_role {
     };
 
     ($token:expr, $($role:expr),+) => {
-        if !$token.roles.iter().any(|r| require_role!(_cond: r -> $($role),*)) {
+        if !$token.roles().iter().any(|r| require_role!(_cond: r -> $($role),*)) {
             return Err(APIError::new(403, "Forbidden", "You are not authorized to perform this action. Please contact your administrator for permission before trying again."));
         }
     };
@@ -27,7 +27,7 @@ macro_rules! require_role {
 #[macro_export]
 macro_rules! require_scope {
     ($token:expr, $scope:expr) => {
-        if !$token.scp.split(" ").any(|s| s == $scope) {
+        if !$token.scopes().iter().any(|&s| s == $scope) {
             return Err(APIError::new(403, "Forbidden", "Your client has not been granted permission to access this resource. Please request the necessary access scopes and try again."));
         }
     };

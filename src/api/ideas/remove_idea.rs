@@ -11,7 +11,7 @@ async fn remove_idea_v1(
     require_scope!(token, "Ideas.Write");
     
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
 
     state.store.send(RemoveIdea { collection: uid, id: id }).await??;
     
@@ -26,7 +26,7 @@ async fn remove_idea_v2(
     require_scope!(token, "Ideas.Write");
     
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     state.store.send(RemoveIdea { collection: uid, id: id }).await??;
     
@@ -41,7 +41,7 @@ async fn remove_idea_v3(
     require_scope!(token, "Ideas.Write");
     
     let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     state.store.send(RemoveIdea { collection: uid, id: id }).await??;
     
@@ -57,7 +57,7 @@ async fn remove_collection_idea_v3(
     
     let id = parse_uuid!(info.id, idea ID);
     let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid, auth token oid);
+    let uid = parse_uuid!(token.oid(), auth token oid);
         
     ensure_user_collection(&state, &token).await?;
 

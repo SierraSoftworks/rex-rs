@@ -1,6 +1,5 @@
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use biscuit::{CompactJson};
 use openidconnect::{ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl, core::{CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata}, reqwest::http_client};
 use std::sync::Arc;
 use super::APIError;
@@ -95,8 +94,6 @@ impl FromRequest for AuthToken {
         ready(AuthToken::from_request_internal(req, payload))
     }
 }
-
-impl CompactJson for AuthToken {}
 
 fn get_client() -> CoreClient {
     let issuer_url = openidconnect::IssuerUrl::new("https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string()).expect("The issuer URL should parse correctly.");

@@ -7,7 +7,7 @@ extern crate uuid;
 #[macro_use] extern crate log;
 #[macro_use] extern crate sentry;
 #[macro_use] extern crate lazy_static;
-extern crate prometheus;
+#[macro_use] extern crate prometheus;
 
 #[macro_use] mod macros;
 

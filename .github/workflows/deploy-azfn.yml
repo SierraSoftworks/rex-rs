@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Handler
         run:
-          docker run --rm -t -v $PWD:/volume clux/muslrust cargo build --release
+          docker run --rm -t -v $PWD:/volume clux/muslrust cargo build --release --features table_storage
 
       - run: cp target/x86_64-unknown-linux-musl/release/$HANDLER_NAME ./handler
 

@@ -1953,19 +1953,6 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acbf68b6b34b5d869342732c0dc05f74b7bdb4f17f2302d16d799231a6106441"
-dependencies = [
- "futures 0.3.9",
- "lazy_static",
- "percent-encoding 2.1.0",
- "pin-project 0.4.24",
- "rand 0.7.3",
-]
-
-[[package]]
-name = "opentelemetry"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3434e2a9d2aec539d91f4251bf9047cd53b4d3f386f9d336f4c8076c72a5256"
@@ -1993,7 +1980,7 @@ dependencies = [
  "chrono",
  "http 0.2.2",
  "once_cell",
- "opentelemetry 0.11.2",
+ "opentelemetry",
  "opentelemetry-semantic-conventions",
  "reqwest 0.10.8",
  "serde",
@@ -2007,7 +1994,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3839dd2c931dc1aabcf964623ad74478fa97b3a88ad073d9e107aea36520c21d"
 dependencies = [
- "opentelemetry 0.11.2",
+ "opentelemetry",
 ]
 
 [[package]]
@@ -2575,7 +2562,7 @@ dependencies = [
  "log",
  "md5",
  "openidconnect",
- "opentelemetry 0.11.2",
+ "opentelemetry",
  "opentelemetry-application-insights",
  "percent-encoding 2.1.0",
  "prometheus",
@@ -3520,12 +3507,11 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.7.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c776834eab0d599523cc58accac54f32e1f8d2cea1dbcae157f28e279de7004"
+checksum = "b1706e1f42970e09aa0635deb4f4607e8704a4390427d5f0062bf59240338bcc"
 dependencies = [
- "opentelemetry 0.8.0",
- "rand 0.7.3",
+ "opentelemetry",
  "tracing",
  "tracing-core",
  "tracing-log",

@@ -60,7 +60,7 @@ dependencies = [
  "derive_more",
  "either",
  "futures-util",
- "http 0.2.2",
+ "http 0.2.3",
  "log",
  "trust-dns-proto",
  "trust-dns-resolver",
@@ -105,7 +105,7 @@ dependencies = [
  "futures-util",
  "fxhash",
  "h2 0.2.6",
- "http 0.2.2",
+ "http 0.2.3",
  "httparse",
  "indexmap",
  "itoa",
@@ -142,7 +142,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd1f7dbda1645bf7da33554db60891755f6c01c1b2169e2f4c492098d30c235"
 dependencies = [
  "bytestring",
- "http 0.2.2",
+ "http 0.2.3",
  "log",
  "regex",
  "serde",
@@ -450,7 +450,7 @@ dependencies = [
  "chrono",
  "failure",
  "futures 0.3.9",
- "http 0.2.2",
+ "http 0.2.3",
  "hyper 0.13.8",
  "hyper-rustls",
  "log",
@@ -474,7 +474,7 @@ dependencies = [
  "bytes 0.5.6",
  "chrono",
  "futures 0.3.9",
- "http 0.2.2",
+ "http 0.2.3",
  "hyper 0.13.8",
  "hyper-rustls",
  "log",
@@ -501,7 +501,7 @@ dependencies = [
  "azure_sdk_storage_core",
  "chrono",
  "futures 0.3.9",
- "http 0.2.2",
+ "http 0.2.3",
  "hyper 0.13.8",
  "log",
  "quick-error",
@@ -662,6 +662,12 @@ name = "bytes"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0dcbc35f504eb6fc275a6d20e4ebcda18cf50d40ba6fabff8c711fa16cb3b16"
+
+[[package]]
+name = "bytes"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad1f8e949d755f9d79112b5bb46938e0ef9d3804a0b16dfab13aafcaa5f0fa72"
 
 [[package]]
 name = "bytestring"
@@ -1257,7 +1263,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http 0.2.2",
+ "http 0.2.3",
  "indexmap",
  "slab",
  "tokio 0.2.22",
@@ -1313,11 +1319,11 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84129d298a6d57d246960ff8eb831ca4af3f96d29e2e28848dae275408658e26"
+checksum = "7245cd7449cc792608c3c8a9eaf69bd4eabbabf802713748fd739c98b82f0747"
 dependencies = [
- "bytes 0.5.6",
+ "bytes 1.0.0",
  "fnv",
  "itoa",
 ]
@@ -1341,7 +1347,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13d5ff830006f7646652e057693569bfe0d51760c0085a071769d142a205111b"
 dependencies = [
  "bytes 0.5.6",
- "http 0.2.2",
+ "http 0.2.3",
 ]
 
 [[package]]
@@ -1412,7 +1418,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2 0.2.6",
- "http 0.2.2",
+ "http 0.2.3",
  "http-body 0.3.1",
  "httparse",
  "httpdate",
@@ -1991,7 +1997,7 @@ dependencies = [
  "async-trait",
  "bytes 0.5.6",
  "chrono",
- "http 0.2.2",
+ "http 0.2.3",
  "once_cell",
  "opentelemetry 0.11.2",
  "opentelemetry-semantic-conventions",
@@ -2516,7 +2522,7 @@ dependencies = [
  "encoding_rs",
  "futures-core",
  "futures-util",
- "http 0.2.2",
+ "http 0.2.3",
  "http-body 0.3.1",
  "hyper 0.13.8",
  "hyper-tls 0.4.3",
@@ -2570,7 +2576,7 @@ dependencies = [
  "chrono",
  "env_logger 0.8.2",
  "futures 0.3.9",
- "http 0.2.2",
+ "http 0.2.3",
  "lazy_static",
  "log",
  "md5",

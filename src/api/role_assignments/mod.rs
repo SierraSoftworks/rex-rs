@@ -14,12 +14,12 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(remove_role_assignment::remove_role_assignment_v3);
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct CollectionFilter {
     collection: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct CollectionUserFilter {
     collection: String,
     user: String,

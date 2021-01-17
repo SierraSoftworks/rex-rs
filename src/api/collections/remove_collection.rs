@@ -1,8 +1,10 @@
 use actix_web::{delete, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[delete("/api/v3/collection/{collection}")]
 async fn remove_collection_v3(
     (info, state, token): (web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
@@ -13,9 +15,9 @@ async fn remove_collection_v3(
     let cid = parse_uuid!(info.collection, collection ID);
     let uid = parse_uuid!(token.oid(), auth token oid);
 
-    state.store.send(RemoveCollection { id: cid, principal_id: uid }).await??;
+    state.store.send(RemoveCollection { id: cid, principal_id: uid }.trace()).await??;
 
-    state.store.send(RemoveRoleAssignment { collection_id: cid, principal_id: uid }).await??;
+    state.store.send(RemoveRoleAssignment { collection_id: cid, principal_id: uid }.trace()).await??;
 
     Ok(web::HttpResponse::NoContent().finish())
 }

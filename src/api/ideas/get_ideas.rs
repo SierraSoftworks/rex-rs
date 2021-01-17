@@ -1,8 +1,9 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError, ensure_user_collection};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::{QueryFilter, CollectionFilter};
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v1/ideas")]
 async fn get_ideas_v1(
     state: web::Data<GlobalState>,
@@ -13,9 +14,10 @@ async fn get_ideas_v1(
     
     let uid = parse_uuid!(token.oid(), auth token oid);
 
-    state.store.send(GetIdeas { collection: uid, is_completed: None, tag: None }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    state.store.send(GetIdeas { collection: uid, is_completed: None, tag: None }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v2/ideas")]
 async fn get_ideas_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -29,9 +31,10 @@ async fn get_ideas_v2(
         collection: uid,
         is_completed: query.complete.clone(), 
         tag: query.tag.clone()
-    }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/ideas")]
 async fn get_ideas_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -48,9 +51,10 @@ async fn get_ideas_v3(
         collection: uid,
         is_completed: query.complete.clone(), 
         tag: query.tag.clone()
-    }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/collection/{collection}/ideas")]
 async fn get_collection_ideas_v3(
     (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -62,13 +66,13 @@ async fn get_collection_ideas_v3(
     let uid = parse_uuid!(token.oid(), auth token oid);
         
     ensure_user_collection(&state, &token).await?;
-    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
+    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }.trace()).await??;
 
     state.store.send(GetIdeas {
         collection: cid,
         is_completed: query.complete.clone(), 
         tag: query.tag.clone()
-    }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
 #[cfg(test)]

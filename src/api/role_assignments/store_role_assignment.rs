@@ -1,8 +1,10 @@
 use actix_web::{put, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionUserFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v3/collection/{collection}/user/{user}")]
 async fn store_role_assignment_v3(
     (info, collection, state, token): (web::Path<CollectionUserFilter>,
@@ -19,26 +21,26 @@ async fn store_role_assignment_v3(
     let original_collection = state.store.send(GetCollection {
         id: cid,
         principal_id: uid
-    }).await??;
+    }.trace()).await??;
 
     if tuid == uid {
         return Err(APIError::new(400, "Bad Request", "You cannot modify your own role assignment. Please request that another collection owner performs this task for you."))
     }
 
-    let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
+    let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }.trace()).await??;
     match role.role {
         Role::Owner => {
             match state.store.send(GetCollection {
                 principal_id: tuid,
                 id: cid
-            }).await? {
+            }.trace()).await? {
                 Ok(_) => {},
                 Err(err) if err.code == 404 => {
                     state.store.send(StoreCollection {
                         principal_id: tuid,
                         collection_id: cid,
                         name: original_collection.name
-                    }).await??;
+                    }.trace()).await??;
                 },
                 Err(err) => {
                     return Err(err)
@@ -49,7 +51,7 @@ async fn store_role_assignment_v3(
                 principal_id: tuid,
                 collection_id: cid,
                 role: collection.role.as_str().into(),
-            }).await?.map(|collection| collection.clone().into())
+            }.trace()).await?.map(|collection| collection.clone().into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."))
     }

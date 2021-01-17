@@ -8,7 +8,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(get_user::get_user_v3);
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct UserFilter {
     user: String,
 }

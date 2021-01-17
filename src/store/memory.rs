@@ -1,5 +1,5 @@
 use std::{collections::BTreeMap, sync::Arc};
-use crate::models::*;
+use crate::{models::*, trace_handler};
 use crate::api::APIError;
 use std::sync::RwLock;
 use rand::seq::IteratorRandom;
@@ -29,6 +29,8 @@ impl Actor for MemoryStore {
     type Context = Context<Self>;
 }
 
+trace_handler!(MemoryStore, GetHealth, Result<Health, APIError>);
+
 impl Handler<GetHealth> for MemoryStore {
     type Result = Result<Health, APIError>;
 
@@ -39,6 +41,8 @@ impl Handler<GetHealth> for MemoryStore {
         })
     }
 }
+
+trace_handler!(MemoryStore, GetIdea, Result<Idea, APIError>);
 
 impl Handler<GetIdea> for MemoryStore {
     type Result = Result<Idea, APIError>;
@@ -56,6 +60,8 @@ impl Handler<GetIdea> for MemoryStore {
             
     }
 }
+
+trace_handler!(MemoryStore, GetIdeas, Result<Vec<Idea>, APIError>);
 
 impl Handler<GetIdeas> for MemoryStore {
     type Result = Result<Vec<Idea>, APIError>;
@@ -90,6 +96,8 @@ impl Handler<GetIdeas> for MemoryStore {
             }).map(|(_id, idea)| idea.clone()).collect())
     }
 }
+
+trace_handler!(MemoryStore, GetRandomIdea, Result<Idea, APIError>);
 
 impl Handler<GetRandomIdea> for MemoryStore {
     type Result = Result<Idea, APIError>;
@@ -128,6 +136,8 @@ impl Handler<GetRandomIdea> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, StoreIdea, Result<Idea, APIError>);
+
 impl Handler<StoreIdea> for MemoryStore {
     type Result = Result<Idea, APIError>;
 
@@ -153,6 +163,8 @@ impl Handler<StoreIdea> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, RemoveIdea, Result<(), APIError>);
+
 impl Handler<RemoveIdea> for MemoryStore {
     type Result = Result<(), APIError>;
 
@@ -171,6 +183,8 @@ impl Handler<RemoveIdea> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, GetCollection, Result<Collection, APIError>);
+
 impl Handler<GetCollection> for MemoryStore {
     type Result = Result<Collection, APIError>;
 
@@ -188,6 +202,8 @@ impl Handler<GetCollection> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, GetCollections, Result<Vec<Collection>, APIError>);
+
 impl Handler<GetCollections> for MemoryStore {
     type Result = Result<Vec<Collection>, APIError>;
 
@@ -201,6 +217,8 @@ impl Handler<GetCollections> for MemoryStore {
                 .map(|(_id, collection)| collection.clone()).collect())
     }
 }
+
+trace_handler!(MemoryStore, StoreCollection, Result<Collection, APIError>);
 
 impl Handler<StoreCollection> for MemoryStore {
     type Result = Result<Collection, APIError>;
@@ -224,6 +242,8 @@ impl Handler<StoreCollection> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, RemoveCollection, Result<(), APIError>);
+
 impl Handler<RemoveCollection> for MemoryStore {
     type Result = Result<(), APIError>;
 
@@ -244,6 +264,8 @@ impl Handler<RemoveCollection> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, GetRoleAssignment, Result<RoleAssignment, APIError>);
+
 impl Handler<GetRoleAssignment> for MemoryStore {
     type Result = Result<RoleAssignment, APIError>;
 
@@ -261,6 +283,8 @@ impl Handler<GetRoleAssignment> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, GetRoleAssignments, Result<Vec<RoleAssignment>, APIError>);
+
 impl Handler<GetRoleAssignments> for MemoryStore {
     type Result = Result<Vec<RoleAssignment>, APIError>;
 
@@ -277,6 +301,8 @@ impl Handler<GetRoleAssignments> for MemoryStore {
                 .map(|(_id, collection)| collection.clone()).collect())
     }
 }
+
+trace_handler!(MemoryStore, StoreRoleAssignment, Result<RoleAssignment, APIError>);
 
 impl Handler<StoreRoleAssignment> for MemoryStore {
     type Result = Result<RoleAssignment, APIError>;
@@ -299,6 +325,8 @@ impl Handler<StoreRoleAssignment> for MemoryStore {
         Ok(role_assignment)
     }
 }
+
+trace_handler!(MemoryStore, RemoveRoleAssignment, Result<(), APIError>);
 
 impl Handler<RemoveRoleAssignment> for MemoryStore {
     type Result = Result<(), APIError>;
@@ -323,6 +351,8 @@ impl Handler<RemoveRoleAssignment> for MemoryStore {
     }
 }
 
+trace_handler!(MemoryStore, GetUser, Result<User, APIError>);
+
 impl Handler<GetUser> for MemoryStore {
     type Result = Result<User, APIError>;
 
@@ -335,6 +365,8 @@ impl Handler<GetUser> for MemoryStore {
             .map(|u| u.clone())
     }
 }
+
+trace_handler!(MemoryStore, StoreUser, Result<User, APIError>);
 
 impl Handler<StoreUser> for MemoryStore {
     type Result = Result<User, APIError>;

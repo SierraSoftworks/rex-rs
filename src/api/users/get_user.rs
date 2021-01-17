@@ -1,8 +1,10 @@
 use actix_web::{get, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::UserFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/user/{user}")]
 async fn get_user_v3(
     (info, state, token): (web::Path<UserFilter>, web::Data<GlobalState>, AuthToken),
@@ -11,7 +13,7 @@ async fn get_user_v3(
 
     let tuid = parse_uuid!(info.user, user ID);
 
-    state.store.send(GetUser { email_hash: tuid }).await?.map(|user| user.clone().into())
+    state.store.send(GetUser { email_hash: tuid }.trace()).await?.map(|user| user.clone().into())
 }
 
 #[cfg(test)]

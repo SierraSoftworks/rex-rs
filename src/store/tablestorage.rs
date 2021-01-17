@@ -1,12 +1,13 @@
-use crate::models::*;
+use crate::{models::*, trace_handler};
 use crate::api::APIError;
-use std::{fmt::Debug, sync::Arc, convert::TryInto};
+use std::{convert::TryInto, fmt::Debug, pin::Pin, sync::Arc};
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
 use azure_sdk_storage_core::key_client::KeyClient;
 use azure_sdk_storage_table::{CloudTable, Continuation, TableClient, TableEntity};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use tracing::Instrument;
 use prometheus;
 
 lazy_static! {
@@ -72,6 +73,7 @@ impl TableStorage {
         }
     }
 
+    #[instrument(err, skip(table, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "GET"))]
     async fn get_single<ST, T>(table: TableReference, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: DeserializeOwned + Clone,
@@ -92,6 +94,7 @@ impl TableStorage {
             .map(|r| r.into())
     }
 
+    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
     async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
@@ -113,6 +116,7 @@ impl TableStorage {
         Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone().into()).collect())
     }
 
+    #[instrument(err, skip(table, filter, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
     async fn get_random<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
@@ -134,6 +138,7 @@ impl TableStorage {
         entries.iter().filter(|&e| filter(e)).choose(&mut rand::thread_rng()).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
+    #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
     async fn store_single<ST, T>(table: TableReference, type_name: &str, item: TableEntity<ST>) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
@@ -147,6 +152,7 @@ impl TableStorage {
         Ok(result.into())
     }
 
+    #[instrument(err, skip(table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
     async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
         STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "remove_single"]).inc();
         table.delete(
@@ -259,17 +265,50 @@ impl From<TableEntity<TableStorageUser>> for User {
     }
 }
 
+trait AsyncHandler<M>
+where
+    M: Message,
+{
+    type Result;
+
+    // This method is called for every message received by this actor.
+    fn handle_internal(&self, msg: M) -> Pin<Box<dyn Future<Output = Self::Result>>>;
+}
+
 macro_rules! actor_handler {
     ($msg:ty => $res:ty: handler = $handler:item) => {
-        impl Handler<$msg> for TableStorage {
-            type Result = ResponseActFuture<Self, Result<$res, APIError>>;
+        
+        impl AsyncHandler<$msg> for TableStorage {
+            type Result = Result<$res, APIError>;
             
             $handler
+        }
+
+        impl actix::Handler<$msg> for TableStorage {
+            type Result = ResponseActFuture<Self, Result<$res, APIError>>;
+
+            fn handle(&mut self, msg: $msg, _ctx: &mut Self::Context) -> Self::Result {
+                Box::pin(fut::wrap_future(self.handle_internal(msg)))
+            }
+        }
+
+        impl actix::Handler<$crate::telemetry::TraceMessage<$msg>> for TableStorage {
+            type Result = ResponseActFuture<Self, Result<$res, APIError>>;
+
+            fn handle(&mut self, msg: $crate::telemetry::TraceMessage<$msg>, _ctx: &mut Self::Context) -> Self::Result {
+                let work = self.handle_internal(msg.message);
+
+                let instrumentation = async move {
+                    work.await
+                }.instrument(msg.span);
+
+                Box::pin(fut::wrap_future(instrumentation))
+            }
         }
     };
 
     ($msg:ty|$src:ident => $res:ty: get_single from $table:ident ( $st:ty ) where pk=$pk:expr, rk=$rk:expr; not found = $err:expr) => {
-        actor_handler!($msg => $res: handler = fn handle(&mut self, $src: $msg, _: &mut Self::Context) -> Self::Result {
+        actor_handler!($msg => $res: handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let work = TableStorage::get_single::<$st, $res>(
                 table,
@@ -277,12 +316,13 @@ macro_rules! actor_handler {
                 $pk,
                 $rk,
                 APIError::new(404, "Not Found", $err));
-            Box::pin(fut::wrap_future(work))
+
+            Box::pin(work)
         });
     };
 
     ($msg:ty|$src:ident => $res:ty: get_all from $table:ident ( $st:ty ) where query = $query:expr, context = [$($ctx:tt)*], filter = $fid:ident -> $filter:expr) => {
-        actor_handler!($msg => Vec<$res>: handler = fn handle(&mut self, $src: $msg, _: &mut Self::Context) -> Self::Result {
+        actor_handler!($msg => Vec<$res>: handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let query = $query;
 
@@ -295,12 +335,12 @@ macro_rules! actor_handler {
                 move |$fid| $filter
             );
 
-            Box::pin(fut::wrap_future(work))
+            Box::pin(work)
         });
     };
 
     ($msg:ty|$src:ident => $res:ty: get_random from $table:ident ( $st:ty ) where query = $query:expr, context = [$($ctx:tt)*], filter = $fid:ident -> $filter:expr; not found = $err:expr) => {
-        actor_handler!($msg => $res: handler = fn handle(&mut self, $src: $msg, _: &mut Self::Context) -> Self::Result {
+        actor_handler!($msg => $res: handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let query = $query;
 
@@ -314,24 +354,25 @@ macro_rules! actor_handler {
                 APIError::new(404, "Not Found", $err)
             );
 
-            Box::pin(fut::wrap_future(work))
+            Box::pin(work)
         });
     };
 
     ($msg:ty|$src:ident: remove_single from $table:ident where pk=$pk:expr, rk=$rk:expr) => {
-        actor_handler!($msg => (): handler = fn handle(&mut self, $src: $msg, _: &mut Self::Context) -> Self::Result {
+        actor_handler!($msg => (): handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let work = TableStorage::remove_single(
                 table,
                 "$table",
                 $pk,
                 $rk);
-            Box::pin(fut::wrap_future(work))
+
+            Box::pin(work)
         });
     };
     
     ($msg:ty|$src:ident => $res:ty: store_single in $table:ident ( $st:ty ) $item:expr) => {
-        actor_handler!($msg => $res: handler = fn handle(&mut self, $src: $msg, _: &mut Self::Context) -> Self::Result {
+        actor_handler!($msg => $res: handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let item = $item;
             let work = TableStorage::store_single::<$st, $res>(
@@ -340,7 +381,7 @@ macro_rules! actor_handler {
                 item
             );
 
-            Box::pin(fut::wrap_future(work))
+            Box::pin(work)
         });
     };
 }
@@ -348,6 +389,8 @@ macro_rules! actor_handler {
 impl Actor for TableStorage {
     type Context = Context<Self>;
 }
+
+trace_handler!(TableStorage, GetHealth, Result<Health, APIError>);
 
 impl Handler<GetHealth> for TableStorage {
     type Result = Result<Health, APIError>;

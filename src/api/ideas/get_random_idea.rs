@@ -1,8 +1,9 @@
 use actix_web::{get, web};
 use super::{AuthToken, APIError, ensure_user_collection};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::{CollectionFilter, QueryFilter};
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v1/idea/random")]
 async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
@@ -10,9 +11,10 @@ async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> 
     
     let uid = parse_uuid!(token.oid(), auth token oid);
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v2/idea/random")]
 async fn get_random_idea_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -22,9 +24,10 @@ async fn get_random_idea_v2(
     
     let uid = parse_uuid!(token.oid(), auth token oid);
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/idea/random")]
 async fn get_random_idea_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -35,11 +38,12 @@ async fn get_random_idea_v3(
     let uid = parse_uuid!(token.oid(), auth token oid);
 
     ensure_user_collection(&state, &token).await?;
-    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }).await??;
+    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }.trace()).await??;
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/collection/{collection}/idea/random")]
 async fn get_random_collection_idea_v3(
     (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -50,9 +54,9 @@ async fn get_random_collection_idea_v3(
     let cid = parse_uuid!(info.collection, collection ID);
     let uid = parse_uuid!(token.oid(), auth token oid);
         
-    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
+    state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }.trace()).await??;
 
-    state.store.send(GetRandomIdea { collection: cid, is_completed: query.complete, tag: query.tag.clone() }).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: cid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
 }
 
 #[cfg(test)]

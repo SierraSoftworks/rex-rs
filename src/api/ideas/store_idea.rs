@@ -1,8 +1,10 @@
 use actix_web::{put, web};
+use tracing::instrument;
 use super::{AuthToken, APIError, ensure_user_collection};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::{IdFilter, CollectionIdFilter};
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v1/idea/{id}")]
 async fn store_idea_v1(
     (info, new_idea, state, token): (
@@ -28,9 +30,10 @@ async fn store_idea_v1(
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v2/idea/{id}")]
 async fn store_idea_v2(
     (info, new_idea, state, token): (
@@ -56,9 +59,10 @@ async fn store_idea_v2(
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v3/idea/{id}")]
 async fn store_idea_v3(
     (info, new_idea, state, token): (
@@ -84,9 +88,10 @@ async fn store_idea_v3(
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v3/collection/{collection}/idea/{id}")]
 async fn store_collection_idea_v3(
     (info, new_idea, state, token): (
@@ -106,7 +111,7 @@ async fn store_collection_idea_v3(
         
     ensure_user_collection(&state, &token).await?;
 
-    let role = state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
+    let role = state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }.trace()).await??;
 
     match role.role {
         Role::Owner | Role::Contributor => {
@@ -117,7 +122,7 @@ async fn store_collection_idea_v3(
                 description: idea.description,
                 tags: idea.tags,
                 completed: idea.completed,
-            }).await?.map(|idea| idea.clone().into())
+            }.trace()).await?.map(|idea| idea.clone().into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to modify an idea within this collection."))
     }

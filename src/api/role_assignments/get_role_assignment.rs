@@ -1,8 +1,10 @@
 use actix_web::{get, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionUserFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/collection/{collection}/user/{user}")]
 async fn get_role_assignment_v3(
     (info, state, token): (web::Path<CollectionUserFilter>, web::Data<GlobalState>, AuthToken),
@@ -15,14 +17,14 @@ async fn get_role_assignment_v3(
     let tuid = parse_uuid!(info.user, user ID);
 
     if uid != tuid {
-        let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }).await??;
+        let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }.trace()).await??;
 
         if role.role != Role::Owner {
             return Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."));
         }
     }
 
-    state.store.send(GetRoleAssignment { collection_id: cid, principal_id: tuid }).await?.map(|role| role.clone().into())
+    state.store.send(GetRoleAssignment { collection_id: cid, principal_id: tuid }.trace()).await?.map(|role| role.clone().into())
 }
 
 #[cfg(test)]

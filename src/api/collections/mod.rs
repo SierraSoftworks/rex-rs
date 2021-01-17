@@ -16,7 +16,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(remove_collection::remove_collection_v3);
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct CollectionFilter {
     collection: String,
 }

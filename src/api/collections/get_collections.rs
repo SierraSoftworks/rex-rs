@@ -1,7 +1,9 @@
 use actix_web::{get, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::{api::ensure_user_collection, models::*};
+use crate::{api::ensure_user_collection, models::*, telemetry::TraceMessageExt};
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[get("/api/v3/collections")]
 async fn get_collections_v3(
     (state, token): (web::Data<GlobalState>, AuthToken),
@@ -13,7 +15,7 @@ async fn get_collections_v3(
 
     ensure_user_collection(&state, &token).await?;
         
-    state.store.send(GetCollections { principal_id: uid }).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+    state.store.send(GetCollections { principal_id: uid }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
 #[cfg(test)]

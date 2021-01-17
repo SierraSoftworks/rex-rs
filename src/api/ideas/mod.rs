@@ -38,23 +38,23 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(remove_idea::remove_collection_idea_v3);
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct IdFilter {
     id: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct CollectionFilter {
     collection: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct CollectionIdFilter {
     collection: String,
     id: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct QueryFilter {
     tag: Option<String>,
     complete: Option<bool>,

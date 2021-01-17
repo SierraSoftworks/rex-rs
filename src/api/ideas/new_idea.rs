@@ -1,8 +1,10 @@
 use actix_web::{post, web};
+use tracing::instrument;
 use super::{AuthToken, APIError, ensure_user_collection};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[post("/api/v1/ideas")]
 async fn new_idea_v1(
     (new_idea, state, token): (web::Json<IdeaV1>, web::Data<GlobalState>, AuthToken),
@@ -22,9 +24,10 @@ async fn new_idea_v1(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[post("/api/v2/ideas")]
 async fn new_idea_v2(
     (new_idea, state, token): (web::Json<IdeaV2>, web::Data<GlobalState>, AuthToken),
@@ -44,9 +47,10 @@ async fn new_idea_v2(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[post("/api/v3/ideas")]
 async fn new_idea_v3(
     (new_idea, state, token): (web::Json<IdeaV3>, web::Data<GlobalState>, AuthToken),
@@ -66,9 +70,10 @@ async fn new_idea_v3(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.clone().into())
 }
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[post("/api/v3/collection/{collection}/ideas")]
 async fn new_collection_idea_v3(
     (new_idea, info, state, token): (web::Json<IdeaV3>, web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
@@ -95,7 +100,7 @@ async fn new_collection_idea_v3(
                 description: idea.description,
                 tags: idea.tags,
                 completed: idea.completed,
-            }).await?.map(|idea| idea.clone().into())
+            }.trace()).await?.map(|idea| idea.clone().into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to add an idea to this collection."))
     }

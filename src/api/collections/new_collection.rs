@@ -1,7 +1,9 @@
 use actix_web::{post, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[post("/api/v3/collections")]
 async fn new_collection_v3(
     (collection, state, token): (
@@ -17,13 +19,13 @@ async fn new_collection_v3(
         principal_id: uid,
         collection_id: new_id(),
         name: collection.name.clone(),
-    }).await??;
+    }.trace()).await??;
 
     state.store.send(StoreRoleAssignment {
         principal_id: uid,
         collection_id: collection.collection_id,
         role: Role::Owner
-    }).await??;
+    }.trace()).await??;
     
     Ok(collection.into())
 }

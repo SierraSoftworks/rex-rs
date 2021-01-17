@@ -1,8 +1,10 @@
 use actix_web::{put, web};
+use tracing::instrument;
 use super::{AuthToken, APIError};
-use crate::models::*;
+use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionFilter;
 
+#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
 #[put("/api/v3/collection/{collection}")]
 async fn store_collection_v3(
     (info, collection, state, token): (web::Path<CollectionFilter>,
@@ -19,7 +21,7 @@ async fn store_collection_v3(
         principal_id: uid,
         collection_id: cid,
         name: collection.name.clone(),
-    }).await?.map(|collection| collection.clone().into())
+    }.trace()).await?.map(|collection| collection.clone().into())
 }
 
 #[cfg(test)]

@@ -328,7 +328,7 @@ dependencies = [
  "actix-web",
  "futures 0.3.12",
  "pin-project 0.4.24",
- "prometheus",
+ "prometheus 0.10.0",
 ]
 
 [[package]]
@@ -2183,6 +2183,20 @@ dependencies = [
  "fnv",
  "lazy_static",
  "parking_lot 0.11.0",
+ "regex",
+ "thiserror",
+]
+
+[[package]]
+name = "prometheus"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8425533e7122f0c3cc7a37e6244b16ad3a2cc32ae7ac6276e2a75da0d9c200d"
+dependencies = [
+ "cfg-if 1.0.0",
+ "fnv",
+ "lazy_static",
+ "parking_lot 0.11.0",
  "protobuf",
  "regex",
  "thiserror",
@@ -2577,7 +2591,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-application-insights",
  "percent-encoding 2.1.0",
- "prometheus",
+ "prometheus 0.11.0",
  "rand 0.8.2",
  "reqwest 0.10.8",
  "sentry",

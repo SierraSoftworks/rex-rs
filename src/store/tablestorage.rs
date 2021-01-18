@@ -8,30 +8,6 @@ use azure_sdk_storage_table::{CloudTable, Continuation, TableClient, TableEntity
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use tracing::Instrument;
-use prometheus;
-
-lazy_static! {
-    static ref STORAGE_READS_COUNTER: prometheus::IntCounterVec =
-        prometheus::register_int_counter_vec!(
-            "rex_storage_reads_total",
-            "The number of entities read from storage, by type.",
-            &["type"]
-        ).unwrap();
-
-    static ref STORAGE_WRITES_COUNTER: prometheus::IntCounterVec =
-        prometheus::register_int_counter_vec!(
-            "rex_storage_writes_total",
-            "The number of entities written to storage, by type.",
-            &["type"]
-        ).unwrap();
-
-    static ref STORAGE_OPERATIONS_COUNTER: prometheus::IntCounterVec =
-        register_int_counter_vec!(
-            "rex_storage_operations_total",
-            "The number of storage operations which have been executed, by type.",
-            &["type", "operation"]
-        ).unwrap();
-}
 
 type TableReference = Arc<CloudTable<KeyClient>>;
 
@@ -78,16 +54,11 @@ impl TableStorage {
     where
         ST: DeserializeOwned + Clone,
         T: From<TableEntity<ST>> {
-
-        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_single"]).inc();
-
         let result = table.get::<ST>(
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
             None
         ).await?;
-
-        STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc();
 
         result
             .ok_or(not_found_err)
@@ -101,15 +72,17 @@ impl TableStorage {
         P: Fn(&TableEntity<ST>) -> bool,
         T: From<TableEntity<ST>>
     {
-        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_all"]).inc();
-
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
-        let safe_query = TableStorage::escape_query(query);
+        let safe_query = TableStorage::escape_query(&query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
-            STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc_by(results.len().try_into().unwrap_or(1));
+        while let Some(mut results) = table.execute_query::<ST>(
+            if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }
+            , &mut continuation
+        ).instrument(
+            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
+        ).await? {
             entries.append(&mut results);
         }
 
@@ -123,15 +96,17 @@ impl TableStorage {
         P: Fn(&TableEntity<ST>) -> bool,
         T: From<TableEntity<ST>>
     {
-        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "get_random"]).inc();
-
         let mut continuation = Continuation::start();
 
         let mut entries: Vec<TableEntity<ST>> = vec![];
-        let safe_query = TableStorage::escape_query(query);
+        let safe_query = TableStorage::escape_query(&query);
 
-        while let Some(mut results) = table.execute_query::<ST>(if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }, &mut continuation).await? {
-            STORAGE_READS_COUNTER.with_label_values(&[type_name]).inc_by(results.len().try_into().unwrap_or(1));
+        while let Some(mut results) = table.execute_query::<ST>(
+            if safe_query.is_empty() { None } else { Some(safe_query.as_str()) },
+            &mut continuation
+        ).instrument(
+            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
+        ).await? {
             entries.append(&mut results);
         }
 
@@ -143,25 +118,19 @@ impl TableStorage {
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
         T: From<TableEntity<ST>> {
-        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "store_single"]).inc();
         
         let result = table.insert_or_update_entity(item).await?;
-        
-        STORAGE_WRITES_COUNTER.with_label_values(&[type_name]).inc();
 
         Ok(result.into())
     }
 
     #[instrument(err, skip(table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
     async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
-        STORAGE_OPERATIONS_COUNTER.with_label_values(&[type_name, "remove_single"]).inc();
         table.delete(
             &format!("{:0>32x}", partition_key), 
             &format!("{:0>32x}", row_key),
             None).await?;
         
-        STORAGE_WRITES_COUNTER.with_label_values(&[type_name]).inc();
-
         Ok(())
     }
 
@@ -184,7 +153,7 @@ impl TableStorage {
         query
     }
 
-    fn escape_query(query: String) -> String {
+    fn escape_query(query: &str) -> String {
         percent_encoding::percent_encode(query.as_bytes(), URI_CHARACTERS).to_string()
     }
 }

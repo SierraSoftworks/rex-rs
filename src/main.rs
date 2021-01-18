@@ -7,7 +7,6 @@ extern crate uuid;
 #[macro_use] extern crate tracing;
 #[macro_use] extern crate sentry;
 #[macro_use] extern crate lazy_static;
-#[macro_use] extern crate prometheus;
 
 #[macro_use] mod macros;
 
@@ -18,7 +17,6 @@ mod telemetry;
 
 use actix_cors::Cors;
 use actix_web::{App, HttpServer};
-use actix_web_prom::PrometheusMetrics;
 use telemetry::{Session, TracingLogger};
 
 fn get_listening_port() -> u16 {
@@ -35,19 +33,16 @@ async fn main() -> std::io::Result<()> {
             release: release_name!(),
             ..Default::default()
         }
-        .add_integration(sentry::integrations::log::LogIntegration::default()),
     ));
 
     let state = models::GlobalState::new();
-    let metrics = PrometheusMetrics::new_with_registry(prometheus::default_registry().clone(), "rex", Some("/api/v1/metrics"), None).unwrap();
 
     info!("Starting server on :{}", get_listening_port());
     HttpServer::new(move || {
         App::new()
             .data(state.clone())
-            .wrap(metrics.clone())
             .wrap(TracingLogger)
-            .wrap(Cors::new().send_wildcard().finish())
+            .wrap(Cors::default().allow_any_origin().send_wildcard())
             .configure(api::configure)
     })
         .bind(format!("0.0.0.0:{}", get_listening_port()))?

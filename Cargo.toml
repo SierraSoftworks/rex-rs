@@ -11,13 +11,12 @@ table_storage = []
 
 [dependencies]
 actix = "0.10"
-actix-cors = "0.4"
-actix-http = "2.1"
-actix-rt = "1.1"
-actix-service = "1.0"
-actix-web = "3.2"
+actix-cors = "0.5"
+actix-http = "2"
+actix-rt = "1"
+actix-service = "1"
+actix-web = "3"
 actix-web-httpauth = "0.5"
-actix-web-prom = "0.5"
 async-trait = "0.1.42"
 azure_sdk_core = "0.43.7"
 azure_sdk_storage_core = "0.44.4"
@@ -33,10 +32,9 @@ openidconnect = { version = "1.0" }
 opentelemetry = { version = "0.11", features = ["tokio"] }
 opentelemetry-application-insights = { version = "0.10", features = ["reqwest-client"] }
 percent-encoding = "2.1"
-prometheus = "0.10"
 rand = "0.8"
 reqwest = { version = "0.10" }
-sentry = { version = "0.20", features = ["log"] }
+sentry = { version = "0.22", features = ["log"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "0.3", features = ["full"] }

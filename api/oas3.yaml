@@ -6,7 +6,7 @@ info:
   license:
     name: MIT
     url: https://sierrasoftworks.com/licenses/MIT
-  version: 3.0.
+  version: 3.0.0
 
 servers:
   - url: https://rex.sierrasoftworks.com

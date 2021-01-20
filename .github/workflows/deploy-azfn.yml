@@ -40,6 +40,9 @@ jobs:
     needs: build
 
     runs-on: ubuntu-20.04
+    environment:
+      name: Production
+      url: ${{ env.STAGING_HEALTHCHECK }}
 
     steps:
       - uses: actions/checkout@v2
@@ -78,6 +81,9 @@ jobs:
   deploy-live:
     needs: healthcheck-staging
     if: github.event_name == 'push'
+    environment:
+      name: Production
+      url: ${{ env.LIVE_HEALTHCHECK }}
 
     runs-on: ubuntu-20.04
 

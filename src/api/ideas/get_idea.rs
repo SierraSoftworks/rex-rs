@@ -12,8 +12,8 @@ async fn get_idea_v1(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let id = parse_uuid!(info.id, "idea ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
     
     state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
 }
@@ -26,8 +26,8 @@ async fn get_idea_v2(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let id = parse_uuid!(info.id, "idea ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
         
     state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
 }
@@ -40,8 +40,8 @@ async fn get_idea_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let id = parse_uuid!(info.id, idea ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let id = parse_uuid!(info.id, "idea ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
         
     ensure_user_collection(&state, &token).await?;
     
@@ -56,9 +56,9 @@ async fn get_collection_idea_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Read");
     
-    let id = parse_uuid!(info.id, idea ID);
-    let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let id = parse_uuid!(info.id, "idea ID");
+    let cid = parse_uuid!(info.collection, "collection ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
         
     ensure_user_collection(&state, &token).await?;
 

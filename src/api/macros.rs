@@ -1,8 +1,8 @@
 #[macro_export]
 macro_rules! parse_uuid {
-    ($from:expr, $($desc:tt)+) => {
+    ($from:expr, $desc:expr) => {
         u128::from_str_radix($from.replace("-", "").as_str(), 16)
-            .or(Err(APIError::new(400, "Bad Request", "The $($desc)+ you provided could not be parsed. Please check it and try again.")))?;
+            .or(Err(APIError::new(400, "Bad Request", &format!("The {} you provided could not be parsed. Please check it and try again.", $desc))))?
     };
 }
 

@@ -12,9 +12,9 @@ async fn remove_role_assignment_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "RoleAssignments.Write");
     
-    let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
-    let tuid = parse_uuid!(info.user, user ID);
+    let cid = parse_uuid!(info.collection, "collection ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
+    let tuid = parse_uuid!(info.user, "user ID");
 
     if tuid == uid {
         return Err(APIError::new(400, "Bad Request", "You cannot remove yourself from a collection. Please request that another collection owner performs this for you."))

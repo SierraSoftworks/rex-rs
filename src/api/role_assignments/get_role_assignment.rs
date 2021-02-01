@@ -12,9 +12,9 @@ async fn get_role_assignment_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "RoleAssignments.Write");
     
-    let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
-    let tuid = parse_uuid!(info.user, user ID);
+    let cid = parse_uuid!(info.collection, "collection ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
+    let tuid = parse_uuid!(info.user, "user ID");
 
     if uid != tuid {
         let role = state.store.send(GetRoleAssignment { collection_id: cid, principal_id: uid }.trace()).await??;

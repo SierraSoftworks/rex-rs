@@ -12,8 +12,8 @@ async fn get_collection_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Read");
 
-    let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let cid = parse_uuid!(info.collection, "collection ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
 
     state.store.send(GetCollection { id: cid, principal_id: uid }.trace()).await?.map(|collection| collection.clone().into())
 }

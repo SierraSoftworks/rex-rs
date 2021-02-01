@@ -11,7 +11,7 @@ async fn get_collections_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Read");
 
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let uid = parse_uuid!(token.oid(), "auth token oid");
 
     ensure_user_collection(&state, &token).await?;
         

@@ -11,7 +11,7 @@ async fn get_user_v3(
 ) -> Result<UserV3, APIError> {
     require_role!(token, "Administrator", "User");
 
-    let tuid = parse_uuid!(info.user, user ID);
+    let tuid = parse_uuid!(info.user, "user ID");
 
     state.store.send(GetUser { email_hash: tuid }.trace()).await?.map(|user| user.clone().into())
 }

@@ -13,7 +13,7 @@ async fn new_collection_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Write");
     
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let uid = parse_uuid!(token.oid(), "auth token oid");
         
     let collection = state.store.send(StoreCollection {
         principal_id: uid,

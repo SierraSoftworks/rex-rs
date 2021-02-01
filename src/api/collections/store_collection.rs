@@ -14,8 +14,8 @@ async fn store_collection_v3(
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Collections.Write");
     
-    let cid = parse_uuid!(info.collection, collection ID);
-    let uid = parse_uuid!(token.oid(), auth token oid);
+    let cid = parse_uuid!(info.collection, "collection ID");
+    let uid = parse_uuid!(token.oid(), "auth token oid");
 
     state.store.send(StoreCollection {
         principal_id: uid,

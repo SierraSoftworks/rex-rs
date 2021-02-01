@@ -2643,7 +2643,7 @@ dependencies = [
  "opentelemetry-application-insights",
  "percent-encoding 2.1.0",
  "rand 0.8.3",
- "reqwest 0.10.10",
+ "reqwest 0.11.0",
  "sentry",
  "serde",
  "serde_json",

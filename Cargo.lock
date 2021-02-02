@@ -2027,19 +2027,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "opentelemetry-application-insights"
-version = "0.10.0"
+name = "opentelemetry"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baec2cb50c2c82739ac05920dc21348afa75d0f879746fb1754271d5274b5dbd"
+checksum = "514d24875c140ed269eecc2d1b56d7b71b573716922a763c317fb1b1b4b58f15"
 dependencies = [
  "async-trait",
- "bytes 0.5.6",
+ "futures 0.3.12",
+ "js-sys",
+ "lazy_static",
+ "percent-encoding 2.1.0",
+ "pin-project 1.0.4",
+ "rand 0.8.3",
+ "thiserror",
+ "tokio 1.1.1",
+ "tokio-stream",
+]
+
+[[package]]
+name = "opentelemetry-application-insights"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a14b75b6c37342e8dc3f9006b2ec34e1dc37fe8dcfd9125dbbe861fe3cb43a6"
+dependencies = [
+ "async-trait",
+ "bytes 1.0.1",
  "chrono",
  "http 0.2.3",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.12.0",
  "opentelemetry-semantic-conventions",
- "reqwest 0.10.10",
+ "reqwest 0.11.0",
  "serde",
  "serde_json",
  "thiserror",
@@ -2047,11 +2065,11 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3839dd2c931dc1aabcf964623ad74478fa97b3a88ad073d9e107aea36520c21d"
+checksum = "0ecb679b997c41108a498e3ce8b933fe2f643a9a722ad8ca33f95edab84df106"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.12.0",
 ]
 
 [[package]]
@@ -2639,7 +2657,7 @@ dependencies = [
  "log",
  "md5",
  "openidconnect",
- "opentelemetry",
+ "opentelemetry 0.11.2",
  "opentelemetry-application-insights",
  "percent-encoding 2.1.0",
  "rand 0.8.3",
@@ -3475,6 +3493,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-stream"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76066865172052eb8796c686f0b441a93df8b08d40a950b062ffb9a426f00edd"
+dependencies = [
+ "futures-core",
+ "pin-project-lite 0.2.4",
+ "tokio 1.1.1",
+]
+
+[[package]]
 name = "tokio-sync"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3648,7 +3677,7 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1706e1f42970e09aa0635deb4f4607e8704a4390427d5f0062bf59240338bcc"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.11.2",
  "tracing",
  "tracing-core",
  "tracing-log",

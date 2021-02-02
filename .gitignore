@@ -6,3 +6,6 @@
 **/*.rs.bk
 
 local.settings.json
+
+/rex
+/rex.exe

@@ -6,21 +6,17 @@ edition = "2018"
 
 [features]
 default = []
-
 table_storage = []
 
 [dependencies]
-actix = "0.10"
-actix-cors = "0.5"
-actix-http = "2"
-actix-rt = "1"
-actix-service = "1"
-actix-web = "3"
-actix-web-httpauth = "0.5"
+actix = "0.11.0-beta.2"
+actix-http = "3.0.0-beta.3"
+actix-rt = "2.0"
+actix-service = "2.0.0-beta.4"
+actix-web = "4.0.0-beta.3"
 async-trait = "0.1.42"
-azure_sdk_core = "0.43.7"
-azure_sdk_storage_core = "0.44.4"
-azure_sdk_storage_table = "0.41.3"
+azure_core = { git = "https://github.com/azure/azure-sdk-for-rust" }
+azure_storage = { git = "https://github.com/azure/azure-sdk-for-rust", features = ["table"] }
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.8"
 futures = "0.3"
@@ -37,11 +33,11 @@ reqwest = { version = "0.11" }
 sentry = { version = "0.22", features = ["log"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "0.3", features = ["full"] }
+tokio = { version = "1.0", features = ["full"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-actix-web = "0.2"
+tracing-actix-web = "0.3.0-beta.2"
 tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-futures = { version = "0.2.4", features = ["futures-03"] }
 tracing-opentelemetry = "0.11"
 tracing-subscriber = "0.2"
-uuid = { version = "0.7", features = ["serde", "v4", "u128"] }
+uuid = { version = "0.8", features = ["serde", "v4"] }

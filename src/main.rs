@@ -15,7 +15,6 @@ mod models;
 mod store;
 mod telemetry;
 
-use actix_cors::Cors;
 use actix_web::{App, HttpServer};
 use telemetry::{Session, TracingLogger};
 
@@ -42,7 +41,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .data(state.clone())
             .wrap(TracingLogger)
-            .wrap(Cors::default().allow_any_origin().send_wildcard())
+            // TODO: CORS needs to be updated for new actix-web
+            // .wrap(Cors::default().allow_any_origin().send_wildcard())
             .configure(api::configure)
     })
         .bind(format!("0.0.0.0:{}", get_listening_port()))?

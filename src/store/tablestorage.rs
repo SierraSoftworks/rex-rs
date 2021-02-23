@@ -1,10 +1,11 @@
 use crate::{models::*, trace_handler};
 use crate::api::APIError;
-use std::{convert::TryInto, fmt::Debug, pin::Pin, sync::Arc};
+use std::{fmt::Debug, pin::Pin, sync::Arc};
+use futures::StreamExt;
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
-use azure_sdk_storage_core::key_client::KeyClient;
-use azure_sdk_storage_table::{CloudTable, Continuation, TableClient, TableEntity};
+use azure_storage::core::key_client::KeyClient;
+use azure_storage::table::{CloudTable, TableClient, TableEntity};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use tracing::Instrument;
@@ -65,6 +66,37 @@ impl TableStorage {
             .map(|r| r.into())
     }
 
+    async fn get_all_entities<ST, P>(table: TableReference, _type_name: &str, query: String, filter: P) -> Result<Vec<TableEntity<ST>>, APIError>
+    where
+        ST: Serialize + DeserializeOwned + Clone,
+        P: Fn(&TableEntity<ST>) -> bool
+    {
+        let mut entries: Vec<TableEntity<ST>> = vec![];
+        let safe_query = TableStorage::escape_query(&query);
+
+        if safe_query.is_empty() {
+            let mut stream = Box::pin(table.stream_get_all::<ST>());
+            
+            while let Some(result) = stream.next().instrument(
+                info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = "*")
+            ).await {
+                let mut result = result?;
+                entries.append(&mut result.entities);
+            }
+        } else {
+            let mut stream = Box::pin(table.stream_query::<ST>(safe_query.as_str()));
+            
+            while let Some(result) = stream.next().instrument(
+                info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
+            ).await {
+                let mut result = result?;
+                entries.append(&mut result.entities);
+            }
+        }
+
+        Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone()).collect())
+    }
+
     #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
     async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
@@ -72,21 +104,8 @@ impl TableStorage {
         P: Fn(&TableEntity<ST>) -> bool,
         T: From<TableEntity<ST>>
     {
-        let mut continuation = Continuation::start();
-
-        let mut entries: Vec<TableEntity<ST>> = vec![];
-        let safe_query = TableStorage::escape_query(&query);
-
-        while let Some(mut results) = table.execute_query::<ST>(
-            if safe_query.is_empty() { None } else { Some(safe_query.as_str()) }
-            , &mut continuation
-        ).instrument(
-            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
-        ).await? {
-            entries.append(&mut results);
-        }
-
-        Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone().into()).collect())
+        let entries: Vec<TableEntity<ST>> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
+        Ok(entries.iter().map(|e| e.clone().into()).collect())
     }
 
     #[instrument(err, skip(table, filter, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
@@ -94,23 +113,10 @@ impl TableStorage {
     where
         ST: Serialize + DeserializeOwned + Clone,
         P: Fn(&TableEntity<ST>) -> bool,
-        T: From<TableEntity<ST>>
+        T: From<TableEntity<ST>> + ToOwned
     {
-        let mut continuation = Continuation::start();
-
-        let mut entries: Vec<TableEntity<ST>> = vec![];
-        let safe_query = TableStorage::escape_query(&query);
-
-        while let Some(mut results) = table.execute_query::<ST>(
-            if safe_query.is_empty() { None } else { Some(safe_query.as_str()) },
-            &mut continuation
-        ).instrument(
-            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
-        ).await? {
-            entries.append(&mut results);
-        }
-
-        entries.iter().filter(|&e| filter(e)).choose(&mut rand::thread_rng()).map(|e| e.clone().into()).ok_or(not_found_err)
+        let entries: Vec<TableEntity<ST>> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
+        entries.iter().choose(&mut rand::thread_rng()).map(|e| e).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
     #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]

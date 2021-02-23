@@ -1,9 +1,8 @@
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
-use actix_web_httpauth::extractors::bearer::BearerAuth;
 use openidconnect::{ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl, core::{CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata}, reqwest::http_client};
 use std::sync::Arc;
 use super::APIError;
-use futures::{FutureExt, future::{ready, Ready}};
+use futures::future::{ready, Ready};
 
 lazy_static! {
     static ref CLIENT: Arc<CoreClient> = Arc::new(get_client());
@@ -51,15 +50,25 @@ impl AuthToken {
         &self.claims.additional_claims().unique_name
     }
 
-    fn from_request_internal(req: &HttpRequest, payload: &mut Payload) -> Result<AuthToken, APIError> {
-        let get_creds = BearerAuth::from_request(req, payload).now_or_never();
-        let creds = get_creds
-            .ok_or(APIError::unauthorized())?
-            .map_err(|_| APIError::unauthorized())?;
+    fn bearer_token_from_request(req: &HttpRequest) -> Result<&str, APIError> {
+        req.headers().get("Authorization")
+            .ok_or(APIError::unauthorized())
+            .and_then(|header| header.to_str().map_err(|_| APIError::unauthorized()))
+            .and_then(|header| {
+                if header.starts_with("Bearer ") {
+                    header.split_ascii_whitespace().nth(1).ok_or(APIError::unauthorized())
+                } else {
+                    Err(APIError::unauthorized())
+                }
+            })
+    }
+
+    fn from_request_internal(req: &HttpRequest) -> Result<AuthToken, APIError> {
+        let creds = AuthToken::bearer_token_from_request(req)?;
             
         let client = CLIENT.clone();
         
-        let id_token: AuthIdToken = serde_json::from_value(serde_json::json!(creds.token())).map_err(|e| {
+        let id_token: AuthIdToken = serde_json::from_value(serde_json::json!(creds)).map_err(|e| {
             warn!("Unable to deserialize credential token: {}", e);
             APIError::unauthorized()
         })?;
@@ -90,8 +99,8 @@ impl FromRequest for AuthToken {
     type Config = ();
 
     #[inline]
-    fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
-        ready(AuthToken::from_request_internal(req, payload))
+    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+        ready(AuthToken::from_request_internal(req))
     }
 }
 

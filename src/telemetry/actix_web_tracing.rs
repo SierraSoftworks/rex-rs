@@ -10,13 +10,11 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub struct TracingLogger;
 
-impl<S, B> Transform<S> for TracingLogger
+impl<S, B> Transform<S, ServiceRequest> for TracingLogger
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
     S::Future: 'static,
-    B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Transform = TracingLoggerMiddleware<S>;
@@ -33,22 +31,20 @@ pub struct TracingLoggerMiddleware<S> {
     service: S,
 }
 
-impl<S, B> Service for TracingLoggerMiddleware<S>
+impl<S, B> Service<ServiceRequest> for TracingLoggerMiddleware<S>
 where
-    S: Service<Request = ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
     S::Future: 'static,
-    B: 'static,
 {
-    type Request = ServiceRequest;
     type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let propagator = TraceContextPropagator::new();
 
 

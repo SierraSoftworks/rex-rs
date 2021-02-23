@@ -60,7 +60,7 @@ macro_rules! test_request {
             let mut app = crate::api::test::get_test_app($state.clone()).await;
             let req = actix_web::test::TestRequest::with_uri($path)
                 .method(http::Method::$method)
-                .header("Authorization", crate::api::test::auth_token())
+                .insert_header(("Authorization", crate::api::test::auth_token()))
                 .to_request();
 
             let mut response = actix_web::test::call_service(&mut app, req).await;
@@ -76,7 +76,7 @@ macro_rules! test_request {
             let req = actix_web::test::TestRequest::with_uri($path)
                 .method(http::Method::$method)
                 .set_json(&$body)
-                .header("Authorization", crate::api::test::auth_token())
+                .insert_header(("Authorization", crate::api::test::auth_token()))
                 .to_request();
 
             let mut response = actix_web::test::call_service(&mut app, req).await;

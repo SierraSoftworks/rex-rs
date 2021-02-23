@@ -13,7 +13,7 @@ pub fn test_log_init() {
     let _ = env_logger::builder().is_test(true).filter_level(log::LevelFilter::Debug).try_init();
 }
 
-pub async fn get_test_app(state: GlobalState) -> impl actix_web::dev::Service<Request = actix_http::Request, Response = actix_web::dev::ServiceResponse<actix_web::dev::Body>, Error = actix_web::Error> {
+pub async fn get_test_app(state: GlobalState) -> impl actix_web::dev::Service<actix_http::Request, Response=actix_web::dev::ServiceResponse, Error=actix_web::Error> {
     test::init_service(
         App::new()
             .data(state.clone())

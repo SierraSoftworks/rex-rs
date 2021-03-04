@@ -10,9 +10,9 @@ checksum = "8b5ace29ee3216de37c0546865ad08edef58b0f9e76838ed8959a84a990e58c5"
 
 [[package]]
 name = "actix"
-version = "0.11.0-beta.2"
+version = "0.11.0-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eb78f9871feb3519e06b947c2becbf2cc7f67ce786e510e6bd3f9a27da3dbf1"
+checksum = "0865a034bd84c1cfb2afa66bfd22195b280650817729086268f7744a493fa292"
 dependencies = [
  "actix-rt",
  "actix_derive",
@@ -22,6 +22,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-task",
+ "futures-util",
  "log",
  "once_cell",
  "parking_lot 0.11.1",
@@ -236,9 +237,9 @@ dependencies = [
 
 [[package]]
 name = "actix_derive"
-version = "0.6.0-beta.1"
+version = "0.6.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae749cf2582eb83efd288edd4e9704600fdce1bc4f69aa0c86ca1368a3e4c13f"
+checksum = "4547d62fc2185633c070441fd5ca45e8592a967d18396ca23420877464cf781f"
 dependencies = [
  "proc-macro2",
  "quote",

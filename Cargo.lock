@@ -368,7 +368,7 @@ dependencies = [
  "oauth2 4.0.0-alpha.3",
  "paste",
  "quick-error",
- "reqwest 0.11.1",
+ "reqwest 0.11.2",
  "serde",
  "serde-xml-rs",
  "serde_derive",
@@ -1710,7 +1710,7 @@ dependencies = [
  "chrono",
  "http 0.2.3",
  "rand 0.7.3",
- "reqwest 0.11.1",
+ "reqwest 0.11.2",
  "serde",
  "serde_json",
  "sha2 0.9.3",
@@ -1830,7 +1830,7 @@ dependencies = [
  "once_cell",
  "opentelemetry",
  "opentelemetry-semantic-conventions",
- "reqwest 0.11.1",
+ "reqwest 0.11.2",
  "serde",
  "serde_json",
  "thiserror",
@@ -2309,9 +2309,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0460542b551950620a3648c6aa23318ac6b3cd779114bd873209e6e8b5eb1c34"
+checksum = "bf12057f289428dbf5c591c74bf10392e4a8003f993405a902f20117019022d4"
 dependencies = [
  "base64 0.13.0",
  "bytes 1.0.1",
@@ -2370,7 +2370,7 @@ dependencies = [
  "opentelemetry-application-insights",
  "percent-encoding 2.1.0",
  "rand 0.8.3",
- "reqwest 0.11.1",
+ "reqwest 0.11.2",
  "sentry",
  "serde",
  "serde_json",
@@ -2555,7 +2555,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27c425b07c7186018e2ef9ac3a25b01dae78b05a7ef604d07f216b9f59b42b4"
 dependencies = [
  "httpdate",
- "reqwest 0.11.1",
+ "reqwest 0.11.2",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",

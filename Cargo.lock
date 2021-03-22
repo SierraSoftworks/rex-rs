@@ -1819,9 +1819,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-application-insights"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a14b75b6c37342e8dc3f9006b2ec34e1dc37fe8dcfd9125dbbe861fe3cb43a6"
+checksum = "1632cc9ed75578119e50a5d9dccc418e71b01dc0948b476d5a4196b9fe11b3c2"
 dependencies = [
  "async-trait",
  "bytes 1.0.1",

@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "azure_core"
 version = "0.1.0"
-source = "git+https://github.com/azure/azure-sdk-for-rust#0b62407f099ff82ff9089a152541e42f00151ac3"
+source = "git+https://github.com/azure/azure-sdk-for-rust#6ed300a1f89a28983102c8a228642877157a2f80"
 dependencies = [
  "RustyXML",
  "async-trait",
@@ -380,31 +380,25 @@ dependencies = [
 [[package]]
 name = "azure_storage"
 version = "0.1.0"
-source = "git+https://github.com/azure/azure-sdk-for-rust#0b62407f099ff82ff9089a152541e42f00151ac3"
+source = "git+https://github.com/azure/azure-sdk-for-rust#6ed300a1f89a28983102c8a228642877157a2f80"
 dependencies = [
  "RustyXML",
  "azure_core",
  "base64 0.13.0",
  "bytes 1.0.1",
  "chrono",
- "failure",
  "futures 0.3.13",
  "http 0.2.3",
- "hyper 0.14.2",
- "hyper-rustls",
  "log",
  "md5",
- "mime",
- "percent-encoding 2.1.0",
+ "once_cell",
  "quick-error",
  "ring",
  "serde",
  "serde-xml-rs",
  "serde_derive",
  "serde_json",
- "smallvec 1.6.1",
  "thiserror",
- "time 0.2.25",
  "url 2.2.0",
  "uuid 0.8.2",
 ]
@@ -1726,9 +1720,9 @@ checksum = "a9a7ab5d64814df0fe4a4b5ead45ed6c5f181ee3ff04ba344313a6c80446c5d4"
 
 [[package]]
 name = "once_cell"
-version = "1.5.2"
+version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13bd41f508810a131401606d54ac32a467c97172d74ba7662562ebba5ad07fa0"
+checksum = "af8b08b04175473088b46763e51ee54da5f9a164bc162f615b91bc179dbf15a3"
 
 [[package]]
 name = "opaque-debug"
@@ -2797,9 +2791,6 @@ name = "smallvec"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "socket2"

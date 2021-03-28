@@ -1,7 +1,14 @@
 version: 2
 updates:
-- package-ecosystem: cargo
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
+  - directory: /
+    package-ecosystem: cargo
+    schedule:
+      interval: daily
+  - directory: /
+    package-ecosystem: docker
+    schedule:
+      interval: daily
+  - directory: /
+    package-ecosystem: github-actions
+    schedule:
+      interval: daily

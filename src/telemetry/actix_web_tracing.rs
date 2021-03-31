@@ -54,28 +54,30 @@ where
             .map(|h| h.to_str().unwrap_or(""))
             .unwrap_or("");
 
-            
-
-        let span = tracing::info_span!(
-            "request",
-            "otel.kind" = "server",
-            "net.transport" = "IP.TPC",
-            "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
-            "http.target" = %req.path(),
-            "http.user_agent" = %user_agent,
-            "http.status_code" = tracing::field::Empty,
-            "http.method" = %req.method(),
-            "http.url" = %req.uri(),
-        );
-
-        // Propagate OpenTelemetry parent span context information
-        let context  = propagator.extract(&HeaderMapExtractor { headers: req.headers() });
-        span.set_parent(context);
+            let span = tracing::info_span!(
+                "request",
+                "otel.kind" = "server",
+                "net.transport" = "IP.TCP",
+                "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
+                "http.target" = %req.uri(),
+                "http.user_agent" = %user_agent,
+                "http.status_code" = tracing::field::Empty,
+                "http.method" = %req.method(),
+                "http.url" = %req.match_pattern().unwrap_or(req.path().into()),
+            );
+    
+            {
+                let _enter = span.enter();
+                // Propagate OpenTelemetry parent span context information
+                let context  = propagator.extract(&HeaderMapExtractor { headers: req.headers() });
+    
+                Span::current().set_parent(context.clone());
+            }
 
         let fut = self.service.call(req);
         Box::pin(
             async move {
-                let outcome = fut.await;
+                let outcome = fut.instrument(tracing::info_span!("request.handler", "otel.kind"="internal")).await;
                 let status_code = match &outcome {
                     Ok(response) => response.response().status(),
                     Err(error) => error.as_response_error().status_code(),

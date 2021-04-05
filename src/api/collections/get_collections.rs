@@ -3,7 +3,7 @@ use tracing::instrument;
 use super::{AuthToken, APIError};
 use crate::{api::ensure_user_collection, models::*, telemetry::TraceMessageExt};
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/collections")]
 async fn get_collections_v3(
     (state, token): (web::Data<GlobalState>, AuthToken),

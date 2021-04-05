@@ -3,13 +3,13 @@ use tracing::instrument;
 use crate::{models::*, telemetry::TraceMessageExt};
 use crate::api::APIError;
 
-#[instrument(err, skip(state), fields(otel.kind = "server"))]
+#[instrument(err, skip(state), fields(otel.kind = "internal"))]
 #[get("/api/v1/health")]
 pub async fn get_health_v1(state: web::Data<GlobalState>) -> Result<HealthV1, APIError> {
     state.store.send(GetHealth {}.trace()).await?.map(|health| health.clone().into())
 }
 
-#[instrument(err, skip(state), fields(otel.kind = "server"))]
+#[instrument(err, skip(state), fields(otel.kind = "internal"))]
 #[get("/api/v2/health")]
 pub async fn get_health_v2(state: web::Data<GlobalState>) ->Result<HealthV2, APIError> {
     state.store.send(GetHealth {}.trace()).await?.map(|health| health.clone().into())

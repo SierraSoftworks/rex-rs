@@ -4,7 +4,7 @@ use super::{AuthToken, APIError, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::{IdFilter, CollectionIdFilter};
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[put("/api/v1/idea/{id}")]
 async fn store_idea_v1(
     (info, new_idea, state, token): (
@@ -33,7 +33,7 @@ async fn store_idea_v1(
     }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[put("/api/v2/idea/{id}")]
 async fn store_idea_v2(
     (info, new_idea, state, token): (
@@ -62,7 +62,7 @@ async fn store_idea_v2(
     }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[put("/api/v3/idea/{id}")]
 async fn store_idea_v3(
     (info, new_idea, state, token): (
@@ -91,7 +91,7 @@ async fn store_idea_v3(
     }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[put("/api/v3/collection/{collection}/idea/{id}")]
 async fn store_collection_idea_v3(
     (info, new_idea, state, token): (

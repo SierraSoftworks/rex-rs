@@ -4,7 +4,7 @@ use super::{AuthToken, APIError};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::UserFilter;
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/user/{user}")]
 async fn get_user_v3(
     (info, state, token): (web::Path<UserFilter>, web::Data<GlobalState>, AuthToken),

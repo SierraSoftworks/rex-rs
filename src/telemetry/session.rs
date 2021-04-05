@@ -2,8 +2,6 @@ use opentelemetry::{KeyValue, sdk};
 use tracing_subscriber::{Registry, prelude::__tracing_subscriber_SubscriberExt};
 
 pub struct Session {
-    _uninstall_stdout: Option<sdk::export::trace::stdout::Uninstall>,
-    _uninstall_appinsights: Option<opentelemetry_application_insights::Uninstall>,
 }
 
 impl Session {
@@ -11,8 +9,8 @@ impl Session {
         let app_insights_key = std::env::var("APPINSIGHTS_INSTRUMENTATIONKEY").unwrap_or_default();
         if app_insights_key.is_empty()
         {
-            let (tracer, uninstall) = sdk::export::trace::stdout::new_pipeline()
-                .install();
+            let tracer = sdk::export::trace::stdout::new_pipeline()
+                .install_simple();
 
             let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
             let subscriber = Registry::default().with(telemetry);
@@ -25,11 +23,9 @@ impl Session {
             //     .init();
 
             Self {
-                _uninstall_stdout: Some(uninstall),
-                _uninstall_appinsights: None
             }
         } else {
-            let (tracer, uninstall) = opentelemetry_application_insights::new_pipeline(
+            let tracer = opentelemetry_application_insights::new_pipeline(
                 app_insights_key
             )
                 .with_client(reqwest::Client::new())
@@ -37,7 +33,7 @@ impl Session {
                     KeyValue::new("service.name", "Rex"),
                     KeyValue::new("service.version", env!("CARGO_PKG_VERSION"))
                 ])))
-                .install();
+                .install_simple();
 
             let telemetry = tracing_opentelemetry::layer()
                 .with_tracked_inactivity(true)
@@ -47,8 +43,6 @@ impl Session {
             tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
 
             Self {
-                _uninstall_stdout: None,
-                _uninstall_appinsights: Some(uninstall),
             }
         }
     }

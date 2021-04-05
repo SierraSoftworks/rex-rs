@@ -4,7 +4,7 @@ use super::{AuthToken, APIError, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::{IdFilter, CollectionIdFilter};
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v1/idea/{id}")]
 async fn remove_idea_v1(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -20,7 +20,7 @@ async fn remove_idea_v1(
     Ok(web::HttpResponse::NoContent().finish())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v2/idea/{id}")]
 async fn remove_idea_v2(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -36,7 +36,7 @@ async fn remove_idea_v2(
     Ok(web::HttpResponse::NoContent().finish())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v3/idea/{id}")]
 async fn remove_idea_v3(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -52,7 +52,7 @@ async fn remove_idea_v3(
     Ok(web::HttpResponse::NoContent().finish())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v3/collection/{collection}/idea/{id}")]
 async fn remove_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),

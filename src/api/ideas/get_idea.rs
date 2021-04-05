@@ -4,7 +4,7 @@ use super::{AuthToken, APIError, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::{IdFilter, CollectionIdFilter};
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v1/idea/{id}")]
 async fn get_idea_v1(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -18,7 +18,7 @@ async fn get_idea_v1(
     state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v2/idea/{id}")]
 async fn get_idea_v2(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -32,7 +32,7 @@ async fn get_idea_v2(
     state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/idea/{id}")]
 async fn get_idea_v3(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
@@ -48,7 +48,7 @@ async fn get_idea_v3(
     state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/collection/{collection}/idea/{id}")]
 async fn get_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),

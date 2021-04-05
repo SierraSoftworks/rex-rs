@@ -4,7 +4,7 @@ use super::{AuthToken, APIError};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionUserFilter;
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/collection/{collection}/user/{user}")]
 async fn get_role_assignment_v3(
     (info, state, token): (web::Path<CollectionUserFilter>, web::Data<GlobalState>, AuthToken),

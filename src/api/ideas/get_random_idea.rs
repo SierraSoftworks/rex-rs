@@ -3,7 +3,7 @@ use super::{AuthToken, APIError, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::{CollectionFilter, QueryFilter};
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v1/idea/random")]
 async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
@@ -14,7 +14,7 @@ async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> 
     state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v2/idea/random")]
 async fn get_random_idea_v2(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -27,7 +27,7 @@ async fn get_random_idea_v2(
     state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/idea/random")]
 async fn get_random_idea_v3(
     (query, state, token): (web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),
@@ -43,7 +43,7 @@ async fn get_random_idea_v3(
     state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
 }
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/collection/{collection}/idea/random")]
 async fn get_random_collection_idea_v3(
     (info, query, state, token): (web::Path<CollectionFilter>, web::Query<QueryFilter>, web::Data<GlobalState>, AuthToken),

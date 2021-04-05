@@ -4,7 +4,7 @@ use super::{AuthToken, APIError};
 use crate::{models::*, telemetry::TraceMessageExt};
 use super::CollectionFilter;
 
-#[instrument(err, skip(state, token), fields(otel.kind = "server"))]
+#[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[put("/api/v3/collection/{collection}")]
 async fn store_collection_v3(
     (info, collection, state, token): (web::Path<CollectionFilter>,

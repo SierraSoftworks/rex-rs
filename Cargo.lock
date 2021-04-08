@@ -72,7 +72,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2 0.3.2",
- "http 0.2.3",
+ "http 0.2.4",
  "httparse",
  "itoa",
  "language-tags",
@@ -111,7 +111,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ad299af73649e1fc893e333ccf86f377751eb95ff875d095131574c6f43452c"
 dependencies = [
  "bytestring",
- "http 0.2.3",
+ "http 0.2.4",
  "log",
  "regex",
  "serde",
@@ -167,7 +167,7 @@ dependencies = [
  "actix-utils",
  "derive_more",
  "futures-core",
- "http 0.2.3",
+ "http 0.2.4",
  "log",
  "tokio-util",
 ]
@@ -331,7 +331,7 @@ dependencies = [
  "chrono",
  "failure",
  "futures 0.3.13",
- "http 0.2.3",
+ "http 0.2.4",
  "hyper 0.14.5",
  "hyper-rustls",
  "log",
@@ -359,7 +359,7 @@ dependencies = [
  "bytes 1.0.1",
  "chrono",
  "futures 0.3.13",
- "http 0.2.3",
+ "http 0.2.4",
  "log",
  "md5",
  "once_cell",
@@ -1095,7 +1095,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http 0.2.3",
+ "http 0.2.4",
  "indexmap",
  "slab",
  "tokio 1.4.0",
@@ -1142,9 +1142,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7245cd7449cc792608c3c8a9eaf69bd4eabbabf802713748fd739c98b82f0747"
+checksum = "527e8c9ac747e28542699a951517aa9a6945af506cd1f2e1b53a576c17b6cc11"
 dependencies = [
  "bytes 1.0.1",
  "fnv",
@@ -1170,7 +1170,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dfb77c123b4e2f72a2069aeae0b4b4949cc7e966df277813fc16347e7549737"
 dependencies = [
  "bytes 1.0.1",
- "http 0.2.3",
+ "http 0.2.4",
  "pin-project-lite",
 ]
 
@@ -1242,7 +1242,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2 0.3.2",
- "http 0.2.3",
+ "http 0.2.4",
  "http-body 0.4.1",
  "httparse",
  "httpdate",
@@ -1672,7 +1672,7 @@ checksum = "14be0cf9da49c1a5b2909ec626949dc549e0adda4e9e7f26e4908f08a5435227"
 dependencies = [
  "base64 0.12.3",
  "chrono",
- "http 0.2.3",
+ "http 0.2.4",
  "rand 0.7.3",
  "reqwest 0.11.2",
  "serde",
@@ -1789,7 +1789,7 @@ dependencies = [
  "async-trait",
  "bytes 1.0.1",
  "chrono",
- "http 0.2.3",
+ "http 0.2.4",
  "once_cell",
  "opentelemetry",
  "opentelemetry-semantic-conventions",
@@ -2280,7 +2280,7 @@ dependencies = [
  "encoding_rs",
  "futures-core",
  "futures-util",
- "http 0.2.3",
+ "http 0.2.4",
  "http-body 0.4.1",
  "hyper 0.14.5",
  "hyper-rustls",
@@ -2323,7 +2323,7 @@ dependencies = [
  "chrono",
  "env_logger 0.8.3",
  "futures 0.3.13",
- "http 0.2.3",
+ "http 0.2.4",
  "lazy_static",
  "log",
  "md5",

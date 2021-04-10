@@ -15,8 +15,8 @@ actix-rt = "2.2"
 actix-service = "2.0.0-beta.5"
 actix-web = "4.0.0-beta.5"
 async-trait = "0.1.48"
-azure_core = { git = "https://github.com/azure/azure-sdk-for-rust" }
-azure_storage = { git = "https://github.com/azure/azure-sdk-for-rust", features = ["table"] }
+azure_core = { git = "https://github.com/notheotherben/azure-sdk-for-rust" }
+azure_storage = { git = "https://github.com/notheotherben/azure-sdk-for-rust", features = ["table"] }
 chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.8"
 futures = "0.3"
@@ -25,7 +25,7 @@ lazy_static = "1.4"
 log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "1.0" }
-opentelemetry = { version = "0.13", features = ["tokio"] }
+opentelemetry = { version = "0.13", features = ["tokio", "rt-tokio"] }
 opentelemetry-application-insights = { version = "0.13", features = ["reqwest-client"] }
 percent-encoding = "2.1"
 rand = "0.8"

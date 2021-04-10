@@ -1,16 +1,17 @@
 use crate::{models::*, trace_handler};
 use crate::api::APIError;
 use std::{fmt::Debug, pin::Pin, sync::Arc};
-use futures::StreamExt;
+use futures::{StreamExt, Future};
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
-use azure_storage::core::key_client::KeyClient;
-use azure_storage::table::{CloudTable, TableClient, TableEntity};
+use azure_core::prelude::*;
+use azure_storage::core::prelude::*;
+use azure_storage::table::prelude::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use tracing::Instrument;
 
-type TableReference = Arc<CloudTable<KeyClient>>;
+type TableReference = Arc<TableClient>;
 
 pub struct TableStorage {
     started_at: chrono::DateTime<chrono::Utc>,
@@ -34,19 +35,22 @@ impl TableStorage {
     pub fn new() -> Self {
         let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
 
-        let client = TableClient::from_connection_string(&connection_string).expect("a valid connection string");
-        let ideas_table = CloudTable::new(client.clone(), "ideas");
-        let role_assignments_table = CloudTable::new(client.clone(), "roleassignments");
-        let collections_table = CloudTable::new(client.clone(), "collections");
-        let users_table = CloudTable::new(client, "users");
+        let http_client: Arc<Box<dyn HttpClient>> = Arc::new(Box::new(reqwest::Client::new()));
+        let client = StorageAccountClient::new_connection_string(http_client, &connection_string).expect("a valid connection string");
+        let table_service = client.as_storage_client().as_table_service_client().expect("a valid table storage client");      
+        
+        let ideas_table = table_service.as_table_client("ideas");
+        let role_assignments_table = table_service.as_table_client("roleassignments");
+        let collections_table = table_service.as_table_client("collections");
+        let users_table = table_service.as_table_client("users");
 
         Self {
             started_at: chrono::Utc::now(),
 
-            ideas: TableReference::new(ideas_table),
-            collections: TableReference::new(collections_table),
-            role_assignments: TableReference::new(role_assignments_table),
-            users: TableReference::new(users_table),
+            ideas: ideas_table,
+            collections: collections_table,
+            role_assignments: role_assignments_table,
+            users: users_table,
         }
     }
 
@@ -54,42 +58,59 @@ impl TableStorage {
     async fn get_single<ST, T>(table: TableReference, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: DeserializeOwned + Clone,
-        T: From<TableEntity<ST>> {
-        let result = table.get::<ST>(
-            &format!("{:0>32x}", partition_key), 
-            &format!("{:0>32x}", row_key),
-            None
-        ).await?;
+        T: From<ST> {
+        let result = table
+            .as_partition_key_client(&format!("{:0>32x}", partition_key))
+            .as_entity_client(&format!("{:0>32x}", row_key))
+            .map_err(|err| {
+                error!("Failed to retrieve item from table storage: {}", err);
+                APIError::new(500, "Internal Server Error", "We were unable to retrieve the item you requested, this failure has been reported.")
+            })?
+            .get().execute().await
+            .map_err(|err| {
+                error!("Failed to retrieve item from table storage: {}", err);
+                APIError::new(503, "Service Unavailable", "We were unable to retrieve the item you requested, this failure has been reported.")
+            })?;
 
-        result
+        result.entity
             .ok_or(not_found_err)
-            .map(|r| r.into())
+            .map(|r: ST| r.into())
     }
 
-    async fn get_all_entities<ST, P>(table: TableReference, _type_name: &str, query: String, filter: P) -> Result<Vec<TableEntity<ST>>, APIError>
+    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
+    async fn get_all_entities<ST, P>(table: TableReference, _type_name: &str, query: String, filter: P) -> Result<Vec<ST>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
-        P: Fn(&TableEntity<ST>) -> bool
+        P: Fn(&ST) -> bool
     {
-        let mut entries: Vec<TableEntity<ST>> = vec![];
+        let mut entries: Vec<ST> = vec![];
         let safe_query = TableStorage::escape_query(&query);
 
         if safe_query.is_empty() {
-            let mut stream = Box::pin(table.stream_get_all::<ST>());
+            let mut stream = Box::pin(table.query().stream::<ST>());
             
             while let Some(result) = stream.next().instrument(
                 info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = "*")
             ).await {
-                let mut result = result?;
+                let mut result = result
+                .map_err(|err| {
+                    error!("Failed to retrieve items from table storage: {}", err);
+                    APIError::new(500, "Internal Server Error", "We were unable to retrieve the items you requested, this failure has been reported.")
+                })?;
+
                 entries.append(&mut result.entities);
             }
         } else {
-            let mut stream = Box::pin(table.stream_query::<ST>(safe_query.as_str()));
+            let mut stream = Box::pin(table.query().filter(safe_query).stream::<ST>());
             
             while let Some(result) = stream.next().instrument(
                 info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
             ).await {
-                let mut result = result?;
+                let mut result = result
+                .map_err(|err| {
+                    error!("Failed to retrieve items from table storage: {}", err);
+                    APIError::new(500, "Internal Server Error", "We were unable to retrieve the items you requested, this failure has been reported.")
+                })?;
                 entries.append(&mut result.entities);
             }
         }
@@ -101,41 +122,56 @@ impl TableStorage {
     async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
-        P: Fn(&TableEntity<ST>) -> bool,
-        T: From<TableEntity<ST>>
+        P: Fn(&ST) -> bool,
+        T: From<ST>
     {
-        let entries: Vec<TableEntity<ST>> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
+        let entries: Vec<ST> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
         Ok(entries.iter().map(|e| e.clone().into()).collect())
     }
 
-    #[instrument(err, skip(table, filter, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
+    #[instrument(err, skip( table, filter, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
     async fn get_random<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
-        P: Fn(&TableEntity<ST>) -> bool,
-        T: From<TableEntity<ST>> + ToOwned
+        P: Fn(&ST) -> bool,
+        T: From<ST> + ToOwned
     {
-        let entries: Vec<TableEntity<ST>> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
+        let entries: Vec<ST> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
         entries.iter().choose(&mut rand::thread_rng()).map(|e| e).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
-    #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
-    async fn store_single<ST, T>(table: TableReference, type_name: &str, item: TableEntity<ST>) -> Result<T, APIError> 
+    #[instrument(err, skip( table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
+    async fn store_single<ST, T>(table: TableReference, type_name: &str, item: ST) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
-        T: From<TableEntity<ST>> {
+        T: From<ST> {
         
-        let result = table.insert_or_update_entity(item).await?;
+        let result = table.insert().return_entity(true).execute(&item).await
+        .map_err(|err| {
+            error!("Failed to store item in table storage: {}", err);
+            APIError::new(503, "Service Unavailable", "We were unable to store the item you requested, this failure has been reported.")
+        })?;
 
-        Ok(result.into())
+        let entity = result.entity_with_metadata.map(|e| e.entity).unwrap();
+
+        Ok(entity.into())
     }
 
-    #[instrument(err, skip(table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
+    #[instrument(err, skip( table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
     async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
-        table.delete(
-            &format!("{:0>32x}", partition_key), 
-            &format!("{:0>32x}", row_key),
-            None).await?;
+        let entity_client = table
+            .as_partition_key_client(&format!("{:0>32x}", partition_key))
+            .as_entity_client(&format!("{:0>32x}", row_key))
+            .map_err(|err| {
+                error!("Failed to remove item from table storage: {}", err);
+                APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
+            })?;
+            
+        entity_client.delete().execute().await
+        .map_err(|err| {
+            error!("Failed to remove item from table storage: {}", err);
+            APIError::new(503, "Service Unavailable", "We were unable to remove the item you requested, this failure has been reported.")
+        })?;
         
         Ok(())
     }
@@ -166,6 +202,11 @@ impl TableStorage {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct TableStorageIdea {
+    #[serde(rename="PartitionKey")]
+    pub collection_id: String,
+    #[serde(rename="RowKey")]
+    pub id: String,
+
     #[serde(rename="Name")]
     pub name: String,
     #[serde(rename="Description")]
@@ -176,53 +217,69 @@ struct TableStorageIdea {
     pub completed: bool,
 }
 
-impl From<TableEntity<TableStorageIdea>> for Idea {
-    fn from(entity: TableEntity<TableStorageIdea>) -> Self {
+impl From<TableStorageIdea> for Idea {
+    fn from(entity: TableStorageIdea) -> Self {
         Self {
-            id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
-            collection_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
-            name: entity.payload.name.clone(),
-            tags: hashset!([entity.payload.tags.split(",").filter(|t| !t.is_empty())]),
-            description: entity.payload.description.clone(),
-            completed: entity.payload.completed
+            id: u128::from_str_radix(&entity.id, 16).unwrap_or_default(),
+            collection_id: u128::from_str_radix(&entity.collection_id, 16).unwrap_or_default(),
+            name: entity.name.clone(),
+            tags: hashset!([entity.tags.split(",").filter(|t| !t.is_empty())]),
+            description: entity.description.clone(),
+            completed: entity.completed
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct TableStorageCollection {
+    #[serde(rename="PartitionKey")]
+    pub principal_id: String,
+    #[serde(rename="RowKey")]
+    pub collection_id: String,
+
     #[serde(rename="Name")]
     pub name: String,
 }
 
-impl From<TableEntity<TableStorageCollection>> for Collection {
-    fn from(entity: TableEntity<TableStorageCollection>) -> Self {
+impl From<TableStorageCollection> for Collection {
+    fn from(entity: TableStorageCollection) -> Self {
         Self {
-            collection_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
-            user_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
-            name: entity.payload.name.clone(),
+            collection_id: u128::from_str_radix(&entity.collection_id, 16).unwrap_or_default(),
+            user_id: u128::from_str_radix(&entity.principal_id, 16).unwrap_or_default(),
+            name: entity.name.clone(),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct TableStorageRoleAssignment {
+    #[serde(rename="PartitionKey")]
+    pub collection_id: String,
+    #[serde(rename="RowKey")]
+    pub principal_id: String,
+
     #[serde(rename="Role")]
     pub role: String,
 }
 
-impl From<TableEntity<TableStorageRoleAssignment>> for RoleAssignment {
-    fn from(entity: TableEntity<TableStorageRoleAssignment>) -> Self {
+impl From<TableStorageRoleAssignment> for RoleAssignment {
+    fn from(entity: TableStorageRoleAssignment) -> Self {
         Self {
-            collection_id: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
-            user_id: u128::from_str_radix(&entity.row_key, 16).unwrap_or_default(),
-            role: entity.payload.role.as_str().into(),
+            collection_id: u128::from_str_radix(&entity.collection_id, 16).unwrap_or_default(),
+            user_id: u128::from_str_radix(&entity.principal_id, 16).unwrap_or_default(),
+            role: entity.role.as_str().into(),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct TableStorageUser {
+    #[serde(rename="PartitionKey")]
+    pub email_hash: String,
+
+    #[serde(rename="RowKey")]
+    pub row_key: String,
+
     #[serde(rename="PrincipalId")]
     pub principal_id: String,
 
@@ -230,12 +287,12 @@ struct TableStorageUser {
     pub first_name: String,
 }
 
-impl From<TableEntity<TableStorageUser>> for User {
-    fn from(entity: TableEntity<TableStorageUser>) -> Self {
+impl From<TableStorageUser> for User {
+    fn from(entity: TableStorageUser) -> Self {
         Self {
-            email_hash: u128::from_str_radix(&entity.partition_key, 16).unwrap_or_default(),
-            principal_id: u128::from_str_radix(&entity.payload.principal_id, 16).unwrap_or_default(),
-            first_name: entity.payload.first_name.as_str().into(),
+            email_hash: u128::from_str_radix(&entity.email_hash, 16).unwrap_or_default(),
+            principal_id: u128::from_str_radix(&entity.principal_id, 16).unwrap_or_default(),
+            first_name: entity.first_name.as_str().into(),
         }
     }
 }
@@ -385,7 +442,7 @@ actor_handler!(GetIdeas|msg => Idea: get_all from ideas(TableStorageIdea) where
     context = [
         let tag_str = msg.tag.unwrap_or("".to_string());
     ],
-    filter=i -> tag_str.is_empty() || i.payload.tags.split(",").any(|i| i == tag_str.as_str()));
+    filter=i -> tag_str.is_empty() || i.tags.split(",").any(|i| i == tag_str.as_str()));
 
     
 actor_handler!(GetRandomIdea|msg => Idea: get_random from ideas(TableStorageIdea) where
@@ -393,20 +450,16 @@ actor_handler!(GetRandomIdea|msg => Idea: get_random from ideas(TableStorageIdea
     context = [
         let tag_str = msg.tag.unwrap_or("".to_string());
     ],
-    filter = i -> tag_str.is_empty() || i.payload.tags.split(",").any(|i| i == tag_str.as_str());
+    filter = i -> tag_str.is_empty() || i.tags.split(",").any(|i| i == tag_str.as_str());
     not found = "We could not find any ideas in the collection you provided which matched your query. Please create some and try again.");
 
-actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) TableEntity {
-    partition_key: format!("{:0>32x}", msg.collection),
-    row_key: format!("{:0>32x}", msg.id),
-    payload: TableStorageIdea {
-        name: msg.name.clone(),
-        description: msg.description.clone(),
-        tags: msg.tags.iter().fold("".to_string(), |j, i| j + "," + i.as_str()),
-        completed: msg.completed,
-    },
-    etag: None,
-    timestamp: None
+actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) TableStorageIdea {
+    collection_id: format!("{:0>32x}", msg.collection),
+    id: format!("{:0>32x}", msg.id),
+    name: msg.name.clone(),
+    description: msg.description.clone(),
+    tags: msg.tags.iter().fold("".to_string(), |j, i| j + "," + i.as_str()),
+    completed: msg.completed,
 });
 
 actor_handler!(RemoveIdea|msg: remove_single from ideas where pk=msg.collection, rk=msg.id);
@@ -418,14 +471,10 @@ actor_handler!(GetCollections|msg => Collection: get_all from collections(TableS
     context = [],
     filter = _i -> true);
 
-actor_handler!(StoreCollection|msg => Collection: store_single in collections(TableStorageCollection) TableEntity {
-    partition_key: format!("{:0>32x}", msg.principal_id),
-    row_key: format!("{:0>32x}", msg.collection_id),
-    payload: TableStorageCollection {
-        name: msg.name.clone(),
-    },
-    etag: None,
-    timestamp: None
+actor_handler!(StoreCollection|msg => Collection: store_single in collections(TableStorageCollection) TableStorageCollection {
+    principal_id: format!("{:0>32x}", msg.principal_id),
+    collection_id: format!("{:0>32x}", msg.collection_id),
+    name: msg.name.clone(),
 });
 
 actor_handler!(RemoveCollection|msg: remove_single from collections where pk=msg.principal_id, rk=msg.id);
@@ -437,27 +486,19 @@ actor_handler!(GetRoleAssignments|msg => RoleAssignment: get_all from role_assig
     context = [],
     filter = _i -> true);
 
-actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_assignments(TableStorageRoleAssignment) TableEntity {
-    partition_key: format!("{:0>32x}", msg.collection_id),
-    row_key: format!("{:0>32x}", msg.principal_id),
-    payload: TableStorageRoleAssignment {
-        role: msg.role.into()
-    },
-    etag: None,
-    timestamp: None
+actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_assignments(TableStorageRoleAssignment) TableStorageRoleAssignment {
+    collection_id: format!("{:0>32x}", msg.collection_id),
+    principal_id: format!("{:0>32x}", msg.principal_id),
+    role: msg.role.into(),
 }); 
 
 actor_handler!(RemoveRoleAssignment|msg: remove_single from role_assignments where pk=msg.collection_id, rk=msg.principal_id);
 
 actor_handler!(GetUser|msg => User: get_single from users(TableStorageUser) where pk=msg.email_hash, rk=msg.email_hash; not found = "The user you are looking for could not be found. Please check that you have entered their email address correctly and try again.");
 
-actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) TableEntity {
-    partition_key: format!("{:0>32x}", msg.email_hash),
+actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) TableStorageUser {
+    email_hash: format!("{:0>32x}", msg.email_hash),
     row_key: format!("{:0>32x}", msg.email_hash),
-    payload: TableStorageUser {
-        principal_id: format!("{:0>32x}", msg.principal_id),
-        first_name: msg.first_name.clone(),
-    },
-    etag: None,
-    timestamp: None
+    principal_id: format!("{:0>32x}", msg.principal_id),
+    first_name: msg.first_name.clone()
 });

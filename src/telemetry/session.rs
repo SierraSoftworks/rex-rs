@@ -17,11 +17,6 @@ impl Session {
 
             tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
 
-            // tracing_subscriber::fmt()
-            //     .with_max_level(tracing::Level::INFO)
-            //     .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
-            //     .init();
-
             Self {
             }
         } else {
@@ -33,7 +28,7 @@ impl Session {
                     KeyValue::new("service.name", "Rex"),
                     KeyValue::new("service.version", env!("CARGO_PKG_VERSION"))
                 ])))
-                .install_simple();
+                .install_batch(opentelemetry::runtime::Tokio);
 
             let telemetry = tracing_opentelemetry::layer()
                 .with_tracked_inactivity(true)
@@ -45,5 +40,11 @@ impl Session {
             Self {
             }
         }
+    }
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        opentelemetry::global::shutdown_tracer_provider();
     }
 }

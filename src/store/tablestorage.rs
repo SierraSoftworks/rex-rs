@@ -140,21 +140,29 @@ impl TableStorage {
         entries.iter().choose(&mut rand::thread_rng()).map(|e| e).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
-    #[instrument(err, skip( table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
-    async fn store_single<ST, T>(table: TableReference, type_name: &str, item: ST) -> Result<T, APIError> 
+    #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
+    async fn store_single<ST, T, PK, RK>(table: TableReference, type_name: &str, partition_key: PK, row_key: RK, item: ST) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
-        T: From<ST> {
+        T: From<ST>,
+        PK: AsRef<str> + Debug,
+        RK: AsRef<str> + Debug {
         
-        let result = table.insert().return_entity(true).execute(&item).await
-        .map_err(|err| {
-            error!("Failed to store item in table storage: {}", err);
-            APIError::new(503, "Service Unavailable", "We were unable to store the item you requested, this failure has been reported.")
-        })?;
+        let result = table
+            .as_partition_key_client(partition_key.as_ref())
+            .as_entity_client(row_key.as_ref())
+            .map_err(|err| {
+                error!("Failed to remove item from table storage: {}", err);
+                APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
+            })?
+            .insert_or_replace().execute(&item)
+            .await
+            .map_err(|err| {
+                error!("Failed to store item in table storage: {}", err);
+                APIError::new(503, "Service Unavailable", "We were unable to store the item you requested, this failure has been reported.")
+            })?;
 
-        let entity = result.entity_with_metadata.map(|e| e.entity).unwrap();
-
-        Ok(entity.into())
+        Ok(item.into())
     }
 
     #[instrument(err, skip( table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
@@ -403,13 +411,15 @@ macro_rules! actor_handler {
         });
     };
     
-    ($msg:ty|$src:ident => $res:ty: store_single in $table:ident ( $st:ty ) $item:expr) => {
+    ($msg:ty|$src:ident => $res:ty: store_single in $table:ident ( $st:ty ) where pk=$pk:expr, rk=$rk:expr; return $item:expr) => {
         actor_handler!($msg => $res: handler = fn handle_internal(&self, $src: $msg) -> Pin<Box<dyn Future<Output = Self::Result>>> {
             let table = self.$table.clone();
             let item = $item;
-            let work = TableStorage::store_single::<$st, $res>(
+            let work = TableStorage::store_single(
                 table,
                 "$table",
+                $pk,
+                $rk,
                 item
             );
 
@@ -453,7 +463,7 @@ actor_handler!(GetRandomIdea|msg => Idea: get_random from ideas(TableStorageIdea
     filter = i -> tag_str.is_empty() || i.tags.split(",").any(|i| i == tag_str.as_str());
     not found = "We could not find any ideas in the collection you provided which matched your query. Please create some and try again.");
 
-actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) TableStorageIdea {
+actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) where pk=format!("{:0>32x}", msg.collection), rk=format!("{:0>32x}", msg.id); return TableStorageIdea {
     collection_id: format!("{:0>32x}", msg.collection),
     id: format!("{:0>32x}", msg.id),
     name: msg.name.clone(),
@@ -471,7 +481,7 @@ actor_handler!(GetCollections|msg => Collection: get_all from collections(TableS
     context = [],
     filter = _i -> true);
 
-actor_handler!(StoreCollection|msg => Collection: store_single in collections(TableStorageCollection) TableStorageCollection {
+actor_handler!(StoreCollection|msg => Collection: store_single in collections(TableStorageCollection) where pk=format!("{:0>32x}", msg.principal_id), rk=format!("{:0>32x}", msg.collection_id); return TableStorageCollection {
     principal_id: format!("{:0>32x}", msg.principal_id),
     collection_id: format!("{:0>32x}", msg.collection_id),
     name: msg.name.clone(),
@@ -486,7 +496,7 @@ actor_handler!(GetRoleAssignments|msg => RoleAssignment: get_all from role_assig
     context = [],
     filter = _i -> true);
 
-actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_assignments(TableStorageRoleAssignment) TableStorageRoleAssignment {
+actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_assignments(TableStorageRoleAssignment) where pk=format!("{:0>32x}", msg.collection_id), rk=format!("{:0>32x}", msg.principal_id); return TableStorageRoleAssignment {
     collection_id: format!("{:0>32x}", msg.collection_id),
     principal_id: format!("{:0>32x}", msg.principal_id),
     role: msg.role.into(),
@@ -496,7 +506,7 @@ actor_handler!(RemoveRoleAssignment|msg: remove_single from role_assignments whe
 
 actor_handler!(GetUser|msg => User: get_single from users(TableStorageUser) where pk=msg.email_hash, rk=msg.email_hash; not found = "The user you are looking for could not be found. Please check that you have entered their email address correctly and try again.");
 
-actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) TableStorageUser {
+actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) where pk=format!("{:0>32x}", msg.email_hash), rk=format!("{:0>32x}", msg.email_hash); return TableStorageUser {
     email_hash: format!("{:0>32x}", msg.email_hash),
     row_key: format!("{:0>32x}", msg.email_hash),
     principal_id: format!("{:0>32x}", msg.principal_id),

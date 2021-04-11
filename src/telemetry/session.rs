@@ -6,6 +6,8 @@ pub struct Session {
 
 impl Session {
     pub fn new() -> Self {
+        tracing_log::LogTracer::init().expect("log tracer should be installed");
+
         let app_insights_key = std::env::var("APPINSIGHTS_INSTRUMENTATIONKEY").unwrap_or_default();
         if app_insights_key.is_empty()
         {

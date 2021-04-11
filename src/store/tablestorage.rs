@@ -22,15 +22,6 @@ pub struct TableStorage {
     users: TableReference,
 }
 
-const URI_CHARACTERS: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
-    .add(b' ')
-    .add(b'"')
-    .add(b'<')
-    .add(b'>')
-    .add(b'%')
-    .add(b'#')
-    .add(b'&');
-
 impl TableStorage {
     pub fn new() -> Self {
         let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
@@ -66,15 +57,14 @@ impl TableStorage {
                 error!("Failed to retrieve item from table storage: {}", err);
                 APIError::new(500, "Internal Server Error", "We were unable to retrieve the item you requested, this failure has been reported.")
             })?
-            .get().execute().await
+            .get()
+            .execute::<ST>().await
             .map_err(|err| {
                 error!("Failed to retrieve item from table storage: {}", err);
-                APIError::new(503, "Service Unavailable", "We were unable to retrieve the item you requested, this failure has been reported.")
+                not_found_err
             })?;
 
-        result.entity
-            .ok_or(not_found_err)
-            .map(|r: ST| r.into())
+        Ok(result.entity.into())
     }
 
     #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
@@ -84,35 +74,23 @@ impl TableStorage {
         P: Fn(&ST) -> bool
     {
         let mut entries: Vec<ST> = vec![];
-        let safe_query = TableStorage::escape_query(&query);
 
-        if safe_query.is_empty() {
-            let mut stream = Box::pin(table.query().stream::<ST>());
-            
-            while let Some(result) = stream.next().instrument(
-                info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = "*")
-            ).await {
-                let mut result = result
-                .map_err(|err| {
-                    error!("Failed to retrieve items from table storage: {}", err);
-                    APIError::new(500, "Internal Server Error", "We were unable to retrieve the items you requested, this failure has been reported.")
-                })?;
+        let mut query_operation = table.query();
+        if !query.is_empty() {
+            query_operation = query_operation.filter(&query);
+        }
 
-                entries.append(&mut result.entities);
-            }
-        } else {
-            let mut stream = Box::pin(table.query().filter(safe_query).stream::<ST>());
-            
-            while let Some(result) = stream.next().instrument(
-                info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
-            ).await {
-                let mut result = result
-                .map_err(|err| {
-                    error!("Failed to retrieve items from table storage: {}", err);
-                    APIError::new(500, "Internal Server Error", "We were unable to retrieve the items you requested, this failure has been reported.")
-                })?;
-                entries.append(&mut result.entities);
-            }
+        let mut stream = Box::pin(query_operation.stream::<ST>());
+        
+        while let Some(result) = stream.next().instrument(
+            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
+        ).await {
+            let mut result = result
+            .map_err(|err| {
+                error!("Failed to retrieve items from table storage: {}", err);
+                APIError::new(500, "Internal Server Error", "We were unable to retrieve the items you requested, this failure has been reported.")
+            })?;
+            entries.append(&mut result.entities);
         }
 
         Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone()).collect())
@@ -148,7 +126,7 @@ impl TableStorage {
         PK: AsRef<str> + Debug,
         RK: AsRef<str> + Debug {
         
-        let result = table
+        table
             .as_partition_key_client(partition_key.as_ref())
             .as_entity_client(row_key.as_ref())
             .map_err(|err| {
@@ -185,7 +163,7 @@ impl TableStorage {
     }
 
     fn build_idea_filter_query(partition_key: u128, is_completed: Option<bool>, tag: Option<String>) -> String {
-        let mut query = format!("$filter=PartitionKey eq '{:0>32x}'", partition_key);
+        let mut query = format!("PartitionKey eq '{:0>32x}'", partition_key);
         match is_completed {
             Some(completed) => {
                 query = query + format!(" and Completed eq {}", completed).as_str()
@@ -201,10 +179,6 @@ impl TableStorage {
         }
 
         query
-    }
-
-    fn escape_query(query: &str) -> String {
-        percent_encoding::percent_encode(query.as_bytes(), URI_CHARACTERS).to_string()
     }
 }
 
@@ -477,7 +451,7 @@ actor_handler!(RemoveIdea|msg: remove_single from ideas where pk=msg.collection,
 actor_handler!(GetCollection|msg => Collection: get_single from collections(TableStorageCollection) where pk=msg.principal_id, rk=msg.id; not found = "The collection ID you provided could not be found. Please check them and try again.");
 
 actor_handler!(GetCollections|msg => Collection: get_all from collections(TableStorageCollection) where
-    query = format!("$filter=PartitionKey eq '{:0>32x}'", msg.principal_id),
+    query = format!("PartitionKey eq '{:0>32x}'", msg.principal_id),
     context = [],
     filter = _i -> true);
 
@@ -492,7 +466,7 @@ actor_handler!(RemoveCollection|msg: remove_single from collections where pk=msg
 actor_handler!(GetRoleAssignment|msg => RoleAssignment: get_single from role_assignments(TableStorageRoleAssignment) where pk=msg.collection_id, rk=msg.principal_id; not found = "The collection ID you provided could not be found. Please check them and try again.");
 
 actor_handler!(GetRoleAssignments|msg => RoleAssignment: get_all from role_assignments(TableStorageRoleAssignment) where
-    query = format!("$filter=PartitionKey eq '{:0>32x}'", msg.collection_id),
+    query = format!("PartitionKey eq '{:0>32x}'", msg.collection_id),
     context = [],
     filter = _i -> true);
 

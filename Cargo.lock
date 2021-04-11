@@ -322,7 +322,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "azure_core"
 version = "0.1.0"
-source = "git+https://github.com/notheotherben/azure-sdk-for-rust#fa151f27ecfd5eae65be82cf20a4cfe66bcea3b5"
+source = "git+https://github.com/notheotherben/azure-sdk-for-rust#f29ddf4821df7266d79e2342db53e3da83bcc8fe"
 dependencies = [
  "RustyXML",
  "async-trait",
@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "azure_storage"
 version = "0.1.0"
-source = "git+https://github.com/notheotherben/azure-sdk-for-rust#fa151f27ecfd5eae65be82cf20a4cfe66bcea3b5"
+source = "git+https://github.com/notheotherben/azure-sdk-for-rust#f29ddf4821df7266d79e2342db53e3da83bcc8fe"
 dependencies = [
  "RustyXML",
  "azure_core",

@@ -6,6 +6,8 @@ pub struct Session {
 
 impl Session {
     pub fn new() -> Self {
+        tracing_log::LogTracer::init().expect("log tracer should be installed");
+
         let app_insights_key = std::env::var("APPINSIGHTS_INSTRUMENTATIONKEY").unwrap_or_default();
         if app_insights_key.is_empty()
         {
@@ -16,11 +18,6 @@ impl Session {
             let subscriber = Registry::default().with(telemetry);
 
             tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
-
-            // tracing_subscriber::fmt()
-            //     .with_max_level(tracing::Level::INFO)
-            //     .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
-            //     .init();
 
             Self {
             }
@@ -33,7 +30,7 @@ impl Session {
                     KeyValue::new("service.name", "Rex"),
                     KeyValue::new("service.version", env!("CARGO_PKG_VERSION"))
                 ])))
-                .install_simple();
+                .install_batch(opentelemetry::runtime::Tokio);
 
             let telemetry = tracing_opentelemetry::layer()
                 .with_tracked_inactivity(true)
@@ -45,5 +42,11 @@ impl Session {
             Self {
             }
         }
+    }
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        opentelemetry::global::shutdown_tracer_provider();
     }
 }

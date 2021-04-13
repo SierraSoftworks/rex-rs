@@ -45,7 +45,7 @@ impl TableStorage {
         }
     }
 
-    #[instrument(err, skip(table, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "GET"))]
+    #[instrument(err, skip(table, not_found_err), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "GET"))]
     async fn get_single<ST, T>(table: TableReference, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: DeserializeOwned + Clone,
@@ -67,7 +67,7 @@ impl TableStorage {
         Ok(result.entity.into())
     }
 
-    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
+    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_all_entities<ST, P>(table: TableReference, _type_name: &str, query: String, filter: P) -> Result<Vec<ST>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
@@ -83,7 +83,7 @@ impl TableStorage {
         let mut stream = Box::pin(query_operation.stream::<ST>());
         
         while let Some(result) = stream.next().instrument(
-            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "azure_table_storage", "db.operation" = "LIST", db.statement = %query)
+            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "TABLESTORAGE", "db.operation" = "LIST", db.statement = %query)
         ).await {
             let mut result = result
             .map_err(|err| {
@@ -96,7 +96,7 @@ impl TableStorage {
         Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone()).collect())
     }
 
-    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
+    #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
@@ -107,7 +107,7 @@ impl TableStorage {
         Ok(entries.iter().map(|e| e.clone().into()).collect())
     }
 
-    #[instrument(err, skip( table, filter, not_found_err), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "LIST", db.statement = %query))]
+    #[instrument(err, skip( table, filter, not_found_err), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_random<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone,
@@ -118,7 +118,7 @@ impl TableStorage {
         entries.iter().choose(&mut rand::thread_rng()).map(|e| e).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
-    #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "PUT"))]
+    #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "PUT"))]
     async fn store_single<ST, T, PK, RK>(table: TableReference, type_name: &str, partition_key: PK, row_key: RK, item: ST) -> Result<T, APIError> 
     where
         ST: Serialize + DeserializeOwned + Clone + Debug,
@@ -143,7 +143,7 @@ impl TableStorage {
         Ok(item.into())
     }
 
-    #[instrument(err, skip( table), fields(otel.kind = "client", db.system = "azure_table_storage", db.operation = "DELETE"))]
+    #[instrument(err, skip( table), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "DELETE"))]
     async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
         let entity_client = table
             .as_partition_key_client(&format!("{:0>32x}", partition_key))

@@ -10,10 +10,10 @@ table_storage = []
 
 [dependencies]
 actix = "0.11"
-actix-http = "3.0.0-beta.5"
+actix-http = "3.0.0-beta.6"
 actix-rt = "2.2"
-actix-service = "2.0.0-beta.5"
-actix-web = "4.0.0-beta.5"
+actix-service = "2.0.0-beta.6"
+actix-web = "4.0.0-beta.6"
 async-trait = "0.1.48"
 azure_core = { git = "https://github.com/notheotherben/azure-sdk-for-rust" }
 azure_storage = { git = "https://github.com/notheotherben/azure-sdk-for-rust", features = ["table"] }
@@ -33,9 +33,9 @@ reqwest = { version = "0.11" }
 sentry = { version = "0.22", features = ["log"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1.4", features = ["full"] }
+tokio = { version = "1.5", features = ["full"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-actix-web = "0.3.0-beta.2"
+tracing-actix-web = "0.4.0-beta.1"
 tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-opentelemetry = "0.12"

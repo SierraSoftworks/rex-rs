@@ -1,4 +1,4 @@
-use actix_web::{delete, web};
+use actix_web::{HttpResponse, delete, web};
 use tracing::instrument;
 use super::{AuthToken, APIError};
 use crate::{models::*, telemetry::TraceMessageExt};
@@ -8,7 +8,7 @@ use super::CollectionUserFilter;
 #[delete("/api/v3/collection/{collection}/user/{user}")]
 async fn remove_role_assignment_v3(
     (info, state, token): (web::Path<CollectionUserFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<web::HttpResponse, APIError> {
+) -> Result<HttpResponse, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "RoleAssignments.Write");
     
@@ -25,7 +25,7 @@ async fn remove_role_assignment_v3(
         Role::Owner => {
             state.store.send(RemoveRoleAssignment { collection_id: cid, principal_id: tuid }.trace()).await??;
 
-            Ok(web::HttpResponse::NoContent().finish())
+            Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."))
     }

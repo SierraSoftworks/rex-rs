@@ -1,4 +1,4 @@
-use actix_web::{delete, web};
+use actix_web::{HttpResponse, delete, web};
 use tracing::instrument;
 use super::{AuthToken, APIError, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
@@ -8,7 +8,7 @@ use super::{IdFilter, CollectionIdFilter};
 #[delete("/api/v1/idea/{id}")]
 async fn remove_idea_v1(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<web::HttpResponse, APIError> {
+) -> Result<HttpResponse, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -17,14 +17,14 @@ async fn remove_idea_v1(
 
     state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
     
-    Ok(web::HttpResponse::NoContent().finish())
+    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v2/idea/{id}")]
 async fn remove_idea_v2(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<web::HttpResponse, APIError> {
+) -> Result<HttpResponse, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -33,14 +33,14 @@ async fn remove_idea_v2(
         
     state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
     
-    Ok(web::HttpResponse::NoContent().finish())
+    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v3/idea/{id}")]
 async fn remove_idea_v3(
     (info, state, token): (web::Path<IdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<web::HttpResponse, APIError> {
+) -> Result<HttpResponse, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -49,14 +49,14 @@ async fn remove_idea_v3(
         
     state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
     
-    Ok(web::HttpResponse::NoContent().finish())
+    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[delete("/api/v3/collection/{collection}/idea/{id}")]
 async fn remove_collection_idea_v3(
     (info, state, token): (web::Path<CollectionIdFilter>, web::Data<GlobalState>, AuthToken),
-) -> Result<web::HttpResponse, APIError> {
+) -> Result<HttpResponse, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
     
@@ -72,7 +72,7 @@ async fn remove_collection_idea_v3(
         Role::Owner | Role::Contributor => {
             state.store.send(RemoveIdea { collection: cid, id: id }.trace()).await??;
             
-            Ok(web::HttpResponse::NoContent().finish())
+            Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to remove an idea from this collection."))
     }

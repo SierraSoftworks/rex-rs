@@ -1,3 +1,4 @@
+use actix_http::{Response, body::Body};
 use actix_web::{error, http::StatusCode, HttpResponse};
 use std::fmt;
 
@@ -23,10 +24,11 @@ impl APIError {
 }
 
 impl error::ResponseError for APIError {
-    fn error_response(&self) -> HttpResponse {
+    fn error_response(&self) -> Response<Body> {
         HttpResponse::build(self.status_code())
             .content_type("application/json; charset=utf-8")
             .json(self)
+            .into()
     }
 
     fn status_code(&self) -> StatusCode {

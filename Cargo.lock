@@ -1813,20 +1813,35 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-application-insights"
-version = "0.14.0"
-source = "git+https://github.com/SierraSoftworks/opentelemetry-application-insights#f26d16610c1ace31f2fdcd88243b0a77dbb871f1"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04b5ec337d760877ea5cbbdda336f08b3dd0af4982b9c2c07c6530a2514da962"
 dependencies = [
  "async-trait",
- "bytes 1.0.1",
  "chrono",
  "http 0.2.4",
  "once_cell",
  "opentelemetry 0.14.0",
+ "opentelemetry-http",
  "opentelemetry-semantic-conventions",
  "reqwest 0.11.3",
  "serde",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "opentelemetry-http"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b752610d59706ff7cae48003552b3d0bf19bcce532629c8a49095894f21c319"
+dependencies = [
+ "async-trait",
+ "bytes 1.0.1",
+ "futures-util",
+ "http 0.2.4",
+ "opentelemetry 0.14.0",
+ "reqwest 0.11.3",
 ]
 
 [[package]]

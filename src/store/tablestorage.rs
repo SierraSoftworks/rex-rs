@@ -26,7 +26,7 @@ impl TableStorage {
     pub fn new() -> Self {
         let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
 
-        let http_client: Arc<Box<dyn HttpClient>> = Arc::new(Box::new(reqwest::Client::new()));
+        let http_client: Arc<dyn HttpClient> = Arc::new(reqwest::Client::new());
         let client = StorageAccountClient::new_connection_string(http_client, &connection_string).expect("a valid connection string");
         let table_service = client.as_storage_client().as_table_service_client().expect("a valid table storage client");      
         

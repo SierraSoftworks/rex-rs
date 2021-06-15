@@ -1,5 +1,6 @@
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
 use openidconnect::{ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl, core::{CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata}, reqwest::http_client};
+use tracing::Span;
 use std::sync::Arc;
 use super::APIError;
 use futures::future::{ready, Ready};
@@ -63,6 +64,7 @@ impl AuthToken {
             })
     }
 
+    #[instrument("auth_token.from_request", skip(req))]
     fn from_request_internal(req: &HttpRequest) -> Result<AuthToken, APIError> {
         let creds = AuthToken::bearer_token_from_request(req)?;
             

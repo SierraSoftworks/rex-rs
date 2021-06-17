@@ -83,7 +83,7 @@ impl TableStorage {
         let mut stream = Box::pin(query_operation.stream::<ST>());
         
         while let Some(result) = stream.next().instrument(
-            info_span!("Fetching page of results from Table Storage", "otel.kind" = "client", "db.system" = "TABLESTORAGE", "db.operation" = "LIST", db.statement = %query)
+            info_span!("get_all_entities.get_page", "otel.kind" = "client", "db.system" = "TABLESTORAGE", "db.operation" = "LIST.PAGE", db.statement = %query)
         ).await {
             let mut result = result
             .map_err(|err| {

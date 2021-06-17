@@ -1,19 +1,28 @@
-use std::{pin::Pin, task::{Context, Poll}};
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
-use actix_web::{Error, http::HeaderMap};
 use actix_service::*;
 use actix_web::dev::*;
-use futures::{Future, future::{ok, Ready}};
-use opentelemetry::{propagation::{Extractor, TextMapPropagator}, sdk::propagation::TraceContextPropagator};
+use actix_web::{http::HeaderMap, Error};
+use futures::{
+    future::{ok, Ready},
+    Future,
+};
+use opentelemetry::{
+    propagation::{Extractor, TextMapPropagator},
+    sdk::propagation::TraceContextPropagator,
+};
 use tracing::{Instrument, Span};
-use tracing_honeycomb::{TraceId, register_dist_tracing_root};
+use tracing_honeycomb::{register_dist_tracing_root, TraceId};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub struct TracingLogger;
 
 impl<S, B> Transform<S, ServiceRequest> for TracingLogger
 where
-    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -34,7 +43,7 @@ pub struct TracingLoggerMiddleware<S> {
 
 impl<S, B> Service<ServiceRequest> for TracingLoggerMiddleware<S>
 where
-    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -48,41 +57,53 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let propagator = TraceContextPropagator::new();
 
-
         let user_agent = req
             .headers()
             .get("User-Agent")
             .map(|h| h.to_str().unwrap_or(""))
             .unwrap_or("");
 
-            let span = tracing::info_span!(
-                "request",
-                "otel.kind" = "server",
-                "net.transport" = "IP.TCP",
-                "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
-                "http.target" = %req.uri(),
-                "http.user_agent" = %user_agent,
-                "http.status_code" = tracing::field::Empty,
-                "http.method" = %req.method(),
-                "http.url" = %req.match_pattern().unwrap_or(req.path().into()),
-                "user" = tracing::field::Empty,
-                "app.version" = env!("CARGO_PKG_VERSION"),
-            );
-    
-            {
-                let _enter = span.enter();
-                // Propagate OpenTelemetry parent span context information
-                let context  = propagator.extract(&HeaderMapExtractor { headers: req.headers() });
+        let span = tracing::info_span!(
+            "request",
+            "otel.kind" = "server",
+            "net.transport" = "IP.TCP",
+            "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
+            "http.target" = %req.uri(),
+            "http.user_agent" = %user_agent,
+            "http.status_code" = tracing::field::Empty,
+            "http.method" = %req.method(),
+            "http.url" = %req.match_pattern().unwrap_or(req.path().into()),
+            "user" = tracing::field::Empty,
+            "app.version" = env!("CARGO_PKG_VERSION"),
+        );
 
-                register_dist_tracing_root(TraceId::new(), None).unwrap();
-    
-                Span::current().set_parent(context.clone());
-            }
+        {
+            let _enter = span.enter();
+            // Propagate OpenTelemetry parent span context information
+            let context = propagator.extract(&HeaderMapExtractor {
+                headers: req.headers(),
+            });
 
-        let fut = self.service.call(req);
+            register_dist_tracing_root(TraceId::new(), None).unwrap();
+
+            Span::current().set_parent(context);
+        }
+
+        let handler_span = tracing::info_span!(
+            "request.handler",
+            "otel.kind" = "internal"
+        );
+
+        let fut = {
+            let _enter = handler_span.enter();
+            self.service.call(req)
+        };
+
         Box::pin(
             async move {
-                let outcome = fut.instrument(tracing::info_span!("request.handler", "otel.kind"="internal")).await;
+                let outcome = fut
+                    .instrument(handler_span)
+                    .await;
                 let status_code = match &outcome {
                     Ok(response) => response.response().status(),
                     Err(error) => error.as_response_error().status_code(),
@@ -96,7 +117,7 @@ where
 }
 
 struct HeaderMapExtractor<'a> {
-    headers: &'a HeaderMap
+    headers: &'a HeaderMap,
 }
 
 impl<'a> Extractor for HeaderMapExtractor<'a> {

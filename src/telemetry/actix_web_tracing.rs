@@ -89,10 +89,13 @@ where
             Span::current().set_parent(context);
         }
 
-        let handler_span = tracing::info_span!(
-            "request.handler",
-            "otel.kind" = "internal"
-        );
+        let handler_span = {
+            let _enter = span.enter();
+            tracing::info_span!(
+                "request.handler",
+                "otel.kind" = "internal"
+            )
+        };
 
         let fut = {
             let _enter = handler_span.enter();

@@ -15,8 +15,8 @@ macro_rules! actor_message {
 #[macro_export]
 macro_rules! json_responder {
     ($t:ty) => {
-        #[tracing::instrument(target="response.render", fields(http.content_type = "application/json"), skip(self, _req))]
         impl actix_web::Responder for $t {
+            #[tracing::instrument(target="response.render", fields(http.content_type = "application/json"), skip(self, _req))]
             fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse {
                     actix_web::HttpResponse::Ok()
                     .content_type("application/json")

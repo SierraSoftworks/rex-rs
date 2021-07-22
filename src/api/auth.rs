@@ -1,6 +1,5 @@
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
 use openidconnect::{ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl, core::{CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata}, reqwest::http_client};
-use tracing::Span;
 use std::sync::Arc;
 use super::APIError;
 use futures::future::{ready, Ready};

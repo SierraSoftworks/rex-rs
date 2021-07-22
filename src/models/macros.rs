@@ -33,7 +33,7 @@ macro_rules! json_responder {
                     let $model = &self;
                     actix_web::HttpResponse::Created()
                         .content_type("application/json")
-                        .insert_header(("Location", $location.expect("a location url").into_string()))
+                        .insert_header(("Location", String::from($location.expect("a location url"))))
                         .json(&self)
                 } else {                
                     actix_web::HttpResponse::Ok()

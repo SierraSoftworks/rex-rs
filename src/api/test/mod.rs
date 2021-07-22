@@ -1,11 +1,9 @@
 use crate::api::configure;
 use crate::models::*;
-use actix_web::{test, web, App};
+use actix_web::{App, test::{self, read_body_json}};
 use chrono::{Duration, Utc};
 use openidconnect::{Audience, EndUserName, IssuerUrl, LocalizedClaim, StandardClaims, SubjectIdentifier, core::{CoreHmacKey, CoreJwsSigningAlgorithm}};
-use web::BytesMut;
 use serde::{de::DeserializeOwned};
-use futures::StreamExt;
 
 use super::auth::{AuthAdditionalClaims, AuthIdToken, AuthIdTokenClaims};
 
@@ -16,7 +14,7 @@ pub fn test_log_init() {
 pub async fn get_test_app(state: GlobalState) -> impl actix_web::dev::Service<actix_http::Request, Response=actix_web::dev::ServiceResponse, Error=actix_web::Error> {
     test::init_service(
         App::new()
-            .data(state.clone())
+            .app_data(actix_web::web::Data::new(state.clone()))
             .configure(configure),
     )
     .await
@@ -68,25 +66,16 @@ pub fn auth_token() -> String {
     format!("Bearer {}", token.to_string())
 }
 
-pub async fn assert_status(resp: &mut actix_web::dev::ServiceResponse, expected_status: http::StatusCode) {
-    if expected_status == resp.status() {
-        return
+pub async fn assert_status(resp: actix_web::dev::ServiceResponse, expected_status: http::StatusCode) -> actix_web::dev::ServiceResponse {
+    if expected_status != resp.status() {
+        let status = resp.status();
+        let err: super::APIError = get_content(resp).await;
+        panic!("Unexpected response code (got == expected)\n  got: {}\n  expected: {}\n  error: {}", status, expected_status, err)
+    } else {
+        resp
     }
-
-    let err: super::APIError = get_content(resp).await;
-    panic!("Unexpected response code (got == expected)\n  got: {}\n  expected: {}\n  error: {}", resp.status(), expected_status, err)
 }
 
-pub async fn get_content<T: DeserializeOwned>(resp: &mut actix_web::dev::ServiceResponse) -> T {
-    let mut body = resp.take_body();
-    let mut bytes = BytesMut::new();
-    while let Some(item) = body.next().await {
-        bytes.extend_from_slice(&item.unwrap());
-    }
-    let content_bytes = bytes.freeze();
-
-    serde_json::from_slice(&content_bytes)
-        .unwrap_or_else(|err| {
-            panic!("Failed to deserialize response: {}", err);
-        })
+pub async fn get_content<T: DeserializeOwned>(resp: actix_web::dev::ServiceResponse) -> T {
+    read_body_json(resp).await
 }

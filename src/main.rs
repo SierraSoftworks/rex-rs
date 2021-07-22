@@ -39,7 +39,7 @@ async fn main() -> std::io::Result<()> {
     info!("Starting server on :{}", get_listening_port());
     HttpServer::new(move || {
         App::new()
-            .data(state.clone())
+            .app_data(actix_web::web::Data::new(state.clone()))
             .wrap(TracingLogger)
             // TODO: CORS needs to be updated for new actix-web
             // .wrap(Cors::default().allow_any_origin().send_wildcard())

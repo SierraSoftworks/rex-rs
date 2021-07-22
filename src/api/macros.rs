@@ -63,10 +63,8 @@ macro_rules! test_request {
                 .insert_header(("Authorization", crate::api::test::auth_token()))
                 .to_request();
 
-            let mut response = actix_web::test::call_service(&mut app, req).await;
-            crate::api::test::assert_status(&mut response, http::StatusCode::$status).await;
-
-            response
+            let response = actix_web::test::call_service(&mut app, req).await;
+            crate::api::test::assert_status(response, http::StatusCode::$status).await
         }
     };
 
@@ -79,40 +77,38 @@ macro_rules! test_request {
                 .insert_header(("Authorization", crate::api::test::auth_token()))
                 .to_request();
 
-            let mut response = actix_web::test::call_service(&mut app, req).await;
-            crate::api::test::assert_status(&mut response, http::StatusCode::$status).await;
-
-            response
+            let response = actix_web::test::call_service(&mut app, req).await;
+            crate::api::test::assert_status(response, http::StatusCode::$status).await
         }
     };
 
     ($method:ident $path:expr => $status:ident with content | state = $state:ident) => {
         {
-            let mut response = test_request!($method $path => $status | state = $state);
-            crate::api::test::get_content(&mut response).await
+            let response = test_request!($method $path => $status | state = $state);
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr, $body:expr => $status:ident with content | state = $state:ident) => {
         {
-            let mut response = test_request!($method $path, $body => $status | state = $state);
-            crate::api::test::get_content(&mut response).await
+            let response = test_request!($method $path, $body => $status | state = $state);
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr => $status:ident with location =~ $location:expr, content | state = $state:ident) => {
         {
-            let mut response = test_request!($method $path => $status | state = $state);
+            let response = test_request!($method $path => $status | state = $state);
             crate::api::test::assert_location_header(response.headers(), $location);
-            crate::api::test::get_content(&mut response).await
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr, $body:expr => $status:ident with location =~ $location:expr, content | state = $state:ident) => {
         {
-            let mut response = test_request!($method $path, $body => $status | state = $state);
+            let response = test_request!($method $path, $body => $status | state = $state);
             crate::api::test::assert_location_header(response.headers(), $location);
-            crate::api::test::get_content(&mut response).await
+            crate::api::test::get_content(response).await
         }
     };
 
@@ -136,31 +132,31 @@ macro_rules! test_request {
 
     ($method:ident $path:expr => $status:ident with content) => {
         {
-            let mut response = test_request!($method $path => $status);
-            crate::api::test::get_content(&mut response).await
+            let response = test_request!($method $path => $status);
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr, $body:expr => $status:ident with content) => {
         {
-            let mut response = test_request!($method $path, $body => $status);
-            crate::api::test::get_content(&mut response).await
+            let response = test_request!($method $path, $body => $status);
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr => $status:ident with location =~ $location:expr, content) => {
         {
-            let mut response = test_request!($method $path => $status);
+            let response = test_request!($method $path => $status);
             assert_location_header(response.headers(), $location);
-            crate::api::test::get_content(&mut response).await
+            crate::api::test::get_content(response).await
         }
     };
 
     ($method:ident $path:expr, $body:expr => $status:ident with location =~ $location:expr, content) => {
         {
-            let mut response = test_request!($method $path, $body => $status);
+            let response = test_request!($method $path, $body => $status);
             assert_location_header(response.headers(), $location);
-            crate::api::test::get_content(&mut response).await
+            crate::api::test::get_content(response).await
         }
     };
 }

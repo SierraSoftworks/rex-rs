@@ -12,8 +12,8 @@ table_storage = []
 actix = "0.11"
 actix-http = "3.0.0-beta.6"
 actix-rt = "2.2"
-actix-service = "2.0.0-beta.6"
-actix-web = "4.0.0-beta.6"
+actix-service = "2.0.0"
+actix-web = "4.0.0-beta.8"
 async-trait = "0.1.48"
 azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust" }
 azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust", features = ["table"] }
@@ -31,10 +31,10 @@ opentelemetry-application-insights = { version = "0.15", features = ["reqwest-cl
 percent-encoding = "2.1"
 rand = "0.8"
 reqwest = { version = "0.11" }
-sentry = { version = "0.22", features = ["log"] }
+sentry = { version = "0.23", features = ["log"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1.5", features = ["full"] }
+tokio = { version = "1.9", features = ["full"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-actix-web = "0.4.0-beta.1"
 tracing-log = { version = "0.1", features = ["env_logger"] }

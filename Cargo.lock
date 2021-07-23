@@ -1882,9 +1882,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "492848ff47f11b7f9de0443b404e2c5775f695e1af6b7076ca25f999581d547a"
+checksum = "ff27b33e30432e7b9854936693ca103d8591b0501f7ae9f633de48cda3bf2a67"
 dependencies = [
  "async-trait",
  "crossbeam-channel",
@@ -1901,9 +1901,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-application-insights"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04b5ec337d760877ea5cbbdda336f08b3dd0af4982b9c2c07c6530a2514da962"
+checksum = "c2e952f3e37398cb77a8e871d1270c46a05e0f4145c52d3f129f51db79906ac0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1920,9 +1920,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-http"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b752610d59706ff7cae48003552b3d0bf19bcce532629c8a49095894f21c319"
+checksum = "1eeb0d4b230c69aa425f9c3aadf02ce7aa4b2bc9a4e9fbe59614108232078263"
 dependencies = [
  "async-trait",
  "bytes 1.0.1",
@@ -1934,9 +1934,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55539628957c0a861ed310f37d9022a503aee5ccc2d699f78428d6c661de121d"
+checksum = "748502c9b5621d7f0fe9cf26cb75bc773a04ce8f1c2b9ce44c3e01045aac6b6d"
 dependencies = [
  "opentelemetry",
 ]
@@ -2693,24 +2693,25 @@ dependencies = [
 
 [[package]]
 name = "sentry"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27c425b07c7186018e2ef9ac3a25b01dae78b05a7ef604d07f216b9f59b42b4"
+checksum = "546b9b6f76c26c60ffbcf0b7136e15169fe13d43949b4aadb7c1edc1c3f3a26f"
 dependencies = [
- "httpdate 0.3.2",
+ "httpdate 1.0.1",
  "reqwest 0.11.4",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
  "sentry-log",
  "sentry-panic",
+ "tokio 1.9.0",
 ]
 
 [[package]]
 name = "sentry-backtrace"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80a5b9d9be0a0e25b2aaa5f3e9815d7fc6b8904f800c41800e5583652b5ca733"
+checksum = "9cd0cba2aff36ac98708f7a6e7abbdde82dbaf180d5870c41084dc1b473648b9"
 dependencies = [
  "backtrace",
  "lazy_static",
@@ -2720,25 +2721,26 @@ dependencies = [
 
 [[package]]
 name = "sentry-contexts"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2410b212de9b2eb7427d2bf9a1f4f5cb2aa14359863d982066ead00d6de9bce0"
+checksum = "9bacf1c62427c6c97b896640d0c4dd204bbd3b79dd192d7cb40891aa5ee11d58"
 dependencies = [
  "hostname",
  "lazy_static",
  "libc",
  "regex",
- "rustc_version 0.3.3",
+ "rustc_version 0.4.0",
  "sentry-core",
  "uname",
 ]
 
 [[package]]
 name = "sentry-core"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbbe485e384cb5540940e65d729820ffcbedc0c902fcb27081e44dacfe6a0c34"
+checksum = "f9a957270c9a430218f8031c866493061a27e35a70250e9527f093563a33ce6b"
 dependencies = [
+ "chrono",
  "lazy_static",
  "rand 0.8.4",
  "sentry-types",
@@ -2748,9 +2750,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-log"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "647143f672410ae5f242acd40f9f8f39729aff5ac7e856d91450fdfc30c2e960"
+checksum = "66da5759b0704a2fb0d420863b0795ea3429739e188ff67fff82bb13dcd3cc50"
 dependencies = [
  "log",
  "sentry-core",
@@ -2758,9 +2760,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-panic"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89cf195cff04a50b90e6b9ac8b4874dc63b8e0a466f193702801ef98baa9bd90"
+checksum = "692bf989f0c99f025e33d7f58e62822c3771f56d189698c66dcc863122255d95"
 dependencies = [
  "sentry-backtrace",
  "sentry-core",
@@ -2768,9 +2770,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.22.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5e777cff85b44538ac766a9604676b7180d01d2566e76b2ac41426c734498c"
+checksum = "f4dd2266fee014a86e250e98e389191ecd23be546b5c42b6a2fb9af2972fadac"
 dependencies = [
  "chrono",
  "debugid",
@@ -3529,9 +3531,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2f4cb277b92a8ba1170b3b911056428ce2ef9993351baf5965bb0359a2e5963"
+checksum = "c47440f2979c4cd3138922840eec122e3c0ba2148bc290f756bd7fd60fc97fff"
 dependencies = [
  "opentelemetry",
  "tracing",

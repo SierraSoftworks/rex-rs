@@ -36,8 +36,13 @@ impl Session {
                             KeyValue::new("service.name", "Rex"),
                             KeyValue::new("service.version", env!("CARGO_PKG_VERSION")),
                         ],
-                    )))
-                    .install_batch(opentelemetry::runtime::Tokio);
+                    )));
+
+                #[cfg(test)]
+                let tracer = tracer.install_simple();
+
+                #[cfg(not(test))]
+                let tracer = tracer.install_batch(opentelemetry::runtime::Tokio);
 
                 let layer = tracing_opentelemetry::layer()
                     .with_tracked_inactivity(true)

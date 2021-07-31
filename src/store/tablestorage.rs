@@ -403,7 +403,7 @@ macro_rules! actor_handler {
 }
 
 impl Actor for TableStorage {
-    type Context = Context<Self>;
+    type Context = actix::prelude::Context<Self>;
 }
 
 trace_handler!(TableStorage, GetHealth, Result<Health, APIError>);

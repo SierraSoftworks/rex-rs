@@ -18,7 +18,7 @@ async-trait = "0.1.48"
 azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust" }
 azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust", features = ["table"] }
 chrono = { version = "0.4", features = ["serde"] }
-env_logger = "0.8"
+env_logger = "0.9"
 futures = "0.3"
 http = "0.2"
 lazy_static = "1.4"

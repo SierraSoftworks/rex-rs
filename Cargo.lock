@@ -1573,6 +1573,23 @@ dependencies = [
  "pin-project",
  "rand 0.8.4",
  "thiserror",
+]
+
+[[package]]
+name = "opentelemetry"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1cf9b1c4e9a6c4de793c632496fa490bdc0e1eea73f0c91394f7b6990935d22"
+dependencies = [
+ "async-trait",
+ "crossbeam-channel",
+ "futures",
+ "js-sys",
+ "lazy_static",
+ "percent-encoding",
+ "pin-project",
+ "rand 0.8.4",
+ "thiserror",
  "tokio 1.10.0",
  "tokio-stream",
 ]
@@ -1587,7 +1604,7 @@ dependencies = [
  "chrono",
  "http",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.15.0",
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
  "reqwest 0.11.4",
@@ -1606,7 +1623,7 @@ dependencies = [
  "bytes 1.0.1",
  "futures-util",
  "http",
- "opentelemetry",
+ "opentelemetry 0.15.0",
  "reqwest 0.11.4",
 ]
 
@@ -1616,7 +1633,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "748502c9b5621d7f0fe9cf26cb75bc773a04ce8f1c2b9ce44c3e01045aac6b6d"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.15.0",
 ]
 
 [[package]]
@@ -1982,7 +1999,7 @@ dependencies = [
  "log",
  "md5",
  "openidconnect",
- "opentelemetry",
+ "opentelemetry 0.16.0",
  "opentelemetry-application-insights",
  "percent-encoding",
  "rand 0.8.4",
@@ -2835,7 +2852,7 @@ version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c47440f2979c4cd3138922840eec122e3c0ba2148bc290f756bd7fd60fc97fff"
 dependencies = [
- "opentelemetry",
+ "opentelemetry 0.15.0",
  "tracing",
  "tracing-core",
  "tracing-log",

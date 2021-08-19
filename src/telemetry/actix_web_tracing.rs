@@ -84,7 +84,7 @@ where
                 headers: req.headers(),
             });
 
-            register_dist_tracing_root(TraceId::new(), None).unwrap();
+            register_dist_tracing_root(TraceId::new(), None).unwrap_or_default();
 
             Span::current().set_parent(context);
         }

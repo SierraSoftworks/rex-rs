@@ -8,17 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: readmeio/github-readme-sync@2.1.1
+      - uses: readmeio/github-readme-sync@2.1.2
         with:
           readme-oas-key: ${{ secrets.README_OAS_KEY }}:61055da79d7fb919039c003d
           oas-file-path: './api/api_v1.yml'
           api-version: 'v1.0'
-      - uses: readmeio/github-readme-sync@2.1.1
+      - uses: readmeio/github-readme-sync@2.1.2
         with:
           readme-oas-key: ${{ secrets.README_OAS_KEY }}:61055d6b133d7768bfff219b
           oas-file-path: './api/api_v2.yml'
           api-version: 'v2.0'
-      - uses: readmeio/github-readme-sync@2.1.1
+      - uses: readmeio/github-readme-sync@2.1.2
         with:
           readme-oas-key: ${{ secrets.README_OAS_KEY }}:61055dba4fee73a96247a7f2
           oas-file-path: './api/api_v3.yml'

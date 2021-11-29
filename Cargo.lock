@@ -1426,6 +1426,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-bigint"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1498,17 +1509,18 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "openidconnect"
-version = "2.1.0"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a42ff51db0f23ae55dd6f234a15ed7bb468bc97938670693a3eaa42869110167"
+checksum = "7d523cf32bdf7696f36bc4198a42c34b65f0227b97f2f501ebfbe016baa5bc52"
 dependencies = [
- "base64 0.12.3",
+ "base64 0.13.0",
  "chrono",
  "http",
  "itertools",
  "log",
+ "num-bigint",
  "oauth2",
- "rand 0.7.3",
+ "rand 0.8.4",
  "ring",
  "serde",
  "serde-value",

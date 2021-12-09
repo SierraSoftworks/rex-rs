@@ -14,7 +14,7 @@ actix-http = "3.0.0-beta.9"
 actix-rt = "2.5"
 actix-service = "2.0.1"
 actix-web = "4.0.0-beta.8"
-async-trait = "0.1.51"
+async-trait = "0.1.52"
 azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust" }
 azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust", features = ["table"] }
 chrono = { version = "0.4", features = ["serde"] }

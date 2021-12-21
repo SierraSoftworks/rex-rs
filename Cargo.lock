@@ -331,7 +331,7 @@ dependencies = [
  "log",
  "oauth2",
  "rand 0.8.4",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
  "rustc_version 0.4.0",
  "serde",
  "serde_derive",
@@ -1481,7 +1481,7 @@ dependencies = [
  "getrandom 0.2.3",
  "http",
  "rand 0.8.4",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -1602,7 +1602,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
  "serde",
  "serde_json",
  "thiserror",
@@ -1619,7 +1619,7 @@ dependencies = [
  "futures-util",
  "http",
  "opentelemetry",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
 ]
 
 [[package]]
@@ -1930,9 +1930,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.7"
+version = "0.11.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07bea77bc708afa10e59905c3d4af7c8fd43c9214251673095ff8b14345fcbc5"
+checksum = "7c4e0a76dc12a116108933f6301b95e83634e0c47b0afbed6abbaa0601e99258"
 dependencies = [
  "base64 0.13.0",
  "bytes 1.0.1",
@@ -1965,7 +1965,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "webpki-roots 0.21.1",
+ "webpki-roots 0.22.1",
  "winreg",
 ]
 
@@ -1994,7 +1994,7 @@ dependencies = [
  "opentelemetry-application-insights",
  "percent-encoding",
  "rand 0.8.4",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
  "sentry",
  "serde",
  "serde_json",
@@ -2202,7 +2202,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "546b9b6f76c26c60ffbcf0b7136e15169fe13d43949b4aadb7c1edc1c3f3a26f"
 dependencies = [
  "httpdate 1.0.1",
- "reqwest 0.11.7",
+ "reqwest 0.11.8",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
@@ -3131,11 +3131,11 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "0.21.1"
+version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aabe153544e473b775453675851ecc86863d2a81d786d741f6b76778f2a48940"
+checksum = "c475786c6f47219345717a043a37ec04cb4bc185e28853adcc4fa0a947eba630"
 dependencies = [
- "webpki 0.21.4",
+ "webpki 0.22.0",
 ]
 
 [[package]]

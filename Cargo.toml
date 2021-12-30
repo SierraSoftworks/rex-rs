@@ -41,5 +41,5 @@ tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-honeycomb = "0.4"
 tracing-opentelemetry = "0.15"
-tracing-subscriber = "0.2"
+tracing-subscriber = "0.3"
 uuid = { version = "0.8", features = ["serde", "v4"] }

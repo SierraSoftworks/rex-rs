@@ -70,7 +70,7 @@ dependencies = [
  "flate2",
  "futures-core",
  "futures-util",
- "h2 0.3.3",
+ "h2 0.3.10",
  "http",
  "httparse",
  "itoa 0.4.7",
@@ -331,7 +331,7 @@ dependencies = [
  "log",
  "oauth2",
  "rand 0.8.4",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
  "rustc_version 0.4.0",
  "serde",
  "serde_derive",
@@ -898,9 +898,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.3"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "825343c4eef0b63f541f8903f395dc5beb362a979b5799a84062527ef1e37726"
+checksum = "0c9de88456263e249e241fcd211d3954e2c9b0ef7ccfc235a444eb367cae3689"
 dependencies = [
  "bytes 1.0.1",
  "fnv",
@@ -1040,7 +1040,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "h2 0.3.3",
+ "h2 0.3.10",
  "http",
  "http-body 0.4.2",
  "httparse",
@@ -1481,7 +1481,7 @@ dependencies = [
  "getrandom 0.2.3",
  "http",
  "rand 0.8.4",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -1602,7 +1602,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
  "serde",
  "serde_json",
  "thiserror",
@@ -1619,7 +1619,7 @@ dependencies = [
  "futures-util",
  "http",
  "opentelemetry",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
 ]
 
 [[package]]
@@ -1930,15 +1930,16 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.8"
+version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c4e0a76dc12a116108933f6301b95e83634e0c47b0afbed6abbaa0601e99258"
+checksum = "87f242f1488a539a79bac6dbe7c8609ae43b7914b7736210f239a37cccb32525"
 dependencies = [
  "base64 0.13.0",
  "bytes 1.0.1",
  "encoding_rs",
  "futures-core",
  "futures-util",
+ "h2 0.3.10",
  "http",
  "http-body 0.4.2",
  "hyper 0.14.11",
@@ -1994,7 +1995,7 @@ dependencies = [
  "opentelemetry-application-insights",
  "percent-encoding",
  "rand 0.8.4",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
  "sentry",
  "serde",
  "serde_json",
@@ -2202,7 +2203,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "546b9b6f76c26c60ffbcf0b7136e15169fe13d43949b4aadb7c1edc1c3f3a26f"
 dependencies = [
  "httpdate 1.0.1",
- "reqwest 0.11.8",
+ "reqwest 0.11.9",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",

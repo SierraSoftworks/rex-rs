@@ -2006,7 +2006,7 @@ dependencies = [
  "tracing-honeycomb",
  "tracing-log",
  "tracing-opentelemetry",
- "tracing-subscriber",
+ "tracing-subscriber 0.3.6",
  "uuid",
 ]
 
@@ -2810,7 +2810,7 @@ dependencies = [
  "itertools",
  "tracing",
  "tracing-core",
- "tracing-subscriber",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -2865,7 +2865,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
- "tracing-subscriber",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -2898,6 +2898,20 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77be66445c4eeebb934a7340f227bfe7b338173d3f8c00a60a5a58005c9faecf"
+dependencies = [
+ "ansi_term",
+ "sharded-slab",
+ "smallvec 1.6.1",
+ "thread_local",
+ "tracing-core",
+ "tracing-log",
 ]
 
 [[package]]

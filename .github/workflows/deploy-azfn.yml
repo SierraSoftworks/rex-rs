@@ -31,7 +31,7 @@ jobs:
       - run: cp target/x86_64-unknown-linux-musl/release/$HANDLER_NAME ./handler
 
       - name: Save handler artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: handler
           path: handler

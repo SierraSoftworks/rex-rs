@@ -338,7 +338,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "url",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -363,7 +363,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "url",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -638,7 +638,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f91cf5a8c2f2097e2a32627123508635d47ce10563d999ec1a95addf08b502ba"
 dependencies = [
  "serde",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -2081,7 +2081,7 @@ dependencies = [
  "tracing-log",
  "tracing-opentelemetry",
  "tracing-subscriber",
- "uuid",
+ "uuid 1.1.1",
 ]
 
 [[package]]
@@ -2358,7 +2358,7 @@ dependencies = [
  "thiserror",
  "time 0.3.6",
  "url",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -2874,7 +2874,7 @@ dependencies = [
  "futures",
  "tracing",
  "tracing-futures",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -2937,7 +2937,7 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-distributed",
- "uuid",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -3081,6 +3081,16 @@ name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom 0.2.3",
+ "serde",
+]
+
+[[package]]
+name = "uuid"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6d5d669b51467dcf7b2f1a796ce0f955f05f01cafda6c19d6e95f730df29238"
 dependencies = [
  "getrandom 0.2.3",
  "serde",

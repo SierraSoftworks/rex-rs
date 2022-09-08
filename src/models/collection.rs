@@ -32,17 +32,17 @@ impl From<Collection> for CollectionV3 {
         Self {
             id: Some(format!("{:0>32x}", idea.collection_id)),
             user_id: Some(format!("{:0>32x}", idea.user_id)),
-            name: idea.name.clone(),
+            name: idea.name,
         }
     }
 }
 
-impl Into<Collection> for CollectionV3 {
-    fn into(self) -> Collection {
+impl From<CollectionV3> for Collection {
+    fn from(val: CollectionV3) -> Self {
         Collection {
-            user_id: self.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            collection_id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(|| new_id()),
-            name: self.name.clone(),
+            user_id: val.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            collection_id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(new_id),
+            name: val.name,
         }
     }
 }

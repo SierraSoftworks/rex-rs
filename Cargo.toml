@@ -28,7 +28,7 @@ md5 = "0.7"
 openidconnect = { version = "2.3", default_features = false, features = ["curl"] }
 opentelemetry = { version = "0.17", features = ["tokio", "rt-tokio"] }
 opentelemetry-otlp = { version = "0.10", features = ["tls-roots"] }
-percent-encoding = "2.1"
+percent-encoding = "2.2"
 rand = "0.8"
 reqwest = { version = "0.11" }
 sentry = { version = "0.27", features = ["log"] }

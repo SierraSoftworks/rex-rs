@@ -12,6 +12,7 @@ extern crate uuid;
 
 mod api;
 mod models;
+mod ui;
 mod store;
 mod telemetry;
 
@@ -44,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             // TODO: CORS needs to be updated for new actix-web
             // .wrap(Cors::default().allow_any_origin().send_wildcard())
             .configure(api::configure)
+            .configure(ui::configure)
     })
         .bind(format!("0.0.0.0:{}", get_listening_port()))?
         .run()

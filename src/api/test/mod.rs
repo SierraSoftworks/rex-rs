@@ -20,7 +20,7 @@ pub async fn get_test_app(state: GlobalState) -> impl actix_web::dev::Service<ac
     .await
 }
 
-pub fn assert_location_header(header: &actix_web::http::HeaderMap, prefix: &str) {
+pub fn assert_location_header(header: &actix_web::http::header::HeaderMap, prefix: &str) {
     let location = header.get("Location")
         .expect("a location header")
         .to_str()

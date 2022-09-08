@@ -1,97 +1,87 @@
-use opentelemetry::{sdk, KeyValue};
-use tracing::{metadata::LevelFilter};
-use tracing_honeycomb::new_honeycomb_telemetry_layer;
-use tracing_log::LogTracer;
-use tracing_subscriber::{prelude::*, Registry};
+use opentelemetry_otlp::WithExportConfig;
+use sentry::ClientInitGuard;
+use tracing_subscriber::prelude::*;
 
-pub struct Session {}
+pub struct Session {
+    raven: ClientInitGuard,
+}
 
 impl Session {
     pub fn new() -> Self {
-        LogTracer::init().unwrap();
+        let raven = sentry::init((
+            "https://b7ca8a41e8e84fef889e4f428071dab2@o219072.ingest.sentry.io/1415519",
+            sentry::ClientOptions {
+                release: Some(version!("rex@v").into()),
+                #[cfg(debug_assertions)]
+                environment: Some("Development".into()),
+                #[cfg(not(debug_assertions))]
+                environment: Some("Production".into()),
+                default_integrations: true,
+                attach_stacktrace: true,
+                send_default_pii: false,
+                ..Default::default()
+            },
+        ));
 
-        let honeycomb_layer = match std::env::var("HONEYCOMB_KEY").ok() {
-            Some(honeycomb_key) if !honeycomb_key.is_empty() => {
-                let config = libhoney::Config {
-                    options: libhoney::client::Options {
-                        api_key: honeycomb_key,
-                        dataset:  std::env::var("HONEYCOMB_DATASET").unwrap_or("rex.sierrasoftworks.com".into()),
-                        ..libhoney::client::Options::default()
+        #[cfg(not(debug_assertions))]
+        let honeycomb_key = std::env::var("HONEYCOMB_KEY").ok();
+        
+        #[cfg(debug_assertions)]
+        let honeycomb_key = Some("X6naTEMkzy10PMiuzJKifF");
+
+        if let Some(honeycomb_key) = honeycomb_key {
+            let mut tracing_metadata = tonic::metadata::MetadataMap::new();
+            tracing_metadata.insert(
+                "x-honeycomb-team",
+                honeycomb_key.parse().unwrap(),
+            );
+    
+            let tracer = opentelemetry_otlp::new_pipeline()
+                .tracing()
+                .with_exporter(
+                    opentelemetry_otlp::new_exporter()
+                        .tonic()
+                        .with_endpoint("https://api.honeycomb.io:443")
+                        .with_metadata(tracing_metadata),
+                )
+                .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
+                    opentelemetry::sdk::Resource::new(vec![
+                        opentelemetry::KeyValue::new("service.name", "rex"),
+                        opentelemetry::KeyValue::new("service.version", version!("v")),
+                        opentelemetry::KeyValue::new("host.os", std::env::consts::OS),
+                        opentelemetry::KeyValue::new("host.architecture", std::env::consts::ARCH),
+                    ]),
+                ))
+                .install_batch(opentelemetry::runtime::Tokio)
+                .unwrap();
+    
+            tracing_subscriber::registry()
+                .with(tracing_subscriber::filter::LevelFilter::DEBUG)
+                .with(tracing_subscriber::filter::dynamic_filter_fn(
+                    |_metadata, ctx| {
+                        !ctx
+                            .lookup_current()
+                            // Exclude the rustls session "Connection" events which don't have a parent span
+                            .map(|s| s.parent().is_none() && s.name() == "Connection")
+                            .unwrap_or_default()
                     },
-                    transmission_options: libhoney::transmission::Options::default(),
-                };
-
-                let layer = new_honeycomb_telemetry_layer("rex", config);
-                Some(layer)
-            }
-            _ => None,
-        };
-
-        let app_insights_layer = match std::env::var("APPINSIGHTS_INSTRUMENTATIONKEY").ok() {
-            Some(app_insights_key) if !app_insights_key.is_empty() => {
-                let tracer = opentelemetry_application_insights::new_pipeline(app_insights_key)
-                    .with_client(reqwest::Client::new())
-                    .with_trace_config(sdk::trace::config().with_resource(sdk::Resource::new(
-                        vec![
-                            KeyValue::new("service.name", "Rex"),
-                            KeyValue::new("service.version", env!("CARGO_PKG_VERSION")),
-                        ],
-                    )));
-
-                #[cfg(test)]
-                let tracer = tracer.install_simple();
-
-                #[cfg(not(test))]
-                let tracer = tracer.install_batch(opentelemetry::runtime::Tokio);
-
-                let layer = tracing_opentelemetry::layer()
-                    .with_tracked_inactivity(true)
-                    .with_tracer(tracer);
-
-                Some(layer)
-            }
-            _ => None,
-        };
-
-        let default_layer = tracing_subscriber::fmt::Layer::default();
-
-        let subscriber = Registry::default().with(LevelFilter::INFO);
-
-        match (honeycomb_layer, app_insights_layer, default_layer) {
-            (Some(hny), Some(_ai), default) => {
-                let subscriber = subscriber
-                    .with(default)
-                    .with(hny);
-
-                tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
-            }
-            (Some(hny), None, default) => {
-                let subscriber = subscriber
-                    .with(default)
-                    .with(hny);
-
-                tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
-            }
-            (None, Some(ai), default) => {
-                let subscriber = subscriber
-                    .with(default)
-                    .with(ai);
-
-                tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
-            }
-            (None, None, default) => {
-                let subscriber = subscriber.with(default);
-
-                tracing::subscriber::set_global_default(subscriber).unwrap_or_default();
-            }
+                ))
+                .with(tracing_opentelemetry::layer().with_tracer(tracer))
+                .init();
         }
+        
+        sentry::start_session();
 
-        Self {}
+        Self {
+            raven
+        }
     }
 }
 
 impl Drop for Session {
     fn drop(&mut self) {
         opentelemetry::global::shutdown_tracer_provider();
+        self.raven.close(None);
+        sentry::end_session();
     }
 }

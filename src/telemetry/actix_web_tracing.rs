@@ -1,28 +1,18 @@
-use std::{
-    pin::Pin,
-    task::{Context, Poll},
-};
+use std::{pin::Pin, task::{Context, Poll}};
 
+use actix_web::{Error, http::header::HeaderMap};
 use actix_service::*;
 use actix_web::dev::*;
-use actix_web::{http::HeaderMap, Error};
-use futures::{
-    future::{ok, Ready},
-    Future,
-};
-use opentelemetry::{
-    propagation::{Extractor, TextMapPropagator},
-    sdk::propagation::TraceContextPropagator,
-};
+use futures::{Future, future::{ok, Ready}};
+use opentelemetry::{propagation::{Extractor, TextMapPropagator}, sdk::propagation::TraceContextPropagator};
 use tracing::{Instrument, Span};
-use tracing_honeycomb::{register_dist_tracing_root, TraceId};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub struct TracingLogger;
 
 impl<S, B> Transform<S, ServiceRequest> for TracingLogger
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -43,7 +33,7 @@ pub struct TracingLoggerMiddleware<S> {
 
 impl<S, B> Service<ServiceRequest> for TracingLoggerMiddleware<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -72,22 +62,14 @@ where
             "http.user_agent" = %user_agent,
             "http.status_code" = tracing::field::Empty,
             "http.method" = %req.method(),
-            "http.url" = %req.match_pattern().unwrap_or(req.path().into()),
-            "user" = tracing::field::Empty,
+            "http.url" = %req.match_pattern().unwrap_or_else(|| req.path().into()),
             "app.version" = env!("CARGO_PKG_VERSION"),
         );
+    
+        // Propagate OpenTelemetry parent span context information
+        let context  = propagator.extract(&HeaderMapExtractor::from(req.headers()));
 
-        {
-            let _enter = span.enter();
-            // Propagate OpenTelemetry parent span context information
-            let context = propagator.extract(&HeaderMapExtractor {
-                headers: req.headers(),
-            });
-
-            register_dist_tracing_root(TraceId::new(), None).unwrap_or_default();
-
-            Span::current().set_parent(context);
-        }
+        span.set_parent(context);
 
         let handler_span = {
             let _enter = span.enter();
@@ -101,7 +83,7 @@ where
             let _enter = handler_span.enter();
             self.service.call(req)
         };
-
+        
         Box::pin(
             async move {
                 let outcome = fut
@@ -120,7 +102,13 @@ where
 }
 
 struct HeaderMapExtractor<'a> {
-    headers: &'a HeaderMap,
+    headers: &'a HeaderMap
+}
+
+impl<'a> From<&'a HeaderMap> for HeaderMapExtractor<'a> {
+    fn from(headers: &'a HeaderMap) -> Self {
+        HeaderMapExtractor { headers }
+    }
 }
 
 impl<'a> Extractor for HeaderMapExtractor<'a> {

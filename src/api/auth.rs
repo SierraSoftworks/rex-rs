@@ -97,7 +97,6 @@ impl AuthToken {
 impl FromRequest for AuthToken {
     type Error = APIError;
     type Future = Ready<Result<AuthToken, APIError>>;
-    type Config = ();
 
     #[inline]
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {

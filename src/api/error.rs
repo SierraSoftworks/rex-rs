@@ -41,8 +41,8 @@ impl fmt::Display for APIError {
     }
 }
 
-impl From<azure_core::Error> for APIError {
-    fn from(err: azure_core::Error) -> Self {
+impl From<azure_core::error::Error> for APIError {
+    fn from(err: azure_core::error::Error) -> Self {
         error!({ exception.message = %err }, "We were unable to call Azure Table Storage");
 
         sentry::capture_error(&err);

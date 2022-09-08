@@ -1,12 +1,11 @@
-use crate::{models::*, trace_handler};
+use crate::{models::{*, self}, trace_handler};
 use crate::api::APIError;
 use std::{fmt::Debug, pin::Pin, sync::Arc};
 use futures::{StreamExt, Future};
 use rand::seq::IteratorRandom;
 use actix::prelude::*;
-use azure_core::prelude::*;
-use azure_storage::core::prelude::*;
-use azure_storage::table::prelude::*;
+use azure_data_tables::prelude::*;
+use azure_storage::prelude::*;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use tracing::Instrument;
@@ -26,61 +25,60 @@ impl TableStorage {
     pub fn new() -> Self {
         let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
 
-        let http_client: Arc<dyn HttpClient> = Arc::new(reqwest::Client::new());
-        let client = StorageAccountClient::new_connection_string(http_client, &connection_string).expect("a valid connection string");
-        let table_service = client.as_storage_client().as_table_service_client().expect("a valid table storage client");      
+        let client = StorageClient::new_connection_string(&connection_string).expect("a valid connection string");
+        let table_service = client.table_service_client().expect("a valid table storage client");      
         
-        let ideas_table = table_service.as_table_client("ideas");
-        let role_assignments_table = table_service.as_table_client("roleassignments");
-        let collections_table = table_service.as_table_client("collections");
-        let users_table = table_service.as_table_client("users");
+        let ideas_table = table_service.table_client("ideas");
+        let role_assignments_table = table_service.table_client("roleassignments");
+        let collections_table = table_service.table_client("collections");
+        let users_table = table_service.table_client("users");
 
         Self {
             started_at: chrono::Utc::now(),
 
-            ideas: ideas_table,
-            collections: collections_table,
-            role_assignments: role_assignments_table,
-            users: users_table,
+            ideas: TableReference::new(ideas_table),
+            collections: TableReference::new(collections_table),
+            role_assignments: TableReference::new(role_assignments_table),
+            users: TableReference::new(users_table),
         }
     }
 
     #[instrument(err, skip(table, not_found_err), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "GET"))]
     async fn get_single<ST, T>(table: TableReference, type_name: &str, partition_key: u128, row_key: u128, not_found_err: APIError) -> Result<T, APIError>
     where
-        ST: DeserializeOwned + Clone,
+        ST: DeserializeOwned + Clone + Sync + Send,
         T: From<ST> {
-        let result = table
-            .as_partition_key_client(&format!("{:0>32x}", partition_key))
-            .as_entity_client(&format!("{:0>32x}", row_key))
+        let result: ST = table
+            .partition_key_client(&format!("{:0>32x}", partition_key))
+            .entity_client(&format!("{:0>32x}", row_key))
             .map_err(|err| {
                 error!("Failed to retrieve item from table storage: {}", err);
                 APIError::new(500, "Internal Server Error", "We were unable to retrieve the item you requested, this failure has been reported.")
             })?
             .get()
-            .execute::<ST>().await
+            .into_future().await
             .map_err(|err| {
                 error!("Failed to retrieve item from table storage: {}", err);
                 not_found_err
-            })?;
+            })?.entity;
 
-        Ok(result.entity.into())
+        Ok(result.into())
     }
 
     #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_all_entities<ST, P>(table: TableReference, _type_name: &str, query: String, filter: P) -> Result<Vec<ST>, APIError>
     where
-        ST: Serialize + DeserializeOwned + Clone,
+        ST: Serialize + DeserializeOwned + Clone + Sync + Send,
         P: Fn(&ST) -> bool
     {
         let mut entries: Vec<ST> = vec![];
 
         let mut query_operation = table.query();
         if !query.is_empty() {
-            query_operation = query_operation.filter(&query);
+            query_operation = query_operation.filter(query.clone());
         }
 
-        let mut stream = Box::pin(query_operation.stream::<ST>());
+        let mut stream = Box::pin(query_operation.into_stream::<ST>());
         
         while let Some(result) = stream.next().instrument(
             info_span!("get_all_entities.get_page", "otel.kind" = "client", "db.system" = "TABLESTORAGE", "db.operation" = "LIST.PAGE", db.statement = %query)
@@ -93,13 +91,13 @@ impl TableStorage {
             entries.append(&mut result.entities);
         }
 
-        Ok(entries.iter().filter(|&e| filter(e)).map(|e| e.clone()).collect())
+        Ok(entries.iter().filter(|&e| filter(e)).cloned().collect())
     }
 
     #[instrument(err, skip(table, filter), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_all<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P) -> Result<Vec<T>, APIError>
     where
-        ST: Serialize + DeserializeOwned + Clone,
+        ST: Serialize + DeserializeOwned + Clone + Sync + Send,
         P: Fn(&ST) -> bool,
         T: From<ST>
     {
@@ -110,30 +108,31 @@ impl TableStorage {
     #[instrument(err, skip( table, filter, not_found_err), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "LIST", db.statement = %query))]
     async fn get_random<ST, T, P>(table: TableReference, type_name: &str, query: String, filter: P, not_found_err: APIError) -> Result<T, APIError>
     where
-        ST: Serialize + DeserializeOwned + Clone,
+        ST: Serialize + DeserializeOwned + Clone + Sync + Send,
         P: Fn(&ST) -> bool,
         T: From<ST> + ToOwned
     {
         let entries: Vec<ST> = TableStorage::get_all_entities(table, type_name, query, filter).await?;
-        entries.iter().choose(&mut rand::thread_rng()).map(|e| e).map(|e| e.clone().into()).ok_or(not_found_err)
+        entries.iter().choose(&mut rand::thread_rng()).map(|e| e.clone().into()).ok_or(not_found_err)
     }
 
     #[instrument(err, skip(table, item), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "PUT"))]
     async fn store_single<ST, T, PK, RK>(table: TableReference, type_name: &str, partition_key: PK, row_key: RK, item: ST) -> Result<T, APIError> 
     where
-        ST: Serialize + DeserializeOwned + Clone + Debug,
+        ST: Serialize + DeserializeOwned + Clone + Debug + Sync + Send,
         T: From<ST>,
         PK: AsRef<str> + Debug,
         RK: AsRef<str> + Debug {
         
         table
-            .as_partition_key_client(partition_key.as_ref())
-            .as_entity_client(row_key.as_ref())
+            .partition_key_client(partition_key.as_ref())
+            .entity_client(row_key.as_ref())
             .map_err(|err| {
                 error!("Failed to remove item from table storage: {}", err);
                 APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
             })?
-            .insert_or_replace().execute(&item)
+            .insert_or_replace(&item)?
+            .into_future()
             .await
             .map_err(|err| {
                 error!("Failed to store item in table storage: {}", err);
@@ -146,14 +145,14 @@ impl TableStorage {
     #[instrument(err, skip( table), fields(otel.kind = "client", db.system = "TABLESTORAGE", db.operation = "DELETE"))]
     async fn remove_single(table: TableReference, type_name: &str, partition_key: u128, row_key: u128) -> Result<(), APIError> {
         let entity_client = table
-            .as_partition_key_client(&format!("{:0>32x}", partition_key))
-            .as_entity_client(&format!("{:0>32x}", row_key))
+            .partition_key_client(&format!("{:0>32x}", partition_key))
+            .entity_client(&format!("{:0>32x}", row_key))
             .map_err(|err| {
                 error!("Failed to remove item from table storage: {}", err);
                 APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
             })?;
             
-        entity_client.delete().execute().await
+        entity_client.delete().into_future().await
         .map_err(|err| {
             error!("Failed to remove item from table storage: {}", err);
             APIError::new(503, "Service Unavailable", "We were unable to remove the item you requested, this failure has been reported.")
@@ -164,18 +163,12 @@ impl TableStorage {
 
     fn build_idea_filter_query(partition_key: u128, is_completed: Option<bool>, tag: Option<String>) -> String {
         let mut query = format!("PartitionKey eq '{:0>32x}'", partition_key);
-        match is_completed {
-            Some(completed) => {
-                query = query + format!(" and Completed eq {}", completed).as_str()
-            },
-            None => {}
+        if let Some(completed) = is_completed {
+            query += format!(" and Completed eq {}", completed).as_str()
         }
         
-        match tag {
-            Some(tag) => {
-                query = query + format!(" and contains(Tags, '{}')", tag.replace("'", "''").replace("%", "%25")).as_str()
-            },
-            None => {}
+        if let Some(tag) = tag {
+            query += format!(" and contains(Tags, '{}')", tag.replace('\'', "''").replace('%', "%25")).as_str()
         }
 
         query
@@ -205,7 +198,7 @@ impl From<TableStorageIdea> for Idea {
             id: u128::from_str_radix(&entity.id, 16).unwrap_or_default(),
             collection_id: u128::from_str_radix(&entity.collection_id, 16).unwrap_or_default(),
             name: entity.name.clone(),
-            tags: hashset!([entity.tags.split(",").filter(|t| !t.is_empty())]),
+            tags: hashset!([entity.tags.split(',').filter(|t| !t.is_empty())]),
             description: entity.description.clone(),
             completed: entity.completed
         }
@@ -269,7 +262,7 @@ struct TableStorageUser {
     pub first_name: String,
 }
 
-impl From<TableStorageUser> for User {
+impl From<TableStorageUser> for models::User {
     fn from(entity: TableStorageUser) -> Self {
         Self {
             email_hash: u128::from_str_radix(&entity.email_hash, 16).unwrap_or_default(),
@@ -414,7 +407,7 @@ impl Handler<GetHealth> for TableStorage {
     fn handle(&mut self, _: GetHealth, _: &mut Self::Context) -> Self::Result {
         Ok(Health {
             ok: true,
-            started_at: self.started_at.clone(),
+            started_at: self.started_at,
         })
     }
 }
@@ -424,17 +417,17 @@ actor_handler!(GetIdea|msg => Idea: get_single from ideas(TableStorageIdea) wher
 actor_handler!(GetIdeas|msg => Idea: get_all from ideas(TableStorageIdea) where
     query=TableStorage::build_idea_filter_query(msg.collection, msg.is_completed, msg.tag.clone()),
     context = [
-        let tag_str = msg.tag.unwrap_or("".to_string());
+        let tag_str = msg.tag.unwrap_or_default();
     ],
-    filter=i -> tag_str.is_empty() || i.tags.split(",").any(|i| i == tag_str.as_str()));
+    filter=i -> tag_str.is_empty() || i.tags.split(',').any(|i| i == tag_str.as_str()));
 
     
 actor_handler!(GetRandomIdea|msg => Idea: get_random from ideas(TableStorageIdea) where
     query = TableStorage::build_idea_filter_query(msg.collection, msg.is_completed, msg.tag.clone()),
     context = [
-        let tag_str = msg.tag.unwrap_or("".to_string());
+        let tag_str = msg.tag.unwrap_or_default();
     ],
-    filter = i -> tag_str.is_empty() || i.tags.split(",").any(|i| i == tag_str.as_str());
+    filter = i -> tag_str.is_empty() || i.tags.split(',').any(|i| i == tag_str.as_str());
     not found = "We could not find any ideas in the collection you provided which matched your query. Please create some and try again.");
 
 actor_handler!(StoreIdea|msg => Idea: store_single in ideas(TableStorageIdea) where pk=format!("{:0>32x}", msg.collection), rk=format!("{:0>32x}", msg.id); return TableStorageIdea {
@@ -478,9 +471,9 @@ actor_handler!(StoreRoleAssignment|msg => RoleAssignment: store_single in role_a
 
 actor_handler!(RemoveRoleAssignment|msg: remove_single from role_assignments where pk=msg.collection_id, rk=msg.principal_id);
 
-actor_handler!(GetUser|msg => User: get_single from users(TableStorageUser) where pk=msg.email_hash, rk=msg.email_hash; not found = "The user you are looking for could not be found. Please check that you have entered their email address correctly and try again.");
+actor_handler!(GetUser|msg => models::User: get_single from users(TableStorageUser) where pk=msg.email_hash, rk=msg.email_hash; not found = "The user you are looking for could not be found. Please check that you have entered their email address correctly and try again.");
 
-actor_handler!(StoreUser|msg => User: store_single in users(TableStorageUser) where pk=format!("{:0>32x}", msg.email_hash), rk=format!("{:0>32x}", msg.email_hash); return TableStorageUser {
+actor_handler!(StoreUser|msg => models::User: store_single in users(TableStorageUser) where pk=format!("{:0>32x}", msg.email_hash), rk=format!("{:0>32x}", msg.email_hash); return TableStorageUser {
     email_hash: format!("{:0>32x}", msg.email_hash),
     row_key: format!("{:0>32x}", msg.email_hash),
     principal_id: format!("{:0>32x}", msg.principal_id),

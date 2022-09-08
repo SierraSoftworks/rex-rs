@@ -24,13 +24,13 @@ async fn store_idea_v1(
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
-        id: id,
+        id,
         collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -53,13 +53,13 @@ async fn store_idea_v2(
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
-        id: id,
+        id,
         collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -82,13 +82,13 @@ async fn store_idea_v3(
     ensure_user_collection(&state, &token).await?;
 
     state.store.send(StoreIdea {
-        id: id,
+        id,
         collection: uid,
         name: idea.name,
         description: idea.description,
         tags: idea.tags,
         completed: idea.completed,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -116,13 +116,13 @@ async fn store_collection_idea_v3(
     match role.role {
         Role::Owner | Role::Contributor => {
             state.store.send(StoreIdea {
-                id: id,
+                id,
                 collection: cid,
                 name: idea.name,
                 description: idea.description,
                 tags: idea.tags,
                 completed: idea.completed,
-            }.trace()).await?.map(|idea| idea.clone().into())
+            }.trace()).await?.map(|idea| idea.into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to modify an idea within this collection."))
     }
@@ -229,7 +229,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,
@@ -264,7 +263,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

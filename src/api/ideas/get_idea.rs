@@ -15,7 +15,7 @@ async fn get_idea_v1(
     let id = parse_uuid!(info.id, "idea ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
     
-    state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetIdea { collection: uid, id }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -29,7 +29,7 @@ async fn get_idea_v2(
     let id = parse_uuid!(info.id, "idea ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
         
-    state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetIdea { collection: uid, id }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -45,7 +45,7 @@ async fn get_idea_v3(
         
     ensure_user_collection(&state, &token).await?;
     
-    state.store.send(GetIdea { collection: uid, id: id }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetIdea { collection: uid, id }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -64,7 +64,7 @@ async fn get_collection_idea_v3(
 
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }.trace()).await??;
 
-    state.store.send(GetIdea { collection: cid, id: id }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetIdea { collection: cid, id }.trace()).await?.map(|idea| idea.into())
 }
 
 #[cfg(test)]
@@ -149,7 +149,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

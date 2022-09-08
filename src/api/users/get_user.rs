@@ -13,7 +13,7 @@ async fn get_user_v3(
 
     let tuid = parse_uuid!(info.user, "user ID");
 
-    state.store.send(GetUser { email_hash: tuid }.trace()).await?.map(|user| user.clone().into())
+    state.store.send(GetUser { email_hash: tuid }.trace()).await?.map(|user| user.into())
 }
 
 #[cfg(test)]

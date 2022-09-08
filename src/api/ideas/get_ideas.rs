@@ -29,7 +29,7 @@ async fn get_ideas_v2(
 
     state.store.send(GetIdeas {
         collection: uid,
-        is_completed: query.complete.clone(), 
+        is_completed: query.complete, 
         tag: query.tag.clone()
     }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
@@ -49,7 +49,7 @@ async fn get_ideas_v3(
 
     state.store.send(GetIdeas {
         collection: uid,
-        is_completed: query.complete.clone(), 
+        is_completed: query.complete, 
         tag: query.tag.clone()
     }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
@@ -70,7 +70,7 @@ async fn get_collection_ideas_v3(
 
     state.store.send(GetIdeas {
         collection: cid,
-        is_completed: query.complete.clone(), 
+        is_completed: query.complete, 
         tag: query.tag.clone()
     }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
@@ -118,7 +118,7 @@ mod tests {
         ]);
 
         let content: Vec<IdeaV2> = test_request!(GET "/api/v2/ideas" => OK with content | state = state);
-        assert!(content.len() >= 1);
+        assert!(!content.is_empty());
         assert_ne!(content[0].id, None);
         assert_eq!(content[0].name, "Test Idea".to_string());
         assert_eq!(content[0].description, "This is a test idea".to_string());
@@ -142,7 +142,7 @@ mod tests {
         ]);
 
         let content: Vec<IdeaV3> = test_request!(GET "/api/v3/ideas" => OK with content | state = state);
-        assert!(content.len() >= 1);
+        assert!(!content.is_empty());
         assert_ne!(content[0].id, None);
         assert_eq!(content[0].collection, Some("00000000000000000000000000000000".into()));
         assert_eq!(content[0].name, "Test Idea".to_string());
@@ -160,7 +160,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

@@ -56,7 +56,7 @@ mod tests {
                 "00000000000000000000000000000002" => {
                     assert_eq!(role.role, "Viewer".to_string());
                 },
-                _ => assert!(false)
+                _ => unreachable!()
             }
         }
     }

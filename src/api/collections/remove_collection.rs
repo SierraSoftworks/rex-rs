@@ -36,7 +36,6 @@ mod tests {
                 collection_id: 1,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 1,

@@ -33,7 +33,7 @@ pub fn assert_location_header(header: &actix_web::http::header::HeaderMap, prefi
     let id = String::from(
         &location[location.find(prefix).expect("index of path") + prefix.len()..],
     )
-    .clone();
+    ;
     assert_ne!(id, "");
 }
 

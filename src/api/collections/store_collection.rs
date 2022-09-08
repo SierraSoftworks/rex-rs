@@ -21,7 +21,7 @@ async fn store_collection_v3(
         principal_id: uid,
         collection_id: cid,
         name: collection.name.clone(),
-    }.trace()).await?.map(|collection| collection.clone().into())
+    }.trace()).await?.map(|collection| collection.into())
 }
 
 #[cfg(test)]

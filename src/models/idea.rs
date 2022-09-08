@@ -38,18 +38,18 @@ impl From<Idea> for IdeaV1 {
         Self {
             id: Some(format!("{:0>32x}", idea.id)),
             name: idea.name.clone(),
-            description: idea.description.clone(),
+            description: idea.description,
         }
     }
 }
 
-impl Into<Idea> for IdeaV1 {
-    fn into(self) -> Idea {
+impl From<IdeaV1> for Idea {
+    fn from(val: IdeaV1) -> Self {
         Idea {
-            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
             collection_id: 0,
-            name: self.name.clone(),
-            description: self.description.clone(),
+            name: val.name.clone(),
+            description: val.description,
             tags: HashSet::new(),
             completed: false,
         }
@@ -73,21 +73,21 @@ impl From<Idea> for IdeaV2 {
             id: Some(format!("{:0>32x}", idea.id)),
             name: idea.name.clone(),
             description: idea.description.clone(),
-            tags: if idea.tags.len() > 0 { Some(idea.tags.clone()) } else { None },
+            tags: if !idea.tags.is_empty() { Some(idea.tags.clone()) } else { None },
             completed: Some(idea.completed),
         }
     }
 }
 
-impl Into<Idea> for IdeaV2 {
-    fn into(self) -> Idea {
+impl From<IdeaV2> for Idea {
+    fn from(val: IdeaV2) -> Self {
         Idea {
-            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
             collection_id: 0,
-            name: self.name.clone(),
-            description: self.description.clone(),
-            tags: self.tags.clone().unwrap_or_else(|| HashSet::new()),
-            completed: self.completed.unwrap_or_else(|| false),
+            name: val.name.clone(),
+            description: val.description.clone(),
+            tags: val.tags.clone().unwrap_or_default(),
+            completed: val.completed.unwrap_or(false),
         }
     }
 }
@@ -118,21 +118,21 @@ impl From<Idea> for IdeaV3 {
             collection: Some(format!("{:0>32x}", idea.collection_id)),
             name: idea.name.clone(),
             description: idea.description.clone(),
-            tags: if idea.tags.len() > 0 { Some(idea.tags.clone()) } else { None },
+            tags: if !idea.tags.is_empty() { Some(idea.tags.clone()) } else { None },
             completed: Some(idea.completed),
         }
     }
 }
 
-impl Into<Idea> for IdeaV3 {
-    fn into(self) -> Idea {
+impl From<IdeaV3> for Idea {
+    fn from(val: IdeaV3) -> Self {
         Idea {
-            id: self.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(|| new_id()),
-            collection_id: self.collection.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            name: self.name.clone(),
-            description: self.description.clone(),
-            tags: self.tags.clone().unwrap_or_else(|| HashSet::new()),
-            completed: self.completed.unwrap_or_else(|| false),
+            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(new_id),
+            collection_id: val.collection.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            name: val.name.clone(),
+            description: val.description.clone(),
+            tags: val.tags.clone().unwrap_or_default(),
+            completed: val.completed.unwrap_or(false),
         }
     }
 }

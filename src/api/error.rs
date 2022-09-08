@@ -16,7 +16,7 @@ impl APIError {
 
     pub fn new(code: u16, error: &str, message: &str) -> Self {
         Self {
-            code: code,
+            code,
             error: error.to_string(),
             message: message.to_string(),
         }
@@ -28,7 +28,6 @@ impl error::ResponseError for APIError {
         HttpResponse::build(self.status_code())
             .content_type("application/json; charset=utf-8")
             .json(self)
-            .into()
     }
 
     fn status_code(&self) -> StatusCode {

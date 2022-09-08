@@ -15,7 +15,7 @@ async fn get_collection_v3(
     let cid = parse_uuid!(info.collection, "collection ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
-    state.store.send(GetCollection { id: cid, principal_id: uid }.trace()).await?.map(|collection| collection.clone().into())
+    state.store.send(GetCollection { id: cid, principal_id: uid }.trace()).await?.map(|collection| collection.into())
 }
 
 #[cfg(test)]
@@ -32,7 +32,6 @@ mod tests {
                 collection_id: 1,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             }
         ]);
 

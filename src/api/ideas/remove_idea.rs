@@ -15,7 +15,7 @@ async fn remove_idea_v1(
     let id = parse_uuid!(info.id, "idea ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
-    state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
+    state.store.send(RemoveIdea { collection: uid, id }.trace()).await??;
     
     Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
@@ -31,7 +31,7 @@ async fn remove_idea_v2(
     let id = parse_uuid!(info.id, "idea ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
         
-    state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
+    state.store.send(RemoveIdea { collection: uid, id }.trace()).await??;
     
     Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
@@ -47,7 +47,7 @@ async fn remove_idea_v3(
     let id = parse_uuid!(info.id, "idea ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
         
-    state.store.send(RemoveIdea { collection: uid, id: id }.trace()).await??;
+    state.store.send(RemoveIdea { collection: uid, id }.trace()).await??;
     
     Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
 }
@@ -70,7 +70,7 @@ async fn remove_collection_idea_v3(
 
     match role.role {
         Role::Owner | Role::Contributor => {
-            state.store.send(RemoveIdea { collection: cid, id: id }.trace()).await??;
+            state.store.send(RemoveIdea { collection: cid, id }.trace()).await??;
             
             Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
         },
@@ -152,7 +152,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

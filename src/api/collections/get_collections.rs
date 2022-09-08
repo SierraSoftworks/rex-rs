@@ -32,12 +32,11 @@ mod tests {
                 collection_id: 1,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             }
         ]);
 
         let content: Vec<CollectionV3> = test_request!(GET "/api/v3/collections" => OK with content | state = state);
-        assert!(content.len() >= 1);
+        assert!(!content.is_empty());
         assert!(content.iter().any(|c| c.id == Some("00000000000000000000000000000001".into())));
         assert!(content.iter().all(|c| c.user_id == Some("00000000000000000000000000000000".into())));
         assert!(content.iter().any(|c| c.name == "Test Collection"));

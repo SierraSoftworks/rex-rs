@@ -32,17 +32,17 @@ impl From<User> for UserV3 {
         Self {
             id: format!("{:0>32x}", user.principal_id),
             email_hash: format!("{:0>32x}", user.email_hash),
-            first_name: user.first_name.into(),
+            first_name: user.first_name,
         }
     }
 }
 
-impl Into<User> for UserV3 {
-    fn into(self) -> User {
+impl From<UserV3> for User {
+    fn from(val: UserV3) -> Self {
         User {
-            principal_id: u128::from_str_radix(&self.id, 16).unwrap_or_else(|_| 0),
-            email_hash: u128::from_str_radix(&self.email_hash, 16).unwrap_or(0),
-            first_name: self.first_name.as_str().into(),
+            principal_id: u128::from_str_radix(&val.id, 16).unwrap_or(0),
+            email_hash: u128::from_str_radix(&val.email_hash, 16).unwrap_or(0),
+            first_name: val.first_name.as_str().into(),
         }
     }
 }

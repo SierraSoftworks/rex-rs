@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use crate::api::APIError;
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Role {
     Owner,
     Contributor,
@@ -26,9 +26,9 @@ impl From<&str> for Role {
     }
 }
 
-impl Into<String> for Role {
-    fn into(self) -> String {
-        match self {
+impl From<Role> for String {
+    fn from(val: Role) -> Self {
+        match val {
             Role::Owner => "Owner".into(),
             Role::Contributor => "Contributor".into(),
             Role::Viewer => "Viewer".into(),
@@ -77,12 +77,12 @@ impl From<RoleAssignment> for RoleAssignmentV3 {
     }
 }
 
-impl Into<RoleAssignment> for RoleAssignmentV3 {
-    fn into(self) -> RoleAssignment {
+impl From<RoleAssignmentV3> for RoleAssignment {
+    fn from(val: RoleAssignmentV3) -> Self {
         RoleAssignment {
-            user_id: self.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            collection_id: self.collection_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            role: self.role.as_str().into(),
+            user_id: val.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            collection_id: val.collection_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            role: val.role.as_str().into(),
         }
     }
 }

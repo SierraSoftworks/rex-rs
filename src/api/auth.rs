@@ -17,7 +17,7 @@ pub struct AuthToken {
     claims: AuthIdTokenClaims,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct AuthAdditionalClaims {
     pub oid: String,
     pub roles: Vec<String>,
@@ -35,7 +35,7 @@ impl AuthToken {
     }
 
     pub fn name(&self) -> String {
-        self.claims.name().and_then(|n| n.get(None)).map(|n| n.to_string()).unwrap_or(String::new())
+        self.claims.name().and_then(|n| n.get(None)).map(|n| n.to_string()).unwrap_or_default()
     }
 
     pub fn roles(&self) -> &Vec<String> {
@@ -43,7 +43,7 @@ impl AuthToken {
     }
 
     pub fn scopes(&self) -> Vec<&str> {
-        self.claims.additional_claims().scp.split(" ").collect()
+        self.claims.additional_claims().scp.split(' ').collect()
     }
 
     pub fn email(&self) -> &str {
@@ -52,11 +52,11 @@ impl AuthToken {
 
     fn bearer_token_from_request(req: &HttpRequest) -> Result<&str, APIError> {
         req.headers().get("Authorization")
-            .ok_or(APIError::unauthorized())
+            .ok_or_else(APIError::unauthorized)
             .and_then(|header| header.to_str().map_err(|_| APIError::unauthorized()))
             .and_then(|header| {
                 if header.starts_with("Bearer ") {
-                    header.split_ascii_whitespace().nth(1).ok_or(APIError::unauthorized())
+                    header.split_ascii_whitespace().nth(1).ok_or_else(APIError::unauthorized)
                 } else {
                     Err(APIError::unauthorized())
                 }
@@ -114,13 +114,13 @@ fn get_client() -> CoreClient {
 
     let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string()).expect("The redirect URL should parse correctly");
 
-    let client = CoreClient::from_provider_metadata(
+    
+
+    CoreClient::from_provider_metadata(
         provider_metadata,
         ClientId::new("https://rex.sierrasoftworks.com".to_string()),
         None)
-        .set_redirect_uri(redirect_url);
-
-    client
+        .set_redirect_uri(redirect_url)
 }
 
 struct NoOpNonceVerifier {}

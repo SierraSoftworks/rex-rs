@@ -11,7 +11,7 @@ async fn get_random_idea_v1(state: web::Data<GlobalState>, token: AuthToken) -> 
     
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: None, tag: None }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -24,7 +24,7 @@ async fn get_random_idea_v2(
     
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -40,7 +40,7 @@ async fn get_random_idea_v3(
     ensure_user_collection(&state, &token).await?;
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: uid }.trace()).await??;
 
-    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: uid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -56,7 +56,7 @@ async fn get_random_collection_idea_v3(
         
     state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }.trace()).await??;
 
-    state.store.send(GetRandomIdea { collection: cid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.clone().into())
+    state.store.send(GetRandomIdea { collection: cid, is_completed: query.complete, tag: query.tag.clone() }.trace()).await?.map(|idea| idea.into())
 }
 
 #[cfg(test)]
@@ -142,7 +142,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

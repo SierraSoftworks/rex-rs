@@ -24,7 +24,7 @@ async fn get_role_assignment_v3(
         }
     }
 
-    state.store.send(GetRoleAssignment { collection_id: cid, principal_id: tuid }.trace()).await?.map(|role| role.clone().into())
+    state.store.send(GetRoleAssignment { collection_id: cid, principal_id: tuid }.trace()).await?.map(|role| role.into())
 }
 
 #[cfg(test)]

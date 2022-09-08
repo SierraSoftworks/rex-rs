@@ -51,7 +51,7 @@ async fn store_role_assignment_v3(
                 principal_id: tuid,
                 collection_id: cid,
                 role: collection.role.as_str().into(),
-            }.trace()).await?.map(|collection| collection.clone().into())
+            }.trace()).await?.map(|collection| collection.into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."))
     }

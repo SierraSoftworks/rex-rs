@@ -24,7 +24,7 @@ async fn new_idea_v1(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -47,7 +47,7 @@ async fn new_idea_v2(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -70,7 +70,7 @@ async fn new_idea_v3(
         description: idea.description,
         tags: idea.tags,
         completed: false,
-    }.trace()).await?.map(|idea| idea.clone().into())
+    }.trace()).await?.map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -100,7 +100,7 @@ async fn new_collection_idea_v3(
                 description: idea.description,
                 tags: idea.tags,
                 completed: idea.completed,
-            }.trace()).await?.map(|idea| idea.clone().into())
+            }.trace()).await?.map(|idea| idea.into())
         },
         _ => Err(APIError::new(403, "Forbidden", "You do not have permission to add an idea to this collection."))
     }
@@ -196,7 +196,6 @@ mod tests {
                 collection_id: 7,
                 principal_id: 0,
                 name: "Test Collection".into(),
-                ..Default::default()
             },
             StoreRoleAssignment {
                 collection_id: 7,

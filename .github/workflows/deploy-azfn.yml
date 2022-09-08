@@ -5,13 +5,18 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  id-token: write
+
 env:
   CARGO_TERM_COLOR: always
   HANDLER_NAME: rex
 
+  STAGING_DEPLOYMENT_APP_ID: e0d46426-bd93-4bb2-9b5a-cabb0af9a509
   STAGING_FUNCTION_NAME: rex-sierrasoftworks-staging
   STAGING_HEALTHCHECK: "https://rex-staging.sierrasoftworks.com/api/v1/health"
 
+  LIVE_DEPLOYMENT_APP_ID: 25c19850-5c4e-4b6e-9257-a6e62b31e2e7
   LIVE_FUNCTION_NAME: rex-sierrasoftworks
   LIVE_HEALTHCHECK: "https://rex.sierrasoftworks.com/api/v1/health"
 
@@ -58,7 +63,9 @@ jobs:
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          tenant-id: a26571f1-22b3-4756-ac7b-39ca684fab48
+          subscription-id: 108b3ddb-53fb-4344-80b2-d6c151912be6
+          client-id: ${{ env.STAGING_DEPLOYMENT_APP_ID }}
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
@@ -101,7 +108,9 @@ jobs:
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          tenant-id: a26571f1-22b3-4756-ac7b-39ca684fab48
+          subscription-id: 108b3ddb-53fb-4344-80b2-d6c151912be6
+          client-id: ${{ env.LIVE_DEPLOYMENT_APP_ID }}
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1

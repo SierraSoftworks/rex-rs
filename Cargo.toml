@@ -42,4 +42,4 @@ tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-opentelemetry = "0.17"
 tracing-subscriber = { version = "0.3", features = ["tracing-log"] }
-uuid = { version = "1.1", features = ["serde", "v4"] }
+uuid = { version = "1.2", features = ["serde", "v4"] }

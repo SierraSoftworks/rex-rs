@@ -37,7 +37,7 @@ serde_json = "1.0"
 tokio = { version = "1.21", features = ["full"] }
 tonic = { version = "0.6.2", features = ["tls-roots"] }
 tracing = { version = "0.1", features = ["log"] }
-tracing-actix-web = "0.6.1"
+tracing-actix-web = "0.6.2"
 tracing-log = { version = "0.1", features = ["env_logger"] }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-opentelemetry = "0.17"

@@ -56,6 +56,7 @@ where
         let span = tracing::info_span!(
             "request",
             "otel.kind" = "server",
+            "otel.name" = req.match_pattern().unwrap_or(req.uri().path().to_string()),
             "net.transport" = "IP.TCP",
             "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
             "http.target" = %req.uri(),
@@ -63,7 +64,6 @@ where
             "http.status_code" = tracing::field::Empty,
             "http.method" = %req.method(),
             "http.url" = %req.match_pattern().unwrap_or_else(|| req.path().into()),
-            "app.version" = env!("CARGO_PKG_VERSION"),
         );
     
         // Propagate OpenTelemetry parent span context information
@@ -75,7 +75,8 @@ where
             let _enter = span.enter();
             tracing::info_span!(
                 "request.handler",
-                "otel.kind" = "internal"
+                "otel.kind" = "internal",
+                "otel.name" = req.match_name().unwrap_or("<default>"),
             )
         };
 

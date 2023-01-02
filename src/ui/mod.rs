@@ -1,6 +1,5 @@
 use actix_web::{get, http::header::ContentType, web, HttpRequest, HttpResponse};
 use http::HeaderValue;
-use opentelemetry::trace::SpanKind;
 use tracing::{field, instrument, Span};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
@@ -12,7 +11,7 @@ static DEFAULT_CONTENT_TYPE: HeaderValue = HeaderValue::from_static("application
 #[instrument(
     skip(req),
     fields(
-        otel.kind=%SpanKind::Client,
+        otel.kind="client",
         http.method="GET",
         http.target="/{ui_path}",
         http.path=%req.path(),
@@ -35,7 +34,7 @@ pub async fn get_ui_path(req: HttpRequest) -> HttpResponse {
                         .get("content-type")
                         .unwrap_or(&DEFAULT_CONTENT_TYPE)
                         .clone();
-                    Span::current().record("http.status_code", &status.as_u16());
+                    Span::current().record("http.status_code", status.as_u16());
 
                     match res.bytes().await {
                         Ok(bytes) => HttpResponse::build(status)

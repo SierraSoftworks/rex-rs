@@ -1,4 +1,4 @@
-name: Deploy Azure Function
+name: Deploy
 on:
   push:
     branches: [ main ]
@@ -11,6 +11,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   HANDLER_NAME: rex
+  IMAGE: sierrasoftworks/rex
 
   STAGING_DEPLOYMENT_APP_ID: e0d46426-bd93-4bb2-9b5a-cabb0af9a509
   STAGING_FUNCTION_NAME: rex-sierrasoftworks-staging
@@ -27,19 +28,51 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Build Dockerfile
+        run: docker build . --file Dockerfile --tag image
 
-      - name: Build Handler
-        run:
-          docker run --rm -t -v $PWD:/volume clux/muslrust cargo build --release --features table_storage
-
-      - run: cp target/x86_64-unknown-linux-musl/release/$HANDLER_NAME ./handler
+      - run: |
+          docker run --rm -t -v $PWD:/volume image cp /app/$HANDLER_NAME /volume/handler
+          mv ./handler ./$HANDLER_NAME
 
       - name: Save handler artifact
         uses: actions/upload-artifact@v3
         with:
-          name: handler
-          path: handler
+          name: ${{ env.HANDLER_NAME }}
+          path: ${{ env.HANDLER_NAME }}
+
+      - name: Log into registries
+        if: github.event_name == 'push'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.DOCKER_HUB }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+          
+      - name: Calculate version number
+        id: version
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(git describe --tags 2>/dev/null || git rev-parse --short HEAD)
+          echo "::set-output name=version::$VERSION"
+          
+      - name: Push image to GitHub
+        if: github.event_name == 'push'
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/${{ github.event.repository.name }}
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          docker tag image $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+          docker tag image $IMAGE_ID:${{ steps.version.outputs.version }}
+          docker push $IMAGE_ID:${{ steps.version.outputs.version }}
+          
+      - name: Push image to Docker Hub
+        if: github.event_name == 'push'
+        run: |
+          IMAGE_ID=${{ env.IMAGE }}
+          echo IMAGE_ID=$IMAGE_ID
+          docker tag image $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+          docker tag image $IMAGE_ID:${{ steps.version.outputs.version }}
+          docker push $IMAGE_ID:${{ steps.version.outputs.version }}
 
   deploy-staging:
     needs: build
@@ -56,9 +89,7 @@ jobs:
       - name: Fetch handler artifact
         uses: actions/download-artifact@v3
         with:
-          name: handler
-
-      - run: mv ./handler ./$HANDLER_NAME
+          name: ${{ env.HANDLER_NAME }}
       
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
@@ -101,9 +132,7 @@ jobs:
       - name: Fetch handler artifact
         uses: actions/download-artifact@v3
         with:
-          name: handler
-
-      - run: mv ./handler ./$HANDLER_NAME
+          name: ${{ env.HANDLER_NAME }}
       
       - name: 'Login via Azure CLI'
         uses: azure/login@v1

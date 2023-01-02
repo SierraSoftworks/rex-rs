@@ -31,7 +31,7 @@ pub struct IdeaV1 {
     pub description: String,
 }
 
-json_responder!(IdeaV1 => (req, model) -> req.url_for("get_idea_v1", &vec![model.id.clone().expect("an id to be set")]));
+json_responder!(IdeaV1 => (req, model) -> req.url_for("get_idea_v1", vec![model.id.clone().expect("an id to be set")]));
 
 impl From<Idea> for IdeaV1 {
     fn from(idea: Idea) -> Self {
@@ -65,7 +65,7 @@ pub struct IdeaV2 {
     pub completed: Option<bool>,
 }
 
-json_responder!(IdeaV2 => (req, model) -> req.url_for("get_idea_v2", &vec![model.id.clone().expect("an id to be set")]));
+json_responder!(IdeaV2 => (req, model) -> req.url_for("get_idea_v2", vec![model.id.clone().expect("an id to be set")]));
 
 impl From<Idea> for IdeaV2 {
     fn from(idea: Idea) -> Self {
@@ -103,7 +103,7 @@ pub struct IdeaV3 {
 }
 
 json_responder!(IdeaV3 => (req, model) -> if req.uri().path().contains("/collection/") {
-    req.url_for("get_collection_idea_v3", &vec![
+    req.url_for("get_collection_idea_v3", vec![
         model.collection.clone().expect("a collection id"),
         model.id.clone().expect("an idea id")
     ]) 

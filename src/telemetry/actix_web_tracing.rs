@@ -56,7 +56,7 @@ where
         let span = tracing::info_span!(
             "request",
             "otel.kind" = "server",
-            "otel.name" = req.match_pattern().unwrap_or(req.uri().path().to_string()),
+            "otel.name" = req.match_pattern().unwrap_or_else(|| req.uri().path().to_string()),
             "net.transport" = "IP.TCP",
             "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
             "http.target" = %req.uri(),
@@ -94,7 +94,7 @@ where
                     Ok(response) => response.response().status(),
                     Err(error) => error.as_response_error().status_code(),
                 };
-                Span::current().record("http.status_code", &status_code.as_u16());
+                Span::current().record("http.status_code", status_code.as_u16());
                 outcome
             }
             .instrument(span),

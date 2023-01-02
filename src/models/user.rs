@@ -23,7 +23,7 @@ pub struct UserV3 {
     pub first_name: String,
 }
 
-json_responder!(UserV3 => (req, model) -> req.url_for("get_user_v3", &vec![
+json_responder!(UserV3 => (req, model) -> req.url_for("get_user_v3", vec![
     model.email_hash.clone()
 ]));
 

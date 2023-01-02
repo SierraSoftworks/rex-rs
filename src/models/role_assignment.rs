@@ -62,7 +62,7 @@ pub struct RoleAssignmentV3 {
     pub role: String,
 }
 
-json_responder!(RoleAssignmentV3 => (req, model) -> req.url_for("get_role_assignment_v3", &vec![
+json_responder!(RoleAssignmentV3 => (req, model) -> req.url_for("get_role_assignment_v3", vec![
     model.collection_id.clone().expect("a collection id"),
     model.user_id.clone().expect("a user id")
 ]));

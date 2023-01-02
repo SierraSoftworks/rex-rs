@@ -40,6 +40,12 @@ jobs:
       env:
         RUSTFLAGS: "-C instrument_coverage"
         LLVM_PROFILE_FILE: default.profraw
+      
+    - name: install rustfilt
+      uses: actions-rs/cargo@v1.0.3
+      with:
+        command: install
+        args: rustfilt
         
     - name: prepare coverage output
       shell: pwsh

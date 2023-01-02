@@ -42,7 +42,6 @@ jobs:
         LLVM_PROFILE_FILE: default.profraw
         
     - name: prepare coverage output
-      if: matrix.coverage || false
       shell: pwsh
       run: |
         Write-Host "Merging raw profile output files"

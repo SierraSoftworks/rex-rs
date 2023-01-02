@@ -37,7 +37,7 @@ serde_json = "1.0"
 tokio = { version = "1.21", features = ["full"] }
 tonic = { version = "0.8.3", features = ["tls-roots"] }
 tracing = { git="https://github.com/SierraSoftworks/tracing.git" , features = ["log"] }
-tracing-actix-web = "0.6.1"
+tracing-actix-web = "0.7.1"
 tracing-attributes = { git="https://github.com/SierraSoftworks/tracing.git" }
 tracing-futures = { git="https://github.com/SierraSoftworks/tracing.git" , features = ["futures-03"] }
 tracing-opentelemetry = { git="https://github.com/SierraSoftworks/tracing.git" }

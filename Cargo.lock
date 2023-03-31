@@ -425,12 +425,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "azure_core"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32568c56fda7f2f1173430298bddeb507ed44e99bd989ba1156a25534bff5d98"
+dependencies = [
+ "async-trait",
+ "base64 0.21.0",
+ "bytes",
+ "dyn-clone",
+ "futures 0.3.28",
+ "getrandom 0.2.8",
+ "http-types",
+ "log",
+ "paste",
+ "pin-project",
+ "rand 0.8.5",
+ "rustc_version",
+ "serde",
+ "serde_json",
+ "time 0.3.17",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "azure_data_tables"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5068f1c3c6a3821ab102b1804b71b24cc66d975cfd829af90861d8f58825cfce"
 dependencies = [
- "azure_core",
+ "azure_core 0.8.0",
  "azure_storage",
  "bytes",
  "futures 0.3.28",
@@ -452,7 +477,7 @@ checksum = "b780469184adfd6c692cfb32814e0cb7b8553d5d6cd2c8a8dd6b53165acec07f"
 dependencies = [
  "RustyXML",
  "async-trait",
- "azure_core",
+ "azure_core 0.8.0",
  "base64 0.13.1",
  "bytes",
  "futures 0.3.28",
@@ -2332,7 +2357,7 @@ dependencies = [
  "actix-service",
  "actix-web",
  "async-trait",
- "azure_core",
+ "azure_core 0.11.0",
  "azure_data_tables",
  "azure_storage",
  "chrono",

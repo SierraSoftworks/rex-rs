@@ -425,18 +425,44 @@ dependencies = [
 ]
 
 [[package]]
-name = "azure_data_tables"
-version = "0.9.0"
+name = "azure_core"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5068f1c3c6a3821ab102b1804b71b24cc66d975cfd829af90861d8f58825cfce"
+checksum = "86b0f0eea648347e40f5f7f7e6bfea4553bcefad0fbf52044ea339e5ce3aba61"
 dependencies = [
- "azure_core",
- "azure_storage",
+ "async-trait",
+ "base64 0.21.0",
+ "bytes",
+ "dyn-clone",
+ "futures 0.3.28",
+ "getrandom 0.2.8",
+ "http-types",
+ "log",
+ "paste",
+ "pin-project",
+ "quick-xml",
+ "rand 0.8.5",
+ "reqwest",
+ "rustc_version",
+ "serde",
+ "serde_json",
+ "time 0.3.17",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "azure_data_tables"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6547c327ae512d0db3661cd921b1981d42f8a51f3e2dc0f24a309d29cd4b9f49"
+dependencies = [
+ "azure_core 0.13.0",
+ "azure_storage 0.13.0",
  "bytes",
  "futures 0.3.28",
  "log",
  "serde",
- "serde-xml-rs",
  "serde_derive",
  "serde_json",
  "time 0.3.17",
@@ -452,7 +478,7 @@ checksum = "b780469184adfd6c692cfb32814e0cb7b8553d5d6cd2c8a8dd6b53165acec07f"
 dependencies = [
  "RustyXML",
  "async-trait",
- "azure_core",
+ "azure_core 0.8.0",
  "base64 0.13.1",
  "bytes",
  "futures 0.3.28",
@@ -461,6 +487,29 @@ dependencies = [
  "once_cell",
  "serde",
  "serde-xml-rs",
+ "serde_derive",
+ "serde_json",
+ "sha2",
+ "time 0.3.17",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "azure_storage"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32d9cfa13ed9acb51cd663e04f343bd550a92b455add96c90de387a9a6bc4dbc"
+dependencies = [
+ "RustyXML",
+ "async-trait",
+ "azure_core 0.13.0",
+ "bytes",
+ "futures 0.3.28",
+ "hmac",
+ "log",
+ "once_cell",
+ "serde",
  "serde_derive",
  "serde_json",
  "sha2",
@@ -2168,6 +2217,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81b9228215d82c7b61490fec1de287136b5de6f5700f6e58ea9ad61a7964ca51"
+dependencies = [
+ "memchr",
+ "serde",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2331,9 +2390,9 @@ dependencies = [
  "actix-service",
  "actix-web",
  "async-trait",
- "azure_core",
+ "azure_core 0.8.0",
  "azure_data_tables",
- "azure_storage",
+ "azure_storage 0.9.0",
  "chrono",
  "env_logger",
  "futures 0.3.28",

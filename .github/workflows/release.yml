@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build Dockerfile
         run: docker build . --file Dockerfile --tag image
@@ -85,7 +85,7 @@ jobs:
       url: ${{ env.STAGING_HEALTHCHECK }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Fetch handler artifact
         uses: actions/download-artifact@v3
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Fetch handler artifact
         uses: actions/download-artifact@v3

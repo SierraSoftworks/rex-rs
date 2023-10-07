@@ -393,9 +393,9 @@ dependencies = [
 
 [[package]]
 name = "azure_core"
-version = "0.13.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b0f0eea648347e40f5f7f7e6bfea4553bcefad0fbf52044ea339e5ce3aba61"
+checksum = "8e29286b9edfdd6f2c7e9d970bb5b015df8621258acab9ecfcea09b2d7692467"
 dependencies = [
  "async-trait",
  "base64 0.21.4",
@@ -420,9 +420,9 @@ dependencies = [
 
 [[package]]
 name = "azure_data_tables"
-version = "0.13.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6547c327ae512d0db3661cd921b1981d42f8a51f3e2dc0f24a309d29cd4b9f49"
+checksum = "1d5670742956c18e62a6f430f5107be4e0c7de347d9aec388b74a185ed45952f"
 dependencies = [
  "azure_core",
  "azure_storage",
@@ -439,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "azure_storage"
-version = "0.13.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32d9cfa13ed9acb51cd663e04f343bd550a92b455add96c90de387a9a6bc4dbc"
+checksum = "bed0ccefde57930b2886fd4aed1f70ac469c197b8c2e94828290d71bcbdb5d97"
 dependencies = [
  "RustyXML",
  "async-trait",
@@ -450,7 +450,6 @@ dependencies = [
  "futures",
  "hmac",
  "log",
- "once_cell",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1519,15 +1518,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num_threads"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "oauth2"
 version = "4.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1876,9 +1866,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.29.0"
+version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81b9228215d82c7b61490fec1de287136b5de6f5700f6e58ea9ad61a7964ca51"
+checksum = "eff6510e86862b57b210fd8cbe8ed3f0d7d600b9c2863cd4549a2e033c66e956"
 dependencies = [
  "memchr",
  "serde",
@@ -2646,8 +2636,7 @@ checksum = "426f806f4089c493dcac0d24c29c01e2c38baf8e30f1b716ee37e83d200b18fe"
 dependencies = [
  "deranged",
  "itoa",
- "libc",
- "num_threads",
+ "js-sys",
  "serde",
  "time-core",
  "time-macros",

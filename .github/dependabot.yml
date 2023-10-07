@@ -4,6 +4,16 @@ updates:
     package-ecosystem: cargo
     schedule:
       interval: daily
+    groups:
+      opentelemetry:
+        patterns:
+          - "tracing*"
+          - "opentelemetry*"
+          - "tonic*"
+
+      azure:
+        patterns:
+          - "azure*"
   - directory: /
     package-ecosystem: docker
     schedule:

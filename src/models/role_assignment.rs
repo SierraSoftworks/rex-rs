@@ -1,18 +1,13 @@
 use actix::prelude::*;
 use crate::api::APIError;
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum Role {
     Owner,
     Contributor,
+    #[default]
     Viewer,
     Invalid,
-}
-
-impl Default for Role {
-    fn default() -> Self {
-        Role::Viewer
-    }
 }
 
 impl From<&str> for Role {

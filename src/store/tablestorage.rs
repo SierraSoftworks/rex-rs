@@ -35,15 +35,13 @@ impl TableStorage {
             connection_string
                 .account_name
                 .expect("The connection string must include the account name."),
-            StorageCredentials::Key(
+            StorageCredentials::access_key(
                 connection_string
                     .account_name
-                    .expect("The connection string must include the account name.")
-                    .into(),
+                    .expect("The connection string must include the account name."),
                 connection_string
                     .account_key
-                    .expect("The connection string must include the account key.")
-                    .into(),
+                    .expect("The connection string must include the account key."),
             ),
         );
 
@@ -77,10 +75,6 @@ impl TableStorage {
         let result: ST = table
             .partition_key_client(&format!("{:0>32x}", partition_key))
             .entity_client(&format!("{:0>32x}", row_key))
-            .map_err(|err| {
-                error!("Failed to retrieve item from table storage: {}", err);
-                APIError::new(500, "Internal Server Error", "We were unable to retrieve the item you requested, this failure has been reported.")
-            })?
             .get()
             .into_future().await
             .map_err(|err| {
@@ -181,10 +175,6 @@ impl TableStorage {
         table
             .partition_key_client(partition_key.as_ref())
             .entity_client(row_key.as_ref())
-            .map_err(|err| {
-                error!("Failed to remove item from table storage: {}", err);
-                APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
-            })?
             .insert_or_replace(&item)?
             .into_future()
             .await
@@ -205,11 +195,7 @@ impl TableStorage {
     ) -> Result<(), APIError> {
         let entity_client = table
             .partition_key_client(format!("{:0>32x}", partition_key))
-            .entity_client(format!("{:0>32x}", row_key))
-            .map_err(|err| {
-                error!("Failed to remove item from table storage: {}", err);
-                APIError::new(500, "Internal Server Error", "We were unable to remove the item you requested, this failure has been reported.")
-            })?;
+            .entity_client(format!("{:0>32x}", row_key));
 
         entity_client.delete().into_future().await.map_err(|err| {
             error!("Failed to remove item from table storage: {}", err);
@@ -375,9 +361,7 @@ macro_rules! actor_handler {
             fn handle(&mut self, msg: $crate::telemetry::TraceMessage<$msg>, _ctx: &mut Self::Context) -> Self::Result {
                 let work = self.handle_internal(msg.message);
 
-                let instrumentation = async move {
-                    work.await
-                }.instrument(msg.span);
+                let instrumentation = work.instrument(msg.span);
 
                 Box::pin(fut::wrap_future(instrumentation))
             }

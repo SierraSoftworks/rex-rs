@@ -27,7 +27,7 @@ log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "3.4", default_features = false, features = ["curl"] }
 opentelemetry = { version = "0.20", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.13", features = ["tls-roots"] }
+opentelemetry-otlp = { version = "0.14", features = ["tls-roots"] }
 percent-encoding = "2.2"
 rand = "0.8"
 reqwest = { version = "0.11" }

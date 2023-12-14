@@ -37,7 +37,7 @@ jobs:
           mv ./handler ./$HANDLER_NAME
 
       - name: Save handler artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.HANDLER_NAME }}
           path: ${{ env.HANDLER_NAME }}

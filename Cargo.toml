@@ -19,7 +19,7 @@ azure_core = "0.17"
 azure_data_tables = "0.17"
 azure_storage = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
-env_logger = "0.10"
+env_logger = "0.11"
 futures = "0.3"
 http = "0.2"
 lazy_static = "1.4"

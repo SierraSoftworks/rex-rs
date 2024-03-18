@@ -4,7 +4,8 @@ use actix_web::{Error, http::header::HeaderMap};
 use actix_service::*;
 use actix_web::dev::*;
 use futures::{Future, future::{ok, Ready}};
-use opentelemetry::{propagation::{Extractor, TextMapPropagator}, sdk::propagation::TraceContextPropagator};
+use opentelemetry::propagation::{Extractor, TextMapPropagator};
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing::{Instrument, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 

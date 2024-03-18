@@ -28,20 +28,22 @@ impl TableStorage {
     pub fn new() -> Self {
         let connection_string = std::env::var("TABLE_STORAGE_CONNECTION_STRING").expect("Set the TABLE_STORAGE_CONNECTION_STRING environment variable before starting the server.");
 
-        let connection_string = azure_storage::ConnectionString::new(&connection_string)
+        let creds = azure_storage::ConnectionString::new(&connection_string)
             .expect("a valid connection string");
 
         let table_service = TableServiceClient::new(
-            connection_string
+            creds
                 .account_name
                 .expect("The connection string must include the account name."),
             StorageCredentials::access_key(
-                connection_string
+                creds
                     .account_name
-                    .expect("The connection string must include the account name."),
-                connection_string
+                    .expect("The connection string must include the account name.")
+                    .to_string(),
+                    creds
                     .account_key
-                    .expect("The connection string must include the account key."),
+                    .expect("The connection string must include the account key.")
+                    .to_string(),
             ),
         );
 

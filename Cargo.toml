@@ -42,4 +42,4 @@ tracing-attributes = { git="https://github.com/SierraSoftworks/tracing.git" }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-opentelemetry = "0.23"
 tracing-subscriber = { version = "0.3.18", features = ["tracing-log"] }
-uuid = { version = "1.7", features = ["serde", "v4"] }
+uuid = { version = "1.8", features = ["serde", "v4"] }

@@ -453,65 +453,65 @@ dependencies = [
 
 [[package]]
 name = "azure_core"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70fd680c0d0424a518229b1150922f92653ba2ac933aa000abc8bf1ca08105f7"
+checksum = "34ce3de4b65b1ee2667c81d1fc692949049502a4cf9c38118d811d6d79a7eaef"
 dependencies = [
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.0",
  "bytes",
  "dyn-clone",
  "futures",
  "getrandom 0.2.12",
  "hmac",
  "http-types",
- "log",
  "once_cell",
  "paste",
  "pin-project",
  "quick-xml",
  "rand 0.8.5",
- "reqwest 0.11.26",
+ "reqwest 0.12.3",
  "rustc_version",
  "serde",
  "serde_json",
  "sha2",
  "time",
+ "tracing",
  "url",
  "uuid",
 ]
 
 [[package]]
 name = "azure_data_tables"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94b238e0472368bc3736d786f35d74920f75c8b9106913b4652e3ef1c4552dc1"
+checksum = "7e4d801e0fe05a17e52f98c5a401c77b83c1df3a6c5324ab02fd0e8f4a55af04"
 dependencies = [
  "azure_core",
  "azure_storage",
  "bytes",
  "futures",
- "log",
  "serde",
  "time",
+ "tracing",
  "uuid",
 ]
 
 [[package]]
 name = "azure_storage"
-version = "0.19.0"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15d3da73bfa09350e1bd6ae2a260806fcf90048c7e78cd2d8f88be60b19a7266"
+checksum = "9713002fc30956a9f4061cdbc2e912ff739c6160e138ad3b6d992b3bcedccc6d"
 dependencies = [
  "RustyXML",
  "async-lock",
  "async-trait",
  "azure_core",
  "bytes",
- "log",
  "serde",
  "serde_derive",
  "time",
+ "tracing",
  "url",
  "uuid",
 ]
@@ -2490,12 +2490,10 @@ dependencies = [
  "system-configuration",
  "tokio",
  "tokio-native-tls",
- "tokio-util",
  "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "wasm-streams",
  "web-sys",
  "winreg 0.50.0",
 ]
@@ -2532,10 +2530,12 @@ dependencies = [
  "sync_wrapper",
  "tokio",
  "tokio-native-tls",
+ "tokio-util",
  "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "wasm-streams",
  "web-sys",
  "winreg 0.52.0",
 ]

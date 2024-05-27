@@ -26,9 +26,9 @@ lazy_static = "1.4"
 log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "3.5", default_features = false, features = ["curl"] }
-opentelemetry = { version = "0.22" }
-opentelemetry_sdk = { version = "0.22", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.15", features = ["tls-roots"] }
+opentelemetry = { version = "0.23" }
+opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.16", features = ["tls-roots"] }
 percent-encoding = "2.3"
 rand = "0.8"
 reqwest = { version = "0.11" }

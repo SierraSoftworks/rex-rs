@@ -26,9 +26,9 @@ lazy_static = "1.4"
 log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "3.5", default_features = false, features = ["curl"] }
-opentelemetry = { version = "0.22" }
-opentelemetry_sdk = { version = "0.22", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.15", features = ["tls-roots"] }
+opentelemetry = { version = "0.23" }
+opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.16", features = ["tls-roots"] }
 percent-encoding = "2.3"
 rand = "0.8"
 reqwest = { version = "0.11" }
@@ -40,6 +40,6 @@ tonic = { version = "0.11", features = ["tls-roots"] }
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-attributes = { git="https://github.com/SierraSoftworks/tracing.git" }
 tracing-futures = { version = "0.2.5", features = ["futures-03"] }
-tracing-opentelemetry = "0.23"
+tracing-opentelemetry = "0.24"
 tracing-subscriber = { version = "0.3.18", features = ["tracing-log"] }
 uuid = { version = "1.8", features = ["serde", "v4"] }

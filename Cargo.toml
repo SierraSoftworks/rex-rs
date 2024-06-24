@@ -22,7 +22,7 @@ chrono = { version = "0.4", features = ["serde"] }
 env_logger = "0.11"
 futures = "0.3"
 http = "0.2"
-lazy_static = "1.4"
+lazy_static = "1.5"
 log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "3.5", default_features = false, features = ["curl"] }

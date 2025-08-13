@@ -1,5 +1,5 @@
-use actix::prelude::*;
 use crate::api::APIError;
+use actix::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct User {

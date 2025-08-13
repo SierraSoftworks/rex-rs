@@ -1,7 +1,7 @@
+use super::{APIError, AuthToken};
+use crate::{api::ensure_user_collection, models::*, telemetry::TraceMessageExt};
 use actix_web::{get, web};
 use tracing::instrument;
-use super::{AuthToken, APIError};
-use crate::{api::ensure_user_collection, models::*, telemetry::TraceMessageExt};
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[get("/api/v3/collections")]
@@ -14,31 +14,40 @@ async fn get_collections_v3(
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
     ensure_user_collection(&state, &token).await?;
-        
-    state.store.send(GetCollections { principal_id: uid }.trace()).await?.map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
+
+    state
+        .store
+        .send(GetCollections { principal_id: uid }.trace())
+        .await?
+        .map(|ideas| web::Json(ideas.iter().map(|i| i.clone().into()).collect()))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::models::*;
     use crate::api::test::*;
+    use crate::models::*;
 
     #[actix_rt::test]
     async fn get_collections_v3() {
         test_log_init();
 
-        test_state!(state = [
-            StoreCollection {
+        test_state!(
+            state = [StoreCollection {
                 collection_id: 1,
                 principal_id: 0,
                 name: "Test Collection".into(),
-            }
-        ]);
+            }]
+        );
 
-        let content: Vec<CollectionV3> = test_request!(GET "/api/v3/collections" => OK with content | state = state);
+        let content: Vec<CollectionV3> =
+            test_request!(GET "/api/v3/collections" => OK with content | state = state);
         assert!(!content.is_empty());
-        assert!(content.iter().any(|c| c.id == Some("00000000000000000000000000000001".into())));
-        assert!(content.iter().all(|c| c.user_id == Some("00000000000000000000000000000000".into())));
+        assert!(content
+            .iter()
+            .any(|c| c.id == Some("00000000000000000000000000000001".into())));
+        assert!(content
+            .iter()
+            .all(|c| c.user_id == Some("00000000000000000000000000000000".into())));
         assert!(content.iter().any(|c| c.name == "Test Collection"));
     }
 }

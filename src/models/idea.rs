@@ -1,7 +1,7 @@
-use actix::prelude::*;
-use crate::api::APIError;
-use std::collections::HashSet;
 use super::new_id;
+use crate::api::APIError;
+use actix::prelude::*;
+use std::collections::HashSet;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Idea {
@@ -22,7 +22,6 @@ actor_message!(GetRandomIdea(collection: u128, tag: Option<String>, is_completed
 actor_message!(StoreIdea(id: u128, collection: u128, name: String, description: String, tags: HashSet<String>, completed: bool) -> Idea);
 
 actor_message!(RemoveIdea(id: u128, collection: u128) -> ());
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IdeaV1 {
@@ -46,7 +45,11 @@ impl From<Idea> for IdeaV1 {
 impl From<IdeaV1> for Idea {
     fn from(val: IdeaV1) -> Self {
         Idea {
-            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            id: val
+                .id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
             collection_id: 0,
             name: val.name.clone(),
             description: val.description,
@@ -73,7 +76,11 @@ impl From<Idea> for IdeaV2 {
             id: Some(format!("{:0>32x}", idea.id)),
             name: idea.name.clone(),
             description: idea.description.clone(),
-            tags: if !idea.tags.is_empty() { Some(idea.tags.clone()) } else { None },
+            tags: if !idea.tags.is_empty() {
+                Some(idea.tags.clone())
+            } else {
+                None
+            },
             completed: Some(idea.completed),
         }
     }
@@ -82,7 +89,11 @@ impl From<Idea> for IdeaV2 {
 impl From<IdeaV2> for Idea {
     fn from(val: IdeaV2) -> Self {
         Idea {
-            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            id: val
+                .id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
             collection_id: 0,
             name: val.name.clone(),
             description: val.description.clone(),
@@ -106,7 +117,7 @@ json_responder!(IdeaV3 => (req, model) -> if req.uri().path().contains("/collect
     req.url_for("get_collection_idea_v3", vec![
         model.collection.clone().expect("a collection id"),
         model.id.clone().expect("an idea id")
-    ]) 
+    ])
 } else {
     req.url_for("get_idea_v3", vec![model.id.clone().expect("an idea id")])
 });
@@ -118,7 +129,11 @@ impl From<Idea> for IdeaV3 {
             collection: Some(format!("{:0>32x}", idea.collection_id)),
             name: idea.name.clone(),
             description: idea.description.clone(),
-            tags: if !idea.tags.is_empty() { Some(idea.tags.clone()) } else { None },
+            tags: if !idea.tags.is_empty() {
+                Some(idea.tags.clone())
+            } else {
+                None
+            },
             completed: Some(idea.completed),
         }
     }
@@ -127,8 +142,16 @@ impl From<Idea> for IdeaV3 {
 impl From<IdeaV3> for Idea {
     fn from(val: IdeaV3) -> Self {
         Idea {
-            id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(new_id),
-            collection_id: val.collection.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            id: val
+                .id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_else(new_id),
+            collection_id: val
+                .collection
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
             name: val.name.clone(),
             description: val.description.clone(),
             tags: val.tags.clone().unwrap_or_default(),

@@ -40,7 +40,7 @@ impl TableStorage {
                     .account_name
                     .expect("The connection string must include the account name.")
                     .to_string(),
-                    creds
+                creds
                     .account_key
                     .expect("The connection string must include the account key.")
                     .to_string(),
@@ -78,11 +78,13 @@ impl TableStorage {
             .partition_key_client(&format!("{:0>32x}", partition_key))
             .entity_client(&format!("{:0>32x}", row_key))
             .get()
-            .into_future().await
+            .into_future()
+            .await
             .map_err(|err| {
                 error!("Failed to retrieve item from table storage: {}", err);
                 not_found_err
-            })?.entity;
+            })?
+            .entity;
 
         Ok(result.into())
     }

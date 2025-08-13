@@ -1,6 +1,6 @@
-use actix::prelude::*;
-use crate::api::APIError;
 use super::new_id;
+use crate::api::APIError;
+use actix::prelude::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Collection {
@@ -40,8 +40,16 @@ impl From<Collection> for CollectionV3 {
 impl From<CollectionV3> for Collection {
     fn from(val: CollectionV3) -> Self {
         Collection {
-            user_id: val.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            collection_id: val.id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_else(new_id),
+            user_id: val
+                .user_id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
+            collection_id: val
+                .id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_else(new_id),
             name: val.name,
         }
     }

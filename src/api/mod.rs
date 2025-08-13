@@ -1,20 +1,22 @@
-#[macro_use] mod macros;
+#[macro_use]
+mod macros;
 
 mod auth;
-mod error;
 mod collections;
-mod ideas;
+mod error;
 mod health;
+mod ideas;
 mod role_assignments;
 mod users;
 mod utils;
 
-#[cfg(test)] pub mod test;
+#[cfg(test)]
+pub mod test;
 
 use actix_web::web;
 
-pub use error::APIError;
 pub use auth::AuthToken;
+pub use error::APIError;
 pub use utils::ensure_user_collection;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {

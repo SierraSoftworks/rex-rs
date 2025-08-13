@@ -1,9 +1,15 @@
-use std::{pin::Pin, task::{Context, Poll}};
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
-use actix_web::{Error, http::header::HeaderMap};
 use actix_service::*;
 use actix_web::dev::*;
-use futures::{Future, future::{ok, Ready}};
+use actix_web::{http::header::HeaderMap, Error};
+use futures::{
+    future::{ok, Ready},
+    Future,
+};
 use opentelemetry::propagation::{Extractor, TextMapPropagator};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing::{Instrument, Span};
@@ -13,7 +19,7 @@ pub struct TracingLogger;
 
 impl<S, B> Transform<S, ServiceRequest> for TracingLogger
 where
-    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -34,7 +40,7 @@ pub struct TracingLoggerMiddleware<S> {
 
 impl<S, B> Service<ServiceRequest> for TracingLoggerMiddleware<S>
 where
-    S: Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
     S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
@@ -66,9 +72,9 @@ where
             "http.method" = %req.method(),
             "http.url" = %req.match_pattern().unwrap_or_else(|| req.path().into()),
         );
-    
+
         // Propagate OpenTelemetry parent span context information
-        let context  = propagator.extract(&HeaderMapExtractor::from(req.headers()));
+        let context = propagator.extract(&HeaderMapExtractor::from(req.headers()));
 
         span.set_parent(context);
 
@@ -85,12 +91,10 @@ where
             let _enter = handler_span.enter();
             self.service.call(req)
         };
-        
+
         Box::pin(
             async move {
-                let outcome = fut
-                    .instrument(handler_span)
-                    .await;
+                let outcome = fut.instrument(handler_span).await;
                 let status_code = match &outcome {
                     Ok(response) => response.response().status(),
                     Err(error) => error.as_response_error().status_code(),
@@ -104,7 +108,7 @@ where
 }
 
 struct HeaderMapExtractor<'a> {
-    headers: &'a HeaderMap
+    headers: &'a HeaderMap,
 }
 
 impl<'a> From<&'a HeaderMap> for HeaderMapExtractor<'a> {

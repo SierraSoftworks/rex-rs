@@ -25,17 +25,14 @@ impl Session {
 
         #[cfg(not(debug_assertions))]
         let honeycomb_key = std::env::var("HONEYCOMB_KEY").ok();
-        
+
         #[cfg(debug_assertions)]
         let honeycomb_key = Some("X6naTEMkzy10PMiuzJKifF");
 
         if let Some(honeycomb_key) = honeycomb_key {
             let mut tracing_metadata = tonic::metadata::MetadataMap::new();
-            tracing_metadata.insert(
-                "x-honeycomb-team",
-                honeycomb_key.parse().unwrap(),
-            );
-    
+            tracing_metadata.insert("x-honeycomb-team", honeycomb_key.parse().unwrap());
+
             let tracer = opentelemetry_otlp::new_pipeline()
                 .tracing()
                 .with_exporter(
@@ -54,13 +51,12 @@ impl Session {
                 ))
                 .install_batch(opentelemetry_sdk::runtime::Tokio)
                 .unwrap();
-    
+
             tracing_subscriber::registry()
                 .with(tracing_subscriber::filter::LevelFilter::DEBUG)
                 .with(tracing_subscriber::filter::dynamic_filter_fn(
                     |_metadata, ctx| {
-                        !ctx
-                            .lookup_current()
+                        !ctx.lookup_current()
                             // Exclude the rustls session "Connection" events which don't have a parent span
                             .map(|s| s.parent().is_none() && s.name() == "Connection")
                             .unwrap_or_default()
@@ -69,12 +65,10 @@ impl Session {
                 .with(tracing_opentelemetry::layer().with_tracer(tracer))
                 .init();
         }
-        
+
         sentry::start_session();
 
-        Self {
-            raven
-        }
+        Self { raven }
     }
 }
 

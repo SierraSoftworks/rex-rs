@@ -1,13 +1,12 @@
-
+use super::{ensure_user_collection, APIError, AuthToken};
 use actix_web::web;
-use super::{AuthToken, APIError, ensure_user_collection};
 
-mod new_idea;
-mod get_ideas;
 mod get_idea;
+mod get_ideas;
 mod get_random_idea;
-mod store_idea;
+mod new_idea;
 mod remove_idea;
+mod store_idea;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_ideas::get_ideas_v1)

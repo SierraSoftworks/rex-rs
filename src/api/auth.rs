@@ -1,14 +1,27 @@
-use actix_web::{FromRequest, HttpRequest, dev::Payload};
-use openidconnect::{ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl, core::{CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreProviderMetadata}, curl::http_client};
-use std::sync::Arc;
 use super::APIError;
+use actix_web::{dev::Payload, FromRequest, HttpRequest};
 use futures::future::{ready, Ready};
+use openidconnect::{
+    core::{
+        CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm,
+        CoreJwsSigningAlgorithm, CoreProviderMetadata,
+    },
+    curl::http_client,
+    ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl,
+};
+use std::sync::Arc;
 
 lazy_static! {
     static ref CLIENT: Arc<CoreClient> = Arc::new(get_client());
 }
 
-pub type AuthIdToken = IdToken<AuthAdditionalClaims, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreJsonWebKeyType>;
+pub type AuthIdToken = IdToken<
+    AuthAdditionalClaims,
+    CoreGenderClaim,
+    CoreJweContentEncryptionAlgorithm,
+    CoreJwsSigningAlgorithm,
+    CoreJsonWebKeyType,
+>;
 
 pub type AuthIdTokenClaims = IdTokenClaims<AuthAdditionalClaims, CoreGenderClaim>;
 
@@ -25,9 +38,7 @@ pub struct AuthAdditionalClaims {
     pub unique_name: String,
 }
 
-impl openidconnect::AdditionalClaims for AuthAdditionalClaims {
-
-}
+impl openidconnect::AdditionalClaims for AuthAdditionalClaims {}
 
 impl AuthToken {
     pub fn oid(&self) -> &str {
@@ -35,7 +46,11 @@ impl AuthToken {
     }
 
     pub fn name(&self) -> String {
-        self.claims.name().and_then(|n| n.get(None)).map(|n| n.to_string()).unwrap_or_default()
+        self.claims
+            .name()
+            .and_then(|n| n.get(None))
+            .map(|n| n.to_string())
+            .unwrap_or_default()
     }
 
     pub fn roles(&self) -> &Vec<String> {
@@ -51,12 +66,16 @@ impl AuthToken {
     }
 
     fn bearer_token_from_request(req: &HttpRequest) -> Result<&str, APIError> {
-        req.headers().get("Authorization")
+        req.headers()
+            .get("Authorization")
             .ok_or_else(APIError::unauthorized)
             .and_then(|header| header.to_str().map_err(|_| APIError::unauthorized()))
             .and_then(|header| {
                 if header.starts_with("Bearer ") {
-                    header.split_ascii_whitespace().nth(1).ok_or_else(APIError::unauthorized)
+                    header
+                        .split_ascii_whitespace()
+                        .nth(1)
+                        .ok_or_else(APIError::unauthorized)
                 } else {
                     Err(APIError::unauthorized())
                 }
@@ -66,30 +85,37 @@ impl AuthToken {
     #[instrument("auth_token.from_request", skip(req))]
     fn from_request_internal(req: &HttpRequest) -> Result<AuthToken, APIError> {
         let creds = AuthToken::bearer_token_from_request(req)?;
-            
+
         let client = CLIENT.clone();
-        
-        let id_token: AuthIdToken = serde_json::from_value(serde_json::json!(creds)).map_err(|e| {
-            warn!("Unable to deserialize credential token: {}", e);
-            APIError::unauthorized()
-        })?;
+
+        let id_token: AuthIdToken =
+            serde_json::from_value(serde_json::json!(creds)).map_err(|e| {
+                warn!("Unable to deserialize credential token: {}", e);
+                APIError::unauthorized()
+            })?;
 
         #[cfg(not(test))]
         let token_verifier = client.id_token_verifier();
-        
+
         #[cfg(test)]
-        let token_verifier = client.id_token_verifier().insecure_disable_signature_check().require_issuer_match(false).require_audience_match(false);
+        let token_verifier = client
+            .id_token_verifier()
+            .insecure_disable_signature_check()
+            .require_issuer_match(false)
+            .require_audience_match(false);
 
-        let nonce_verifier = NoOpNonceVerifier{};
+        let nonce_verifier = NoOpNonceVerifier {};
 
-        let claims: &AuthIdTokenClaims = id_token.claims(&token_verifier, nonce_verifier)
-        .map_err(|e| {
-            warn!("Unable to verify ID token for incoming request: {}", e);
-            APIError::unauthorized()
-        })?;
+        let claims: &AuthIdTokenClaims =
+            id_token
+                .claims(&token_verifier, nonce_verifier)
+                .map_err(|e| {
+                    warn!("Unable to verify ID token for incoming request: {}", e);
+                    APIError::unauthorized()
+                })?;
 
         Ok(AuthToken {
-            claims: claims.clone()
+            claims: claims.clone(),
         })
     }
 }
@@ -105,22 +131,22 @@ impl FromRequest for AuthToken {
 }
 
 fn get_client() -> CoreClient {
-    let issuer_url = openidconnect::IssuerUrl::new("https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string()).expect("The issuer URL should parse correctly.");
-    let provider_metadata = CoreProviderMetadata::discover(
-        &issuer_url,
-        http_client
+    let issuer_url = openidconnect::IssuerUrl::new(
+        "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
     )
-    .expect("We should be able to resolve provider metadata for Azure AD.");
+    .expect("The issuer URL should parse correctly.");
+    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)
+        .expect("We should be able to resolve provider metadata for Azure AD.");
 
-    let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string()).expect("The redirect URL should parse correctly");
-
-    
+    let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())
+        .expect("The redirect URL should parse correctly");
 
     CoreClient::from_provider_metadata(
         provider_metadata,
         ClientId::new("https://rex.sierrasoftworks.com".to_string()),
-        None)
-        .set_redirect_uri(redirect_url)
+        None,
+    )
+    .set_redirect_uri(redirect_url)
 }
 
 struct NoOpNonceVerifier {}

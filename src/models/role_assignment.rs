@@ -1,5 +1,5 @@
-use actix::prelude::*;
 use crate::api::APIError;
+use actix::prelude::*;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum Role {
@@ -16,7 +16,7 @@ impl From<&str> for Role {
             "Owner" => Role::Owner,
             "Contributor" => Role::Contributor,
             "Viewer" => Role::Viewer,
-            _ => Role::Invalid
+            _ => Role::Invalid,
         }
     }
 }
@@ -47,12 +47,11 @@ actor_message!(StoreRoleAssignment(collection_id: u128, principal_id: u128, role
 
 actor_message!(RemoveRoleAssignment(collection_id: u128, principal_id: u128) -> ());
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RoleAssignmentV3 {
-    #[serde(rename="collectionId")]
+    #[serde(rename = "collectionId")]
     pub collection_id: Option<String>,
-    #[serde(rename="userId")]
+    #[serde(rename = "userId")]
     pub user_id: Option<String>,
     pub role: String,
 }
@@ -75,10 +74,17 @@ impl From<RoleAssignment> for RoleAssignmentV3 {
 impl From<RoleAssignmentV3> for RoleAssignment {
     fn from(val: RoleAssignmentV3) -> Self {
         RoleAssignment {
-            user_id: val.user_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
-            collection_id: val.collection_id.clone().and_then(|id| u128::from_str_radix(&id, 16).ok()).unwrap_or_default(),
+            user_id: val
+                .user_id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
+            collection_id: val
+                .collection_id
+                .clone()
+                .and_then(|id| u128::from_str_radix(&id, 16).ok())
+                .unwrap_or_default(),
             role: val.role.as_str().into(),
         }
     }
 }
-

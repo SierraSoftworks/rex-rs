@@ -1,5 +1,5 @@
-use actix::prelude::*;
 use crate::api::APIError;
+use actix::prelude::*;
 
 #[derive(Clone, Copy)]
 pub struct Health {

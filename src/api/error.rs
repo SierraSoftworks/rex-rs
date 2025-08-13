@@ -47,7 +47,11 @@ impl From<azure_core::error::Error> for APIError {
 
         sentry::capture_error(&err);
 
-        Self::new(500, "Internal Server Error", "We ran into a problem, this has been reported and will be looked at.")
+        Self::new(
+            500,
+            "Internal Server Error",
+            "We ran into a problem, this has been reported and will be looked at.",
+        )
     }
 }
 
@@ -57,6 +61,10 @@ impl From<actix::MailboxError> for APIError {
 
         sentry::capture_error(&err);
 
-        Self::new(500, "Internal Server Error", "We ran into a problem, this has been reported and will be looked at.")
+        Self::new(
+            500,
+            "Internal Server Error",
+            "We ran into a problem, this has been reported and will be looked at.",
+        )
     }
 }

@@ -1,8 +1,8 @@
+use super::CollectionFilter;
+use super::{ensure_user_collection, APIError, AuthToken};
+use crate::{models::*, telemetry::TraceMessageExt};
 use actix_web::{post, web};
 use tracing::instrument;
-use super::{AuthToken, APIError, ensure_user_collection};
-use crate::{models::*, telemetry::TraceMessageExt};
-use super::CollectionFilter;
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[post("/api/v1/ideas")]
@@ -11,20 +11,27 @@ async fn new_idea_v1(
 ) -> Result<IdeaV1, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
-    
+
     let idea: Idea = new_idea.into_inner().into();
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
     ensure_user_collection(&state, &token).await?;
 
-    state.store.send(StoreIdea {
-        id: new_id(),
-        collection: uid,
-        name: idea.name,
-        description: idea.description,
-        tags: idea.tags,
-        completed: false,
-    }.trace()).await?.map(|idea| idea.into())
+    state
+        .store
+        .send(
+            StoreIdea {
+                id: new_id(),
+                collection: uid,
+                name: idea.name,
+                description: idea.description,
+                tags: idea.tags,
+                completed: false,
+            }
+            .trace(),
+        )
+        .await?
+        .map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -34,20 +41,27 @@ async fn new_idea_v2(
 ) -> Result<IdeaV2, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
-    
+
     let idea: Idea = new_idea.into_inner().into();
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
     ensure_user_collection(&state, &token).await?;
 
-    state.store.send(StoreIdea {
-        id: new_id(),
-        collection: uid,
-        name: idea.name,
-        description: idea.description,
-        tags: idea.tags,
-        completed: false,
-    }.trace()).await?.map(|idea| idea.into())
+    state
+        .store
+        .send(
+            StoreIdea {
+                id: new_id(),
+                collection: uid,
+                name: idea.name,
+                description: idea.description,
+                tags: idea.tags,
+                completed: false,
+            }
+            .trace(),
+        )
+        .await?
+        .map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -57,59 +71,86 @@ async fn new_idea_v3(
 ) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
-    
+
     let idea: Idea = new_idea.into_inner().into();
     let uid = parse_uuid!(token.oid(), "auth token oid");
 
     ensure_user_collection(&state, &token).await?;
 
-    state.store.send(StoreIdea {
-        id: new_id(),
-        collection: uid,
-        name: idea.name,
-        description: idea.description,
-        tags: idea.tags,
-        completed: false,
-    }.trace()).await?.map(|idea| idea.into())
+    state
+        .store
+        .send(
+            StoreIdea {
+                id: new_id(),
+                collection: uid,
+                name: idea.name,
+                description: idea.description,
+                tags: idea.tags,
+                completed: false,
+            }
+            .trace(),
+        )
+        .await?
+        .map(|idea| idea.into())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
 #[post("/api/v3/collection/{collection}/ideas")]
 async fn new_collection_idea_v3(
-    (new_idea, info, state, token): (web::Json<IdeaV3>, web::Path<CollectionFilter>, web::Data<GlobalState>, AuthToken),
+    (new_idea, info, state, token): (
+        web::Json<IdeaV3>,
+        web::Path<CollectionFilter>,
+        web::Data<GlobalState>,
+        AuthToken,
+    ),
 ) -> Result<IdeaV3, APIError> {
     require_role!(token, "Administrator", "User");
     require_scope!(token, "Ideas.Write");
-    
+
     let idea: Idea = new_idea.into_inner().into();
     let cid = parse_uuid!(info.collection, "collection ID");
     let uid = parse_uuid!(token.oid(), "auth token oid");
-        
+
     if cid == uid {
         ensure_user_collection(&state, &token).await?;
     }
 
-    let role = state.store.send(GetRoleAssignment { principal_id: uid, collection_id: cid }).await??;
+    let role = state
+        .store
+        .send(GetRoleAssignment {
+            principal_id: uid,
+            collection_id: cid,
+        })
+        .await??;
 
     match role.role {
-        Role::Owner | Role::Contributor => {
-            state.store.send(StoreIdea {
-                id: new_id(),
-                collection: cid,
-                name: idea.name,
-                description: idea.description,
-                tags: idea.tags,
-                completed: idea.completed,
-            }.trace()).await?.map(|idea| idea.into())
-        },
-        _ => Err(APIError::new(403, "Forbidden", "You do not have permission to add an idea to this collection."))
+        Role::Owner | Role::Contributor => state
+            .store
+            .send(
+                StoreIdea {
+                    id: new_id(),
+                    collection: cid,
+                    name: idea.name,
+                    description: idea.description,
+                    tags: idea.tags,
+                    completed: idea.completed,
+                }
+                .trace(),
+            )
+            .await?
+            .map(|idea| idea.into()),
+        _ => Err(APIError::new(
+            403,
+            "Forbidden",
+            "You do not have permission to add an idea to this collection.",
+        )),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::models::*;
     use crate::api::test::*;
+    use crate::models::*;
 
     #[actix_rt::test]
     async fn new_idea_v1() {
@@ -127,10 +168,15 @@ mod tests {
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
 
-        state.store.send(GetIdea {
-            collection: 0,
-            id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
-        }).await.expect("the actor should have run").expect("The idea should exist in the store");
+        state
+            .store
+            .send(GetIdea {
+                collection: 0,
+                id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
+            })
+            .await
+            .expect("the actor should have run")
+            .expect("The idea should exist in the store");
     }
 
     #[actix_rt::test]
@@ -153,10 +199,15 @@ mod tests {
         assert_eq!(content.tags, Some(hashset!("test")));
         assert_eq!(content.completed, Some(false));
 
-        state.store.send(GetIdea {
-            collection: 0,
-            id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
-        }).await.expect("the actor should have run").expect("The idea should exist in the store");
+        state
+            .store
+            .send(GetIdea {
+                collection: 0,
+                id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
+            })
+            .await
+            .expect("the actor should have run")
+            .expect("The idea should exist in the store");
     }
 
     #[actix_rt::test]
@@ -175,34 +226,44 @@ mod tests {
         } => CREATED with location =~ "/api/v3/idea/", content | state = state);
 
         assert_ne!(content.id, None);
-        assert_eq!(content.collection, Some("00000000000000000000000000000000".into()));
+        assert_eq!(
+            content.collection,
+            Some("00000000000000000000000000000000".into())
+        );
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
         assert_eq!(content.tags, Some(hashset!("test")));
         assert_eq!(content.completed, Some(false));
 
-        state.store.send(GetIdea {
-            collection: 0,
-            id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
-        }).await.expect("the actor should have run").expect("The idea should exist in the store");
+        state
+            .store
+            .send(GetIdea {
+                collection: 0,
+                id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
+            })
+            .await
+            .expect("the actor should have run")
+            .expect("The idea should exist in the store");
     }
 
     #[actix_rt::test]
     async fn new_collection_idea_v3() {
         test_log_init();
 
-        test_state!(state = [
-            StoreCollection {
-                collection_id: 7,
-                principal_id: 0,
-                name: "Test Collection".into(),
-            },
-            StoreRoleAssignment {
-                collection_id: 7,
-                principal_id: 0,
-                role: Role::Owner,
-            }
-        ]);
+        test_state!(
+            state = [
+                StoreCollection {
+                    collection_id: 7,
+                    principal_id: 0,
+                    name: "Test Collection".into(),
+                },
+                StoreRoleAssignment {
+                    collection_id: 7,
+                    principal_id: 0,
+                    role: Role::Owner,
+                }
+            ]
+        );
 
         let content: IdeaV3 = test_request!(POST "/api/v3/collection/00000000000000000000000000000007/ideas", IdeaV3 {
             id: None,
@@ -214,15 +275,23 @@ mod tests {
         } => CREATED with location =~ "/api/v3/collection/00000000000000000000000000000007/idea/", content | state = state);
 
         assert_ne!(content.id, None);
-        assert_eq!(content.collection, Some("00000000000000000000000000000007".into()));
+        assert_eq!(
+            content.collection,
+            Some("00000000000000000000000000000007".into())
+        );
         assert_eq!(content.name, "Test Idea".to_string());
         assert_eq!(content.description, "This is a test idea".to_string());
         assert_eq!(content.tags, Some(hashset!("test")));
         assert_eq!(content.completed, Some(false));
 
-        state.store.send(GetIdea {
-            collection: 7,
-            id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
-        }).await.expect("the actor should have run").expect("The idea should exist in the store");
+        state
+            .store
+            .send(GetIdea {
+                collection: 7,
+                id: u128::from_str_radix(content.id.unwrap().as_str(), 16).unwrap(),
+            })
+            .await
+            .expect("the actor should have run")
+            .expect("The idea should exist in the store");
     }
 }

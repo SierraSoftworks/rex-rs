@@ -39,7 +39,7 @@ macro_rules! json_responder {
                         .content_type("application/json")
                         .insert_header(("Location", String::from($location.expect("a location url"))))
                         .json(&self)
-                } else {                
+                } else {
                     actix_web::HttpResponse::Ok()
                         .content_type("application/json")
                         .json(&self)

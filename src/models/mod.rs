@@ -1,9 +1,10 @@
-#[macro_use] mod macros;
+#[macro_use]
+mod macros;
 
 mod collection;
+mod health;
 mod idea;
 mod role_assignment;
-mod health;
 mod user;
 
 use actix::prelude::*;

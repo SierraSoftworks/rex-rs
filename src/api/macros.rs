@@ -1,8 +1,14 @@
 #[macro_export]
 macro_rules! parse_uuid {
     ($from:expr, $desc:expr) => {
-        u128::from_str_radix($from.replace("-", "").as_str(), 16)
-            .or(Err(APIError::new(400, "Bad Request", &format!("The {} you provided could not be parsed. Please check it and try again.", $desc))))?
+        u128::from_str_radix($from.replace("-", "").as_str(), 16).or(Err(APIError::new(
+            400,
+            "Bad Request",
+            &format!(
+                "The {} you provided could not be parsed. Please check it and try again.",
+                $desc
+            ),
+        )))?
     };
 }
 
@@ -113,11 +119,11 @@ macro_rules! test_request {
     };
 
     /* --------------- NO GLOBAL STATE ------------------ */
-    
+
     ($method:ident $path:expr => $status:ident) => {
         {
             let state = $crate::models::GlobalState::new();
-            
+
             test_request!($method $path => $status | state = state)
         }
     };
@@ -125,7 +131,7 @@ macro_rules! test_request {
     ($method:ident $path:expr, $body:expr => $status:ident) => {
         {
             let state = $crate::models::GlobalState::new();
-            
+
             test_request!($method $path, $body => $status | state = state)
         }
     };

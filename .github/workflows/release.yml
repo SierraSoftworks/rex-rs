@@ -168,22 +168,22 @@ jobs:
           target: ${{ matrix.target }}
           components: llvm-tools-preview
 
-      - name: Setup Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.run_on }}
-
-      - name: Fetch Versioned Cargo.toml
-        uses: actions/download-artifact@v5
-        with:
-          name: cargofile
-
       - name: Install Cross
         if: matrix.builder == 'cross'
         shell: bash
         run: |
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
           cargo binstall --no-confirm cross
+
+      - name: Fetch Versioned Cargo.toml
+        uses: actions/download-artifact@v5
+        with:
+          name: cargofile
+
+      - name: Setup Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.run_on }}
 
       - name: cargo build
         run: ${{ matrix.builder }} build --release --target ${{ matrix.target }}

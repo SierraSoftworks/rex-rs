@@ -16,6 +16,7 @@ env:
   VERSION: "0.0.0-dev"
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  HANDLER_NAME: rex
   
   STAGING_DEPLOYMENT_APP_ID: e0d46426-bd93-4bb2-9b5a-cabb0af9a509
   STAGING_FUNCTION_NAME: rex-sierrasoftworks-staging
@@ -191,15 +192,15 @@ jobs:
         uses: SierraSoftworks/gh-releases@v1.0.7
         if: github.event_name == 'release'
         with:
-          files: "target/${{ matrix.target }}/release/${{ github.event.repository.name }}${{ matrix.extension }} | ${{ github.event.repository.name }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}"
+          files: "target/${{ matrix.target }}/release/${{ env.HANDLER_NAME }}${{ matrix.extension }} | ${{ env.HANDLER_NAME }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           overwrite: "true"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}
-          path: target/${{ matrix.target }}/release/${{ github.event.repository.name }}${{ matrix.extension }}
+          name: ${{ env.HANDLER_NAME }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}
+          path: target/${{ matrix.target }}/release/${{ env.HANDLER_NAME }}${{ matrix.extension }}
 
   docker-build:
     name: Docker Build
@@ -256,11 +257,11 @@ jobs:
       - name: Pull in platform artifact
         uses: actions/download-artifact@v5
         with:
-          name: ${{ github.event.repository.name }}-${{ env.PLATFORM_PAIR }}
+          name: ${{ env.HANDLER_NAME }}-${{ env.PLATFORM_PAIR }}
 
       - name: mark artifact as executable
         run: |
-          chmod +x ${{ github.event.repository.name }}
+          chmod +x ${{ env.HANDLER_NAME }}
 
       - name: Build and push by digest
         id: build
@@ -353,7 +354,7 @@ jobs:
       - name: Fetch handler artifact
         uses: actions/download-artifact@v5
         with:
-          name: ${{ github.event.repository.name }}-linux-amd64
+          name: ${{ env.HANDLER_NAME }}-linux-amd64
       
       - name: 'Login via Azure CLI'
         uses: Azure/login@v2
@@ -396,7 +397,7 @@ jobs:
       - name: Fetch handler artifact
         uses: actions/download-artifact@v5
         with:
-          name: ${{ github.event.repository.name }}-linux-amd64
+          name: ${{ env.HANDLER_NAME }}-linux-amd64
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v2

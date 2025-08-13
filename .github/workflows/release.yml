@@ -134,11 +134,13 @@ jobs:
 
           # Linux builds
           - arch: amd64
-            run_on: ubuntu-22.04
+            run_on: ubuntu-latest
             os: linux
-            target: x86_64-unknown-linux-gnu
+            target: x86_64-unknown-linux-musl
             test: true
             builder: cargo
+            setup: |
+              sudo apt update && sudo apt install -y musl-tools
           - arch: "arm64"
             os: linux
             run_on: ubuntu-latest
@@ -158,6 +160,10 @@ jobs:
             builder: cargo
 
     steps:
+      - name: Run setup script
+        if: ${{ matrix.setup }}
+        run: ${{ matrix.setup }}
+
       - name: Check out code
         uses: actions/checkout@v5
 

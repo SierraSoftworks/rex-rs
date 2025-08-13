@@ -43,3 +43,4 @@ tracing-futures = { version = "0.2.5", features = ["futures-03"] }
 tracing-opentelemetry = "0.24"
 tracing-subscriber = { version = "0.3.18", features = ["tracing-log"] }
 uuid = { version = "1.10", features = ["serde", "v4"] }
+openssl-sys = { version = "0.9.109", features = ["vendored"] }

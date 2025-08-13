@@ -75,8 +75,8 @@ impl TableStorage {
         T: From<ST>,
     {
         let result: ST = table
-            .partition_key_client(&format!("{:0>32x}", partition_key))
-            .entity_client(&format!("{:0>32x}", row_key))
+            .partition_key_client(format!("{partition_key:0>32x}"))
+            .entity_client(format!("{row_key:0>32x}"))
             .get()
             .into_future()
             .await
@@ -198,8 +198,8 @@ impl TableStorage {
         row_key: u128,
     ) -> Result<(), APIError> {
         let entity_client = table
-            .partition_key_client(format!("{:0>32x}", partition_key))
-            .entity_client(format!("{:0>32x}", row_key));
+            .partition_key_client(format!("{partition_key:0>32x}"))
+            .entity_client(format!("{row_key:0>32x}"));
 
         entity_client.delete().into_future().await.map_err(|err| {
             error!("Failed to remove item from table storage: {}", err);
@@ -218,9 +218,9 @@ impl TableStorage {
         is_completed: Option<bool>,
         tag: Option<String>,
     ) -> String {
-        let mut query = format!("PartitionKey eq '{:0>32x}'", partition_key);
+        let mut query = format!("PartitionKey eq '{partition_key:0>32x}'");
         if let Some(completed) = is_completed {
-            query += format!(" and Completed eq {}", completed).as_str()
+            query += format!(" and Completed eq {completed}").as_str()
         }
 
         if let Some(tag) = tag {

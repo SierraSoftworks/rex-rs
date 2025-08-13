@@ -60,7 +60,7 @@ async fn main() -> std::io::Result<()> {
     .map_err(|err| {
         error!("The server exited unexpectedly: {}", err);
         sentry::capture_event(sentry::protocol::Event {
-            message: Some(format!("Server Exited Unexpectedly: {}", err)),
+            message: Some(format!("Server Exited Unexpectedly: {err}")),
             level: sentry::protocol::Level::Fatal,
             ..Default::default()
         });

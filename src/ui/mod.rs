@@ -23,7 +23,7 @@ pub async fn get_ui_path(req: HttpRequest) -> HttpResponse {
         Some(uri) if !uri.is_empty() => {
             let client = reqwest::Client::new();
             let res = client
-                .get(&format!("{}/{}", uri, req.match_info().query("ui_path")))
+                .get(format!("{}/{}", uri, req.match_info().query("ui_path")))
                 .send()
                 .await;
             match res {

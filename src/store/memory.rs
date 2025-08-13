@@ -230,8 +230,7 @@ impl Handler<GetCollections> for MemoryStore {
 
         is.get(&msg.principal_id)
             .ok_or_else(|| APIError::new(404, "Not Found", "The principal ID you provided could not be found. This probably means that you do not yet have any collections."))
-            .map(|items| items.iter()
-                .map(|(_id, collection)| collection.clone()).collect())
+            .map(|items| items.values().cloned().collect())
     }
 }
 
@@ -346,8 +345,7 @@ impl Handler<GetRoleAssignments> for MemoryStore {
                 debug!("Could not find a collection entry for {} in role assignments.", msg.collection_id);
                 APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again.")
             })
-            .map(|items| items.iter()
-                .map(|(_id, collection)| collection.clone()).collect())
+            .map(|items| items.values().cloned().collect())
     }
 }
 
@@ -423,8 +421,7 @@ impl Handler<GetUser> for MemoryStore {
         })?;
 
         users.get(&msg.email_hash)
-            .ok_or_else(|| APIError::new(404, "Not Found", "No user could be found with the email hash you provided. Please check it and try again."))
-            .map(|u| u.clone())
+            .ok_or_else(|| APIError::new(404, "Not Found", "No user could be found with the email hash you provided. Please check it and try again.")).cloned()
     }
 }
 

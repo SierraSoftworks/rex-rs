@@ -88,8 +88,7 @@ pub async fn assert_status(
         let status = resp.status();
         let err: super::APIError = get_content(resp).await;
         panic!(
-            "Unexpected response code (got == expected)\n  got: {}\n  expected: {}\n  error: {}",
-            status, expected_status, err
+            "Unexpected response code (got == expected)\n  got: {status}\n  expected: {expected_status}\n  error: {err}"
         )
     } else {
         resp

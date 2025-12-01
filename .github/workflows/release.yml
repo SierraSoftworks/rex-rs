@@ -361,6 +361,9 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: ${{ env.HANDLER_NAME }}-linux-amd64
+
+      - name: Ensure binary is executable
+        run: chmod +x ${{ env.HANDLER_NAME }}
       
       - name: 'Login via Azure CLI'
         uses: Azure/login@v2
@@ -404,6 +407,9 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: ${{ env.HANDLER_NAME }}-linux-amd64
+
+      - name: Ensure binary is executable
+        run: chmod +x ${{ env.HANDLER_NAME }}
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v2

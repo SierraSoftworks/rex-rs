@@ -64,3 +64,15 @@ impl From<actix::MailboxError> for APIError {
         )
     }
 }
+
+impl From<azure_storage::Error> for APIError {
+    fn from(err: azure_storage::Error) -> Self {
+        error!({ exception.message = %err }, "We were unable to call Azure Storage");
+
+        Self::new(
+            500,
+            "Internal Server Error",
+            "We ran into a problem, this has been reported and will be looked at.",
+        )
+    }
+}

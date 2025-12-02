@@ -5,10 +5,10 @@ use std::{
 
 use actix_service::*;
 use actix_web::dev::*;
-use actix_web::{Error, http::header::HeaderMap};
+use actix_web::{http::header::HeaderMap, Error};
 use futures::{
+    future::{ok, Ready},
     Future, FutureExt,
-    future::{Ready, ok},
 };
 use opentelemetry::propagation::Extractor;
 use tracing_batteries::prelude::*;

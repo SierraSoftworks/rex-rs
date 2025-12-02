@@ -172,7 +172,7 @@ impl TableStorage {
     ) -> Result<T, APIError>
     where
         ST: Serialize + DeserializeOwned + Clone + Debug + Sync + Send,
-        T: From<ST>
+        T: From<ST>,
     {
         table
             .partition_key_client(format!("{partition_key:0>32x}"))

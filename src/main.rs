@@ -20,7 +20,7 @@ mod telemetry;
 mod ui;
 
 use actix_web::{App, HttpServer};
-use telemetry::{TracingLogger};
+use telemetry::TracingLogger;
 
 fn get_listening_port() -> u16 {
     std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT")

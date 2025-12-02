@@ -50,7 +50,10 @@ pub async fn ensure_user_collection(
     {
         Ok(_) => {}
         Err(err) => {
-            info!("User does not have a default collection ({:0>32x}): {}", uid, err);
+            info!(
+                "User does not have a default collection ({:0>32x}): {}",
+                uid, err
+            );
 
             state
                 .store

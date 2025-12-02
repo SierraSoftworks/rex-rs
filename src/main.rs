@@ -8,8 +8,6 @@ extern crate uuid;
 #[macro_use]
 extern crate tracing;
 #[macro_use]
-extern crate sentry;
-#[macro_use]
 extern crate lazy_static;
 
 #[macro_use]
@@ -22,7 +20,7 @@ mod telemetry;
 mod ui;
 
 use actix_web::{App, HttpServer};
-use telemetry::{Session, TracingLogger};
+use telemetry::{TracingLogger};
 
 fn get_listening_port() -> u16 {
     std::env::var("FUNCTIONS_CUSTOMHANDLER_PORT")
@@ -32,15 +30,7 @@ fn get_listening_port() -> u16 {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    let _session = Session::new();
-
-    let _raven = sentry::init((
-        "https://b7ca8a41e8e84fef889e4f428071dab2@sentry.io/1415519",
-        sentry::ClientOptions {
-            release: release_name!(),
-            ..Default::default()
-        },
-    ));
+    let session = telemetry::setup();
 
     let state = models::GlobalState::new();
 
@@ -59,11 +49,7 @@ async fn main() -> std::io::Result<()> {
     .await
     .map_err(|err| {
         error!("The server exited unexpectedly: {}", err);
-        sentry::capture_event(sentry::protocol::Event {
-            message: Some(format!("Server Exited Unexpectedly: {err}")),
-            level: sentry::protocol::Level::Fatal,
-            ..Default::default()
-        });
+        session.record_error(&err);
 
         err
     })

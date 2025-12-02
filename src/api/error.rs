@@ -45,8 +45,6 @@ impl From<azure_core::error::Error> for APIError {
     fn from(err: azure_core::error::Error) -> Self {
         error!({ exception.message = %err }, "We were unable to call Azure Table Storage");
 
-        sentry::capture_error(&err);
-
         Self::new(
             500,
             "Internal Server Error",
@@ -58,8 +56,6 @@ impl From<azure_core::error::Error> for APIError {
 impl From<actix::MailboxError> for APIError {
     fn from(err: actix::MailboxError) -> Self {
         error!({ exception.message = %err }, "We were unable to call Azure Table Storage");
-
-        sentry::capture_error(&err);
 
         Self::new(
             500,

@@ -7,6 +7,7 @@ edition = "2021"
 [features]
 default = []
 table_storage = []
+ci_build = ["table_storage", "openssl-sys/vendored"]
 
 [dependencies]
 actix = "0.13"
@@ -26,21 +27,14 @@ lazy_static = "1.5"
 log = "0.4"
 md5 = "0.7"
 openidconnect = { version = "3.5", default-features = false, features = ["curl"] }
-opentelemetry = { version = "0.23" }
-opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.16", features = ["tls-roots"] }
 percent-encoding = "2.3"
 rand = "0.8"
 reqwest = { version = "0.11" }
-sentry = { version = "0.34", features = ["log"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.39", features = ["full"] }
 tonic = { version = "0.11", features = ["tls-roots"] }
-tracing = { version = "0.1.40", features = ["log"] }
-tracing-attributes = { git="https://github.com/SierraSoftworks/tracing.git" }
-tracing-futures = { version = "0.2.5", features = ["futures-03"] }
-tracing-opentelemetry = "0.24"
-tracing-subscriber = { version = "0.3.18", features = ["tracing-log"] }
+tracing = { version = "0.1.40" }
+tracing-batteries = { git = "https://github.com/sierrasoftworks/tracing-batteries-rs.git", features = ["medama"] }
 uuid = { version = "1.10", features = ["serde", "v4"] }
-openssl-sys = { version = "0.9.109", features = ["vendored"] }
+openssl-sys = { version = "0.9.109", features = ["vendored"], optional = true }

@@ -5,15 +5,13 @@ use std::{
 
 use actix_service::*;
 use actix_web::dev::*;
-use actix_web::{http::header::HeaderMap, Error};
+use actix_web::{Error, http::header::HeaderMap};
 use futures::{
-    future::{ok, Ready},
-    Future,
+    Future, FutureExt,
+    future::{Ready, ok},
 };
-use opentelemetry::propagation::{Extractor, TextMapPropagator};
-use opentelemetry_sdk::propagation::TraceContextPropagator;
-use tracing::{Instrument, Span};
-use tracing_opentelemetry::OpenTelemetrySpanExt;
+use opentelemetry::propagation::Extractor;
+use tracing_batteries::prelude::*;
 
 pub struct TracingLogger;
 
@@ -52,15 +50,13 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let propagator = TraceContextPropagator::new();
-
         let user_agent = req
             .headers()
             .get("User-Agent")
-            .map(|h| h.to_str().unwrap_or(""))
+            .and_then(|h| h.to_str().ok())
             .unwrap_or("");
 
-        let span = tracing::info_span!(
+        let span = info_span!(
             "request",
             "otel.kind" = "server",
             "otel.name" = req.match_pattern().unwrap_or_else(|| req.uri().path().to_string()),
@@ -68,42 +64,39 @@ where
             "net.peer.ip" = %req.connection_info().realip_remote_addr().unwrap_or(""),
             "http.target" = %req.uri(),
             "http.user_agent" = %user_agent,
-            "http.status_code" = tracing::field::Empty,
+            "http.status_code" = EmptyField,
             "http.method" = %req.method(),
             "http.url" = %req.match_pattern().unwrap_or_else(|| req.path().into()),
+            "http.headers" = %req.headers().iter().map(|(k, v)| format!("{k}: {v:?}")).collect::<Vec<_>>().join("\n"),
         );
 
         // Propagate OpenTelemetry parent span context information
-        let context = propagator.extract(&HeaderMapExtractor::from(req.headers()));
+        let context = opentelemetry::global::get_text_map_propagator(|propagator| {
+            propagator.extract(&HeaderMapExtractor::from(req.headers()))
+        });
 
-        span.set_parent(context);
+        let _ = span.set_parent(context);
 
-        let handler_span = {
-            let _enter = span.enter();
-            tracing::info_span!(
-                "request.handler",
-                "otel.kind" = "internal",
-                "otel.name" = req.match_name().unwrap_or("<default>"),
-            )
-        };
+        let fut = self
+            .service
+            .call(req)
+            .map(move |outcome| match &outcome {
+                Ok(response) => {
+                    Span::current()
+                        .record("http.status_code", display(response.response().status()));
+                    outcome
+                }
+                Err(error) => {
+                    Span::current().record(
+                        "http.status_code",
+                        display(error.as_response_error().status_code()),
+                    );
+                    outcome
+                }
+            })
+            .instrument(span);
 
-        let fut = {
-            let _enter = handler_span.enter();
-            self.service.call(req)
-        };
-
-        Box::pin(
-            async move {
-                let outcome = fut.instrument(handler_span).await;
-                let status_code = match &outcome {
-                    Ok(response) => response.response().status(),
-                    Err(error) => error.as_response_error().status_code(),
-                };
-                Span::current().record("http.status_code", status_code.as_u16());
-                outcome
-            }
-            .instrument(span),
-        )
+        Box::pin(fut)
     }
 }
 

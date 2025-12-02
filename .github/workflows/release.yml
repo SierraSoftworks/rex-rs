@@ -192,7 +192,7 @@ jobs:
           key: ${{ matrix.run_on }}
 
       - name: cargo build
-        run: ${{ matrix.builder }} build --release --target ${{ matrix.target }}
+        run: ${{ matrix.builder }} build --release --target ${{ matrix.target }} --features ci_build
 
       - name: Upload GitHub Release Artifacts
         uses: SierraSoftworks/gh-releases@v1.0.7

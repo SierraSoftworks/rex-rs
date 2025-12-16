@@ -128,7 +128,7 @@ impl Handler<GetRandomIdea> for MemoryStore {
                 }
 
                 true
-            }).choose(&mut rand::thread_rng())
+            }).choose(&mut rand::rng())
                 .ok_or_else(|| APIError::new(404, "Not Found", "No random ideas were available."))
                 .map(|(_id, idea)| idea.clone()))
     }

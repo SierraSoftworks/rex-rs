@@ -1165,7 +1165,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2207,7 +2207,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2436,7 +2436,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.17",
  "tokio",
- "tonic 0.14.3",
+ "tonic 0.14.4",
  "tracing",
 ]
 
@@ -2453,7 +2453,7 @@ dependencies = [
  "prost 0.14.1",
  "serde",
  "serde_json",
- "tonic 0.14.3",
+ "tonic 0.14.4",
  "tonic-prost",
 ]
 
@@ -2792,7 +2792,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.1",
  "tracing",
- "windows-sys 0.60.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3231,7 +3231,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3847,7 +3847,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4082,9 +4082,9 @@ dependencies = [
 
 [[package]]
 name = "tonic"
-version = "0.14.3"
+version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a286e33f82f8a1ee2df63f4fa35c0becf4a85a0cb03091a15fd7bf0b402dc94a"
+checksum = "7f32a6f80051a4111560201420c7885d0082ba9efe2ab61875c587bb6b18b9a0"
 dependencies = [
  "async-trait",
  "axum 0.8.7",
@@ -4120,7 +4120,7 @@ checksum = "66bd50ad6ce1252d87ef024b3d64fe4c3cf54a86fb9ef4c631fdd0ded7aeaa67"
 dependencies = [
  "bytes",
  "prost 0.14.1",
- "tonic 0.14.3",
+ "tonic 0.14.4",
 ]
 
 [[package]]
@@ -4233,7 +4233,7 @@ dependencies = [
 [[package]]
 name = "tracing-batteries"
 version = "0.1.0"
-source = "git+https://github.com/sierrasoftworks/tracing-batteries-rs.git#527f84f8384576c87d289e0a882d89631f8b0930"
+source = "git+https://github.com/sierrasoftworks/tracing-batteries-rs.git#5d3a27ae2c436eaf07fa0af2acf4a794fc4c0e9a"
 dependencies = [
  "chrono",
  "hex",
@@ -4250,7 +4250,7 @@ dependencies = [
  "sha2",
  "sys-locale",
  "tokio",
- "tonic 0.14.3",
+ "tonic 0.14.4",
  "tracing",
  "tracing-attributes 0.2.0",
  "tracing-futures",

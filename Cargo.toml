@@ -11,7 +11,7 @@ ci_build = ["table_storage", "openssl-sys/vendored"]
 
 [dependencies]
 actix = "0.13"
-actix-http = "3.8"
+actix-http = "3.12"
 actix-rt = "2.10"
 actix-service = "2.0.2"
 actix-web = "4.8"

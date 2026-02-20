@@ -3143,7 +3143,7 @@ dependencies = [
  "chrono",
  "env_logger",
  "futures",
- "http 0.2.12",
+ "http 1.4.0",
  "lazy_static",
  "log",
  "md5",

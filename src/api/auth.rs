@@ -3,16 +3,21 @@ use actix_web::{dev::Payload, FromRequest, HttpRequest};
 use futures::future::{ready, Ready};
 use openidconnect::{
     core::{
-        CoreClient, CoreGenderClaim, CoreJsonWebKeyType, CoreJweContentEncryptionAlgorithm,
-        CoreJwsSigningAlgorithm, CoreProviderMetadata,
+        CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
+        CoreProviderMetadata,
     },
-    curl::http_client,
-    ClientId, IdToken, IdTokenClaims, Nonce, NonceVerifier, RedirectUrl,
+    ClientId, CurlHttpClient, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken,
+    IdTokenClaims, Nonce, NonceVerifier, RedirectUrl,
 };
 use std::sync::Arc;
 
+/// The OIDC client type with endpoints configured by Azure AD's discovery document.
+/// The authorization endpoint (HasAuthUrl) is always set by the provider metadata,
+/// while the token URL and userinfo URL may or may not be present (EndpointMaybeSet).
+type OidcClient = CoreClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointMaybeSet, EndpointMaybeSet>;
+
 lazy_static! {
-    static ref CLIENT: Arc<CoreClient> = Arc::new(get_client());
+    static ref CLIENT: Arc<OidcClient> = Arc::new(get_client());
 }
 
 pub type AuthIdToken = IdToken<
@@ -20,12 +25,11 @@ pub type AuthIdToken = IdToken<
     CoreGenderClaim,
     CoreJweContentEncryptionAlgorithm,
     CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
 >;
 
 pub type AuthIdTokenClaims = IdTokenClaims<AuthAdditionalClaims, CoreGenderClaim>;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthToken {
     claims: AuthIdTokenClaims,
 }
@@ -130,12 +134,12 @@ impl FromRequest for AuthToken {
     }
 }
 
-fn get_client() -> CoreClient {
+fn get_client() -> OidcClient {
     let issuer_url = openidconnect::IssuerUrl::new(
         "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
     )
     .expect("The issuer URL should parse correctly.");
-    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)
+    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, &CurlHttpClient)
         .expect("We should be able to resolve provider metadata for Azure AD.");
 
     let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())

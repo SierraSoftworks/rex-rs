@@ -1,6 +1,5 @@
 use super::APIError;
 use actix_web::{dev::Payload, FromRequest, HttpRequest};
-use futures::future::{ready, Ready};
 use openidconnect::{
     core::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
@@ -9,16 +8,15 @@ use openidconnect::{
     ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
     Nonce, NonceVerifier, RedirectUrl,
 };
-use std::sync::Arc;
+use std::{future::Future, pin::Pin, sync::Arc};
+use tokio::sync::OnceCell;
 
 /// The OIDC client type with endpoints configured by Azure AD's discovery document.
 /// The authorization endpoint (HasAuthUrl) is always set by the provider metadata,
 /// while the token URL and userinfo URL may or may not be present (EndpointMaybeSet).
 type OidcClient = CoreClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointMaybeSet, EndpointMaybeSet>;
 
-lazy_static! {
-    static ref CLIENT: Arc<OidcClient> = Arc::new(get_client());
-}
+static CLIENT: OnceCell<Arc<OidcClient>> = OnceCell::const_new();
 
 pub type AuthIdToken = IdToken<
     AuthAdditionalClaims,
@@ -87,10 +85,13 @@ impl AuthToken {
     }
 
     #[instrument("auth_token.from_request", skip(req))]
-    fn from_request_internal(req: &HttpRequest) -> Result<AuthToken, APIError> {
-        let creds = AuthToken::bearer_token_from_request(req)?;
+    async fn from_request_internal(req: HttpRequest) -> Result<AuthToken, APIError> {
+        let creds = AuthToken::bearer_token_from_request(&req)?;
 
-        let client = CLIENT.clone();
+        let client = CLIENT
+            .get_or_init(|| async { Arc::new(get_client().await) })
+            .await
+            .clone();
 
         let id_token: AuthIdToken =
             serde_json::from_value(serde_json::json!(creds)).map_err(|e| {
@@ -126,49 +127,37 @@ impl AuthToken {
 
 impl FromRequest for AuthToken {
     type Error = APIError;
-    type Future = Ready<Result<AuthToken, APIError>>;
+    type Future = Pin<Box<dyn Future<Output = Result<AuthToken, APIError>>>>;
 
     #[inline]
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        ready(AuthToken::from_request_internal(req))
+        let req = req.clone();
+        Box::pin(AuthToken::from_request_internal(req))
     }
 }
 
-fn get_client() -> OidcClient {
-    // Run discovery in a fresh OS thread to avoid nesting a new Tokio runtime
-    // inside any existing async context (e.g. during tests).
-    std::thread::spawn(|| {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .expect("Failed to build Tokio runtime for OpenID Connect discovery")
-            .block_on(async {
-                let issuer_url = openidconnect::IssuerUrl::new(
-                    "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
-                )
-                .expect("The issuer URL should parse correctly.");
-                let http_client = reqwest::ClientBuilder::new()
-                    .redirect(reqwest::redirect::Policy::none())
-                    .build()
-                    .expect("Failed to build HTTP client for OpenID Connect discovery");
-                let provider_metadata =
-                    CoreProviderMetadata::discover_async(issuer_url, &http_client)
-                        .await
-                        .expect("We should be able to resolve provider metadata for Azure AD.");
+async fn get_client() -> OidcClient {
+    let issuer_url = openidconnect::IssuerUrl::new(
+        "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
+    )
+    .expect("The issuer URL should parse correctly.");
+    let http_client = reqwest::ClientBuilder::new()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .expect("Failed to build HTTP client for OpenID Connect discovery");
+    let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, &http_client)
+        .await
+        .expect("We should be able to resolve provider metadata for Azure AD.");
 
-                let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())
-                    .expect("The redirect URL should parse correctly");
+    let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())
+        .expect("The redirect URL should parse correctly");
 
-                CoreClient::from_provider_metadata(
-                    provider_metadata,
-                    ClientId::new("https://rex.sierrasoftworks.com".to_string()),
-                    None,
-                )
-                .set_redirect_uri(redirect_url)
-            })
-    })
-    .join()
-    .expect("OpenID Connect client initialization thread panicked")
+    CoreClient::from_provider_metadata(
+        provider_metadata,
+        ClientId::new("https://rex.sierrasoftworks.com".to_string()),
+        None,
+    )
+    .set_redirect_uri(redirect_url)
 }
 
 struct NoOpNonceVerifier {}

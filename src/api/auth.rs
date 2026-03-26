@@ -6,15 +6,22 @@ use openidconnect::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
         CoreProviderMetadata,
     },
-    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
-    Nonce, NonceVerifier, RedirectUrl,
+    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims, Nonce,
+    NonceVerifier, RedirectUrl,
 };
 use std::{future::Future, pin::Pin};
 
 /// The OIDC client type with endpoints configured by Azure AD's discovery document.
 /// The authorization endpoint (HasAuthUrl) is always set by the provider metadata,
 /// while the token URL and userinfo URL may or may not be present (EndpointMaybeSet).
-type OidcClient = CoreClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointMaybeSet, EndpointMaybeSet>;
+type OidcClient = CoreClient<
+    EndpointSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointMaybeSet,
+    EndpointMaybeSet,
+>;
 
 pub type AuthIdToken = IdToken<
     AuthAdditionalClaims,
@@ -130,11 +137,11 @@ impl Actor for OidcActor {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        ctx.wait(
-            actix::fut::wrap_future(get_client()).map(|client, actor: &mut OidcActor, _ctx| {
+        ctx.wait(actix::fut::wrap_future(get_client()).map(
+            |client, actor: &mut OidcActor, _ctx| {
                 actor.client = Some(client);
-            }),
-        );
+            },
+        ));
     }
 }
 
@@ -159,8 +166,8 @@ impl Handler<VerifyToken> for OidcActor {
             )
         })?;
 
-        let id_token: AuthIdToken =
-            serde_json::from_value(serde_json::json!(msg.0.as_str())).map_err(|e| {
+        let id_token: AuthIdToken = serde_json::from_value(serde_json::json!(msg.0.as_str()))
+            .map_err(|e| {
                 warn!("Unable to deserialize credential token: {}", e);
                 APIError::unauthorized()
             })?;

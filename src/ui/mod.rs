@@ -1,12 +1,9 @@
-use actix_web::{get, http::header::ContentType, web, HttpRequest, HttpResponse};
-use http::HeaderValue;
+use actix_web::{get, http::header::ContentType, http::StatusCode, web, HttpRequest, HttpResponse};
 use tracing::{field, instrument, Span};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_ui_path);
 }
-
-static DEFAULT_CONTENT_TYPE: HeaderValue = HeaderValue::from_static("application/octet-stream");
 
 #[instrument(
     skip(req),
@@ -28,12 +25,14 @@ pub async fn get_ui_path(req: HttpRequest) -> HttpResponse {
                 .await;
             match res {
                 Ok(res) => {
-                    let status = res.status();
+                    let status = StatusCode::from_u16(res.status().as_u16())
+                        .unwrap_or(StatusCode::BAD_GATEWAY);
                     let content_type = res
                         .headers()
                         .get("content-type")
-                        .unwrap_or(&DEFAULT_CONTENT_TYPE)
-                        .clone();
+                        .and_then(|v| v.to_str().ok())
+                        .unwrap_or("application/octet-stream")
+                        .to_owned();
                     Span::current().record("http.status_code", status.as_u16());
 
                     match res.bytes().await {

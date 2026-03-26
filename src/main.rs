@@ -7,8 +7,6 @@ extern crate serde_json;
 extern crate uuid;
 #[macro_use]
 extern crate tracing;
-#[macro_use]
-extern crate lazy_static;
 
 #[macro_use]
 mod macros;
@@ -33,11 +31,13 @@ async fn main() -> std::io::Result<()> {
     let session = telemetry::setup();
 
     let state = models::GlobalState::new();
+    let oidc = actix_web::web::Data::new(actix::Actor::start(api::OidcActor::new()));
 
     info!("Starting server on :{}", get_listening_port());
     HttpServer::new(move || {
         App::new()
             .app_data(actix_web::web::Data::new(state.clone()))
+            .app_data(oidc.clone())
             .wrap(TracingLogger)
             // TODO: CORS needs to be updated for new actix-web
             // .wrap(Cors::default().allow_any_origin().send_wildcard())

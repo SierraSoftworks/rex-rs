@@ -27,9 +27,11 @@ pub async fn get_test_app(
     Response = actix_web::dev::ServiceResponse,
     Error = actix_web::Error,
 > {
+    let oidc = actix_web::web::Data::new(actix::Actor::start(crate::api::OidcActor::new()));
     test::init_service(
         App::new()
             .app_data(actix_web::web::Data::new(state.clone()))
+            .app_data(oidc)
             .configure(configure),
     )
     .await

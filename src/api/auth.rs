@@ -6,8 +6,8 @@ use openidconnect::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
         CoreProviderMetadata,
     },
-    ClientId, CurlHttpClient, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken,
-    IdTokenClaims, Nonce, NonceVerifier, RedirectUrl,
+    reqwest, ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
+    Nonce, NonceVerifier, RedirectUrl,
 };
 use std::sync::Arc;
 
@@ -139,7 +139,11 @@ fn get_client() -> OidcClient {
         "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
     )
     .expect("The issuer URL should parse correctly.");
-    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, &CurlHttpClient)
+    let http_client = reqwest::blocking::ClientBuilder::new()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .expect("Failed to build HTTP client for OpenID Connect discovery");
+    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, &http_client)
         .expect("We should be able to resolve provider metadata for Azure AD.");
 
     let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())

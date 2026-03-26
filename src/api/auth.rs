@@ -1,5 +1,6 @@
 use super::APIError;
-use actix_web::{dev::Payload, FromRequest, HttpRequest};
+use actix::prelude::*;
+use actix_web::{dev::Payload, web, FromRequest, HttpRequest};
 use openidconnect::{
     core::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
@@ -8,15 +9,12 @@ use openidconnect::{
     ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
     Nonce, NonceVerifier, RedirectUrl,
 };
-use std::{future::Future, pin::Pin, sync::Arc};
-use tokio::sync::OnceCell;
+use std::{future::Future, pin::Pin};
 
 /// The OIDC client type with endpoints configured by Azure AD's discovery document.
 /// The authorization endpoint (HasAuthUrl) is always set by the provider metadata,
 /// while the token URL and userinfo URL may or may not be present (EndpointMaybeSet).
 type OidcClient = CoreClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointMaybeSet, EndpointMaybeSet>;
-
-static CLIENT: OnceCell<Arc<OidcClient>> = OnceCell::const_new();
 
 pub type AuthIdToken = IdToken<
     AuthAdditionalClaims,
@@ -67,7 +65,7 @@ impl AuthToken {
         &self.claims.additional_claims().unique_name
     }
 
-    fn bearer_token_from_request(req: &HttpRequest) -> Result<&str, APIError> {
+    fn bearer_token_from_request(req: &HttpRequest) -> Result<String, APIError> {
         req.headers()
             .get("Authorization")
             .ok_or_else(APIError::unauthorized)
@@ -82,19 +80,87 @@ impl AuthToken {
                     Err(APIError::unauthorized())
                 }
             })
+            .map(|s| s.to_string())
     }
 
     #[instrument("auth_token.from_request", skip(req))]
     async fn from_request_internal(req: HttpRequest) -> Result<AuthToken, APIError> {
-        let creds = AuthToken::bearer_token_from_request(&req)?;
+        let token = AuthToken::bearer_token_from_request(&req)?;
 
-        let client = CLIENT
-            .get_or_init(|| async { Arc::new(get_client().await) })
-            .await
+        let actor = req
+            .app_data::<web::Data<Addr<OidcActor>>>()
+            .ok_or_else(|| {
+                error!("OidcActor address not registered in app data");
+                APIError::new(
+                    500,
+                    "Internal Server Error",
+                    "We ran into a problem, this has been reported and will be looked at.",
+                )
+            })?
             .clone();
 
+        actor.send(VerifyToken(token)).await?
+    }
+}
+
+impl FromRequest for AuthToken {
+    type Error = APIError;
+    type Future = Pin<Box<dyn Future<Output = Result<AuthToken, APIError>>>>;
+
+    #[inline]
+    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+        let req = req.clone();
+        Box::pin(AuthToken::from_request_internal(req))
+    }
+}
+
+// ── Actor ─────────────────────────────────────────────────────────────────────
+
+pub struct OidcActor {
+    client: Option<OidcClient>,
+}
+
+impl OidcActor {
+    pub fn new() -> Self {
+        Self { client: None }
+    }
+}
+
+impl Actor for OidcActor {
+    type Context = Context<Self>;
+
+    fn started(&mut self, ctx: &mut Self::Context) {
+        ctx.wait(
+            actix::fut::wrap_future(get_client()).map(|client, actor: &mut OidcActor, _ctx| {
+                actor.client = Some(client);
+            }),
+        );
+    }
+}
+
+// ── Message ───────────────────────────────────────────────────────────────────
+
+pub struct VerifyToken(pub String);
+
+impl Message for VerifyToken {
+    type Result = Result<AuthToken, APIError>;
+}
+
+impl Handler<VerifyToken> for OidcActor {
+    type Result = Result<AuthToken, APIError>;
+
+    fn handle(&mut self, msg: VerifyToken, _ctx: &mut Self::Context) -> Self::Result {
+        let client = self.client.as_ref().ok_or_else(|| {
+            error!("OidcActor received VerifyToken before client was initialized");
+            APIError::new(
+                503,
+                "Service Unavailable",
+                "The authentication service is not yet ready. Please try again shortly.",
+            )
+        })?;
+
         let id_token: AuthIdToken =
-            serde_json::from_value(serde_json::json!(creds)).map_err(|e| {
+            serde_json::from_value(serde_json::json!(msg.0.as_str())).map_err(|e| {
                 warn!("Unable to deserialize credential token: {}", e);
                 APIError::unauthorized()
             })?;
@@ -125,16 +191,7 @@ impl AuthToken {
     }
 }
 
-impl FromRequest for AuthToken {
-    type Error = APIError;
-    type Future = Pin<Box<dyn Future<Output = Result<AuthToken, APIError>>>>;
-
-    #[inline]
-    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
-        let req = req.clone();
-        Box::pin(AuthToken::from_request_internal(req))
-    }
-}
+// ── OIDC discovery ────────────────────────────────────────────────────────────
 
 async fn get_client() -> OidcClient {
     let issuer_url = openidconnect::IssuerUrl::new(
@@ -159,6 +216,8 @@ async fn get_client() -> OidcClient {
     )
     .set_redirect_uri(redirect_url)
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 struct NoOpNonceVerifier {}
 

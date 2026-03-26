@@ -15,7 +15,7 @@ pub mod test;
 
 use actix_web::web;
 
-pub use auth::AuthToken;
+pub use auth::{AuthToken, OidcActor};
 pub use error::APIError;
 pub use utils::ensure_user_collection;
 

@@ -6,7 +6,7 @@ use openidconnect::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
         CoreProviderMetadata,
     },
-    reqwest, ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
+    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims,
     Nonce, NonceVerifier, RedirectUrl,
 };
 use std::sync::Arc;
@@ -135,26 +135,40 @@ impl FromRequest for AuthToken {
 }
 
 fn get_client() -> OidcClient {
-    let issuer_url = openidconnect::IssuerUrl::new(
-        "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
-    )
-    .expect("The issuer URL should parse correctly.");
-    let http_client = reqwest::blocking::ClientBuilder::new()
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .expect("Failed to build HTTP client for OpenID Connect discovery");
-    let provider_metadata = CoreProviderMetadata::discover(&issuer_url, &http_client)
-        .expect("We should be able to resolve provider metadata for Azure AD.");
+    // Run discovery in a fresh OS thread to avoid nesting a new Tokio runtime
+    // inside any existing async context (e.g. during tests).
+    std::thread::spawn(|| {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("Failed to build Tokio runtime for OpenID Connect discovery")
+            .block_on(async {
+                let issuer_url = openidconnect::IssuerUrl::new(
+                    "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
+                )
+                .expect("The issuer URL should parse correctly.");
+                let http_client = reqwest::ClientBuilder::new()
+                    .redirect(reqwest::redirect::Policy::none())
+                    .build()
+                    .expect("Failed to build HTTP client for OpenID Connect discovery");
+                let provider_metadata =
+                    CoreProviderMetadata::discover_async(issuer_url, &http_client)
+                        .await
+                        .expect("We should be able to resolve provider metadata for Azure AD.");
 
-    let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())
-        .expect("The redirect URL should parse correctly");
+                let redirect_url = RedirectUrl::new("https://rex.sierrasoftworks.com".to_string())
+                    .expect("The redirect URL should parse correctly");
 
-    CoreClient::from_provider_metadata(
-        provider_metadata,
-        ClientId::new("https://rex.sierrasoftworks.com".to_string()),
-        None,
-    )
-    .set_redirect_uri(redirect_url)
+                CoreClient::from_provider_metadata(
+                    provider_metadata,
+                    ClientId::new("https://rex.sierrasoftworks.com".to_string()),
+                    None,
+                )
+                .set_redirect_uri(redirect_url)
+            })
+    })
+    .join()
+    .expect("OpenID Connect client initialization thread panicked")
 }
 
 struct NoOpNonceVerifier {}

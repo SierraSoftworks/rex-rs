@@ -44,7 +44,7 @@ jobs:
         run: sed -i "s/^version\s*=\s*\".*\"/version = \"$VERSION\"/g" Cargo.toml
 
       - name: Stash Versioned Cargo.toml
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cargofile
           path: Cargo.toml
@@ -110,7 +110,7 @@ jobs:
         run: grcov . --binary-path target/debug/deps/ -s . -t lcov --ignore-not-existing --ignore '../**' --ignore '/*' --ignore 'C:/' -o ./lcov.info
 
       - name: codecov upload
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         with:
           files: ./lcov.info
 
@@ -182,7 +182,7 @@ jobs:
           cargo binstall --no-confirm cross
 
       - name: Fetch Versioned Cargo.toml
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: cargofile
 
@@ -203,7 +203,7 @@ jobs:
           overwrite: "true"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.HANDLER_NAME }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}
           path: target/${{ matrix.target }}/release/${{ env.HANDLER_NAME }}${{ matrix.extension }}
@@ -237,10 +237,10 @@ jobs:
           echo "FULL_IMAGE_NAME=${image}" >> $GITHUB_ENV
 
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -248,7 +248,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.FULL_IMAGE_NAME }}
           tags: |
@@ -261,7 +261,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Pull in platform artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ env.HANDLER_NAME }}-${{ env.PLATFORM_PAIR }}
 
@@ -271,7 +271,7 @@ jobs:
 
       - name: Build and push by digest
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -285,7 +285,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: Upload digest
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: image-digest-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
@@ -313,23 +313,23 @@ jobs:
           echo "FULL_IMAGE_NAME=${image}" >> $GITHUB_ENV
 
       - name: Download digests
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
           pattern: image-digest-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.FULL_IMAGE_NAME }}
 
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -358,7 +358,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Fetch handler artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ env.HANDLER_NAME }}-linux-amd64
 
@@ -366,7 +366,7 @@ jobs:
         run: chmod +x ${{ env.HANDLER_NAME }}
       
       - name: 'Login via Azure CLI'
-        uses: Azure/login@v2
+        uses: Azure/login@v3
         with:
           tenant-id: a26571f1-22b3-4756-ac7b-39ca684fab48
           subscription-id: 108b3ddb-53fb-4344-80b2-d6c151912be6
@@ -384,7 +384,7 @@ jobs:
     
     steps:
       - name: Probe
-        uses: Jtalk/url-health-check-action@v4
+        uses: Jtalk/url-health-check-action@v5
         with:
           url: ${{ env.STAGING_HEALTHCHECK }}
           max-attempts: 5
@@ -404,7 +404,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Fetch handler artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ${{ env.HANDLER_NAME }}-linux-amd64
 
@@ -412,7 +412,7 @@ jobs:
         run: chmod +x ${{ env.HANDLER_NAME }}
 
       - name: 'Login via Azure CLI'
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           tenant-id: a26571f1-22b3-4756-ac7b-39ca684fab48
           subscription-id: 108b3ddb-53fb-4344-80b2-d6c151912be6
@@ -430,7 +430,7 @@ jobs:
     
     steps:
       - name: Probe
-        uses: Jtalk/url-health-check-action@v4
+        uses: Jtalk/url-health-check-action@v5
         with:
           url: ${{ env.LIVE_HEALTHCHECK }}
           max-attempts: 5

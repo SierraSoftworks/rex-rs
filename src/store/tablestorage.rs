@@ -157,7 +157,7 @@ impl TableStorage {
             TableStorage::get_all_entities(table, type_name, query, filter).await?;
         entries
             .iter()
-            .choose(&mut rand::thread_rng())
+            .choose(&mut rand::rng())
             .map(|e| e.clone().into())
             .ok_or(not_found_err)
     }

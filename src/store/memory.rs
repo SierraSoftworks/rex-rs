@@ -81,17 +81,15 @@ impl Handler<GetIdeas> for MemoryStore {
         is.get(&msg.collection)
             .ok_or_else(|| APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .map(|items| items.iter().filter(|(_, i)| {
-                if let Some(is_completed) = msg.is_completed {
-                    if i.completed != is_completed {
+                if let Some(is_completed) = msg.is_completed
+                    && i.completed != is_completed {
                         return false;
                     }
-                }
 
-                if let Some(tag) = msg.tag.clone() {
-                    if !i.tags.contains(tag.as_str()) {
+                if let Some(tag) = msg.tag.clone()
+                    && !i.tags.contains(tag.as_str()) {
                         return false;
                     }
-                }
 
                 true
             }).map(|(_id, idea)| idea.clone()).collect())
@@ -115,17 +113,15 @@ impl Handler<GetRandomIdea> for MemoryStore {
         is.get(&msg.collection)
             .ok_or_else(|| APIError::new(404, "Not Found", "The collection ID you provided could not be found. Please check it and try again."))
             .and_then(|items| items.iter().filter(|(_, i)| {
-                if let Some(is_completed) = msg.is_completed {
-                    if i.completed != is_completed {
+                if let Some(is_completed) = msg.is_completed
+                    && i.completed != is_completed {
                         return false;
                     }
-                }
 
-                if let Some(tag) = msg.tag.clone() {
-                    if !i.tags.contains(tag.as_str()) {
+                if let Some(tag) = msg.tag.clone()
+                    && !i.tags.contains(tag.as_str()) {
                         return false;
                     }
-                }
 
                 true
             }).choose(&mut rand::rng())

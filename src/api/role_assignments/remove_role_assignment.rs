@@ -1,7 +1,7 @@
 use super::CollectionUserFilter;
 use super::{APIError, AuthToken};
 use crate::{models::*, telemetry::TraceMessageExt};
-use actix_web::{delete, web, HttpResponse};
+use actix_web::{HttpResponse, delete, web};
 use tracing::instrument;
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -21,7 +21,11 @@ async fn remove_role_assignment_v3(
     let tuid = parse_uuid!(info.user, "user ID");
 
     if tuid == uid {
-        return Err(APIError::new(400, "Bad Request", "You cannot remove yourself from a collection. Please request that another collection owner performs this for you."));
+        return Err(APIError::new(
+            400,
+            "Bad Request",
+            "You cannot remove yourself from a collection. Please request that another collection owner performs this for you.",
+        ));
     }
 
     let role = state
@@ -47,7 +51,7 @@ async fn remove_role_assignment_v3(
                 )
                 .await??;
 
-            Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+            Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
         }
         _ => Err(APIError::new(
             403,

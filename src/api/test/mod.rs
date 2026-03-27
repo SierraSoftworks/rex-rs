@@ -1,13 +1,13 @@
 use crate::api::configure;
 use crate::models::*;
 use actix_web::{
-    test::{self, read_body_json},
     App,
+    test::{self, read_body_json},
 };
 use chrono::{Duration, Utc};
 use openidconnect::{
-    core::{CoreHmacKey, CoreJwsSigningAlgorithm},
     Audience, EndUserName, IssuerUrl, LocalizedClaim, StandardClaims, SubjectIdentifier,
+    core::{CoreHmacKey, CoreJwsSigningAlgorithm},
 };
 use serde::de::DeserializeOwned;
 
@@ -84,7 +84,7 @@ pub fn auth_token() -> String {
 
 pub async fn assert_status(
     resp: actix_web::dev::ServiceResponse,
-    expected_status: http::StatusCode,
+    expected_status: actix_http::StatusCode,
 ) -> actix_web::dev::ServiceResponse {
     if expected_status != resp.status() {
         let status = resp.status();

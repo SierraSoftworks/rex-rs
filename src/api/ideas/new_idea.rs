@@ -1,5 +1,5 @@
 use super::CollectionFilter;
-use super::{ensure_user_collection, APIError, AuthToken};
+use super::{APIError, AuthToken, ensure_user_collection};
 use crate::{models::*, telemetry::TraceMessageExt};
 use actix_web::{post, web};
 use tracing::instrument;

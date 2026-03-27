@@ -8,8 +8,8 @@ use azure_data_tables::prelude::*;
 use azure_storage::StorageCredentials;
 use futures::{Future, StreamExt};
 use rand::seq::IteratorRandom;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use std::{fmt::Debug, pin::Pin, sync::Arc};
 use tracing_batteries::prelude::*;
 

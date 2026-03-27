@@ -1,4 +1,4 @@
-use super::{ensure_user_collection, APIError, AuthToken};
+use super::{APIError, AuthToken, ensure_user_collection};
 use super::{CollectionFilter, QueryFilter};
 use crate::{models::*, telemetry::TraceMessageExt};
 use actix_web::{get, web};

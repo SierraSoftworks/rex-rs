@@ -33,7 +33,7 @@ macro_rules! json_responder {
 
             #[tracing::instrument(target="response.render", fields(http.content_type = "application/json"), skip(self, $req))]
             fn respond_to(self, $req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-                if $req.method() == http::Method::POST {
+                if $req.method() == actix_http::Method::POST {
                     let $model = &self;
                     actix_web::HttpResponse::Created()
                         .content_type("application/json")

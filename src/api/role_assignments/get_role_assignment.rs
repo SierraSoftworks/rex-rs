@@ -33,7 +33,11 @@ async fn get_role_assignment_v3(
             .await??;
 
         if role.role != Role::Owner {
-            return Err(APIError::new(403, "Forbidden", "You do not have permission to view or manage the list of users for this collection."));
+            return Err(APIError::new(
+                403,
+                "Forbidden",
+                "You do not have permission to view or manage the list of users for this collection.",
+            ));
         }
     }
 

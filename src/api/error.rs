@@ -1,5 +1,5 @@
 use actix_http::body::BoxBody;
-use actix_web::{error, http::StatusCode, HttpResponse};
+use actix_web::{HttpResponse, error, http::StatusCode};
 use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,7 +11,11 @@ pub struct APIError {
 
 impl APIError {
     pub fn unauthorized() -> Self {
-        Self::new(401, "Unauthorized", "You have not provided a valid authentication token. Please authenticate and try again.")
+        Self::new(
+            401,
+            "Unauthorized",
+            "You have not provided a valid authentication token. Please authenticate and try again.",
+        )
     }
 
     pub fn new(code: u16, error: &str, message: &str) -> Self {

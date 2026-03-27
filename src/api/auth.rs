@@ -1,13 +1,13 @@
 use super::APIError;
 use actix::prelude::*;
-use actix_web::{dev::Payload, web, FromRequest, HttpRequest};
+use actix_web::{FromRequest, HttpRequest, dev::Payload, web};
 use openidconnect::{
+    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims, Nonce,
+    NonceVerifier, RedirectUrl,
     core::{
         CoreClient, CoreGenderClaim, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
         CoreProviderMetadata,
     },
-    ClientId, EndpointMaybeSet, EndpointNotSet, EndpointSet, IdToken, IdTokenClaims, Nonce,
-    NonceVerifier, RedirectUrl,
 };
 use std::{future::Future, pin::Pin};
 
@@ -205,8 +205,8 @@ async fn get_client() -> OidcClient {
         "https://sts.windows.net/a26571f1-22b3-4756-ac7b-39ca684fab48/".to_string(),
     )
     .expect("The issuer URL should parse correctly.");
-    let http_client = reqwest::ClientBuilder::new()
-        .redirect(reqwest::redirect::Policy::none())
+    let http_client = openidconnect::reqwest::ClientBuilder::new()
+        .redirect(openidconnect::reqwest::redirect::Policy::none())
         .build()
         .expect("Failed to build HTTP client for OpenID Connect discovery");
     let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, &http_client)

@@ -65,12 +65,12 @@ macro_rules! test_request {
         {
             let app = $crate::api::test::get_test_app($state.clone()).await;
             let req = actix_web::test::TestRequest::with_uri($path)
-                .method(http::Method::$method)
+                .method(actix_http::Method::$method)
                 .insert_header(("Authorization", $crate::api::test::auth_token()))
                 .to_request();
 
             let response = actix_web::test::call_service(&app, req).await;
-            $crate::api::test::assert_status(response, http::StatusCode::$status).await
+            $crate::api::test::assert_status(response, actix_http::StatusCode::$status).await
         }
     };
 
@@ -78,13 +78,13 @@ macro_rules! test_request {
         {
             let app = $crate::api::test::get_test_app($state.clone()).await;
             let req = actix_web::test::TestRequest::with_uri($path)
-                .method(http::Method::$method)
+                .method(actix_http::Method::$method)
                 .set_json(&$body)
                 .insert_header(("Authorization", $crate::api::test::auth_token()))
                 .to_request();
 
             let response = actix_web::test::call_service(&app, req).await;
-            $crate::api::test::assert_status(response, http::StatusCode::$status).await
+            $crate::api::test::assert_status(response, actix_http::StatusCode::$status).await
         }
     };
 

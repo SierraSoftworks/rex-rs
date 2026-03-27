@@ -33,7 +33,11 @@ async fn store_role_assignment_v3(
         .await??;
 
     if tuid == uid {
-        return Err(APIError::new(400, "Bad Request", "You cannot modify your own role assignment. Please request that another collection owner performs this task for you."));
+        return Err(APIError::new(
+            400,
+            "Bad Request",
+            "You cannot modify your own role assignment. Please request that another collection owner performs this task for you.",
+        ));
     }
 
     let role = state

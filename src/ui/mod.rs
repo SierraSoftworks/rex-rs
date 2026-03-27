@@ -1,5 +1,6 @@
-use actix_web::{get, http::header::ContentType, http::StatusCode, web, HttpRequest, HttpResponse};
-use tracing::{field, instrument, Span};
+use actix_http::StatusCode;
+use actix_web::{HttpRequest, HttpResponse, get, http::header::ContentType, web};
+use tracing::{Span, field, instrument};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(get_ui_path);

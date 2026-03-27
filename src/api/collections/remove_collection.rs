@@ -1,7 +1,7 @@
 use super::CollectionFilter;
 use super::{APIError, AuthToken};
 use crate::{models::*, telemetry::TraceMessageExt};
-use actix_web::{delete, web, HttpResponse};
+use actix_web::{HttpResponse, delete, web};
 use tracing::instrument;
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -41,7 +41,7 @@ async fn remove_collection_v3(
         )
         .await??;
 
-    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+    Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
 }
 
 #[cfg(test)]

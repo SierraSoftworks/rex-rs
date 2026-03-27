@@ -1,4 +1,4 @@
-use super::{ensure_user_collection, APIError, AuthToken};
+use super::{APIError, AuthToken, ensure_user_collection};
 use actix_web::web;
 
 mod get_idea;

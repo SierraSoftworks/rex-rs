@@ -1,7 +1,7 @@
-use super::{ensure_user_collection, APIError, AuthToken};
+use super::{APIError, AuthToken, ensure_user_collection};
 use super::{CollectionIdFilter, IdFilter};
 use crate::{models::*, telemetry::TraceMessageExt};
-use actix_web::{delete, web, HttpResponse};
+use actix_web::{HttpResponse, delete, web};
 use tracing::instrument;
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -26,7 +26,7 @@ async fn remove_idea_v1(
         )
         .await??;
 
-    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+    Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -51,7 +51,7 @@ async fn remove_idea_v2(
         )
         .await??;
 
-    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+    Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -76,7 +76,7 @@ async fn remove_idea_v3(
         )
         .await??;
 
-    Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+    Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
 }
 
 #[instrument(err, skip(state, token), fields(otel.kind = "internal"))]
@@ -121,7 +121,7 @@ async fn remove_collection_idea_v3(
                 )
                 .await??;
 
-            Ok(HttpResponse::build(http::StatusCode::NO_CONTENT).finish())
+            Ok(HttpResponse::build(actix_http::StatusCode::NO_CONTENT).finish())
         }
         _ => Err(APIError::new(
             403,

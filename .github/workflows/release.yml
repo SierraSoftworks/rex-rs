@@ -189,7 +189,7 @@ jobs:
       - name: Setup Cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.run_on }}
+          key: ${{ matrix.target }}
 
       - name: cargo build
         run: ${{ matrix.builder }} build --release --target ${{ matrix.target }} --features ci_build

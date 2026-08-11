@@ -2385,7 +2385,7 @@ version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.21.7",
  "chrono",
  "getrandom 0.2.17",
  "http 1.5.0",
@@ -3589,9 +3589,9 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 
 [[package]]
 name = "sentry"
-version = "0.48.0"
+version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8ac94aab850a23d7507307cc505332ed2bafd36c65930dfc5c43610f9e9b477"
+checksum = "63207365db50cb817402f0ec8097d6dad3d644ef3fffd6ba30c75b3077e514da"
 dependencies = [
  "cfg_aliases",
  "httpdate",
@@ -3606,9 +3606,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-actix"
-version = "0.48.0"
+version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc85c297fcb76e3b89a19d14414af6abcf23a670c036266fe4cd71ae6def0d5a"
+checksum = "4a0eb1ed18478fb48db007aeaa672a3de176055357feb768eee0c3471802d0ce"
 dependencies = [
  "actix-http",
  "actix-web",
@@ -3619,9 +3619,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-core"
-version = "0.48.0"
+version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56de6f8c10ed1b74543b9654b99d3d9a2d876bd5996f3ecd60afdc30ef40ad0e"
+checksum = "48759bc392fb5e3b36b4efcb485f51074c0ba8479711cd5c8cf79e86f9f75d41"
 dependencies = [
  "rand 0.9.4",
  "sentry-types",
@@ -3632,9 +3632,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-log"
-version = "0.48.0"
+version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45ce87f3c93659f8ab95f0e62a80b63c2d49f2012980ae6b3c1abce29bd6cde2"
+checksum = "f9553a2f0f75bc8550137ebc753e8d2161af63ff780ca59983935f8df8f01655"
 dependencies = [
  "bitflags 2.11.0",
  "log",
@@ -3643,9 +3643,9 @@ dependencies = [
 
 [[package]]
 name = "sentry-types"
-version = "0.48.0"
+version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00c69667ff14f47aad798e6be2ad8409e350b3ab0b8d72b338b462ed35f7bcc4"
+checksum = "fab146d15a30ab4897a95fd15d6a038b8d7fbf2661c5f8b13738ce8df7a095b7"
 dependencies = [
  "debugid",
  "hex",
@@ -4411,7 +4411,7 @@ dependencies = [
 [[package]]
 name = "tracing-batteries"
 version = "0.1.0"
-source = "git+https://github.com/sierrasoftworks/tracing-batteries-rs.git#f059e936623c2eb0ca67f6ae3301487c9443ffd0"
+source = "git+https://github.com/sierrasoftworks/tracing-batteries-rs.git#2bdcc42b2dfa2f5baecad83e051638d977113a7d"
 dependencies = [
  "chrono",
  "hex",

@@ -1,0 +1,70 @@
+@use "../../tokens" as *;
+
+.header {
+    font-family: $font-display;
+    height: $header-height;
+    padding: 0 20px;
+    border-bottom: 1px solid $color-hairline;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+
+    &__title {
+        margin: 0;
+        font-size: 1.5em;
+    }
+
+    &__name {
+        font-weight: 100;
+        text-decoration: none;
+        color: $color-ink;
+    }
+
+    &__separator {
+        opacity: $opacity-deemphasis;
+        margin: 0 6px;
+    }
+
+    &__collection {
+        font-weight: 300;
+        text-transform: lowercase;
+    }
+}
+
+.header-menu {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-end;
+    height: $header-height;
+
+    // Full-height hover targets washing to a flat grey: the header's one piece
+    // of interaction feedback.
+    a,
+    &__button,
+    &__user {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: $color-text;
+        background: $color-surface;
+        padding: 0 20px;
+        border: none;
+        font: inherit;
+        font-size: 14px;
+        gap: 8px;
+        transition: background $transition;
+    }
+
+    a,
+    &__button {
+        cursor: pointer;
+
+        &:hover {
+            background: $color-hover;
+        }
+    }
+}

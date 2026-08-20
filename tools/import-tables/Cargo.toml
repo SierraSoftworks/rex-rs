@@ -13,3 +13,13 @@ name = "rex-import-tables"
 path = "src/main.rs"
 
 [dependencies]
+rex-server = { path = "../../server" }
+
+azure_core = "1.0"
+azure_data_tables = "0.21"
+azure_storage = "0.21"
+futures = "0.3"
+serde.workspace = true
+tokio = { version = "1.52", features = ["full"] }
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

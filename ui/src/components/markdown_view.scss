@@ -1,0 +1,37 @@
+@use "../../tokens" as *;
+
+.markdown {
+    line-height: 1.6;
+
+    p:first-child {
+        margin-top: 0;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
+
+    pre {
+        background: $color-hairline;
+        padding: 12px;
+        border-radius: $radius;
+        overflow-x: auto;
+    }
+
+    blockquote {
+        margin-left: 0;
+        padding-left: 16px;
+        border-left: 2px solid $color-hairline;
+        color: $color-muted;
+    }
+
+    table {
+        border-collapse: collapse;
+
+        td,
+        th {
+            border: 1px solid $color-hairline;
+            padding: 6px 10px;
+        }
+    }
+}

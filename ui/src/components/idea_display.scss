@@ -1,0 +1,28 @@
+@use "../../tokens" as *;
+
+.idea {
+    margin: 30px;
+    position: relative;
+    display: inline-block;
+    text-align: left;
+}
+
+.idea__title {
+    font-weight: 100;
+
+    // Rex's signature: a hanging left quotation mark, set into the margin. The
+    // offsets are exact; this is the one piece of the design that must not
+    // drift.
+    &::before {
+        position: absolute;
+        content: "\201C";
+        display: inline-block;
+        opacity: $opacity-deemphasis;
+        font-weight: 400;
+        top: 10px;
+        left: -40px;
+        font-size: 40px;
+        width: 40px;
+        text-align: right;
+    }
+}

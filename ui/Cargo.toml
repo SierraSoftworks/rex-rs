@@ -1,0 +1,51 @@
+[package]
+name = "rex-ui"
+description = "The Rex web interface, compiled to WebAssembly and embedded in the server binary."
+version = "0.1.0"
+authors = ["Benjamin Pannell <benjamin@pannell.dev>"]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/SierraSoftworks/rex-rs"
+publish = false
+
+# The UI only ever builds for wasm32, via Trunk, which is why it sits outside
+# the workspace: a native `cargo test` at the root has no business compiling
+# web-sys.
+
+[[bin]]
+name = "rex-ui"
+path = "src/main.rs"
+
+[dependencies]
+rex-api = { path = "../api" }
+
+futures = "0.3"
+gloo-net = { version = "0.7", features = ["http"] }
+gloo-timers = { version = "0.4", features = ["futures"] }
+js-sys = "0.3"
+md5 = "0.8"
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+yew = { version = "0.23", features = ["csr"] }
+yew-router = "0.20"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Crypto",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "HtmlInputElement",
+    "HtmlTextAreaElement",
+    "HtmlSelectElement",
+    "Location",
+    "Storage",
+    "Window",
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

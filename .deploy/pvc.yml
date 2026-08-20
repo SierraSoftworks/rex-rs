@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rex-data
+  labels:
+    app.kubernetes.io/name: rex
+    app.kubernetes.io/instance: rex-server
+spec:
+  accessModes:
+    # One writer, matching the Deployment's single replica.
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

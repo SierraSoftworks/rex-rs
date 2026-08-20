@@ -1,0 +1,51 @@
+@use "../../tokens" as *;
+
+.manage {
+    padding: 20px 40px 60px;
+
+    &__name {
+        font-weight: 100;
+        margin-top: 0;
+    }
+
+    &__columns {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    &__ideas {
+        flex: 2 1 480px;
+        min-width: 0;
+        overflow-x: auto;
+    }
+
+    &__members {
+        flex: 1 1 320px;
+        min-width: 0;
+        overflow-x: auto;
+    }
+
+    h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__actions {
+        white-space: nowrap;
+
+        .button + .button {
+            margin-left: 6px;
+        }
+    }
+
+    // Principal ids are long hex strings; a monospace column keeps them from
+    // pushing everything else around.
+    &__user-id {
+        font-family: $font-mono;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+}

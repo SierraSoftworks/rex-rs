@@ -1,9 +1,12 @@
 use std::path::Path;
 
-/// `include_dir!` needs `../ui/dist` to exist at compile time, and a fresh
-/// clone that has never run `trunk build` does not have it. Creating it here
-/// keeps `cargo build` working on its own; the resulting binary serves a plain
-/// error page instead of the UI, which the warning below is about.
+/// `include_dir!` needs `../ui/dist` to exist when the crate compiles, and a
+/// fresh clone that has never run `trunk build` does not have it. Creating it
+/// here is what keeps `cargo build` working on its own -- and it beats checking
+/// a placeholder into the directory, because `trunk build` empties it.
+///
+/// The resulting binary compiles but serves a plain error page in place of the
+/// interface, which is what the warning below is about.
 fn main() {
     let dist = Path::new(env!("CARGO_MANIFEST_DIR")).join("../ui/dist");
 

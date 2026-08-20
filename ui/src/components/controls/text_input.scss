@@ -1,0 +1,29 @@
+@use "../../../tokens" as *;
+
+.text-input {
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-text;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color $transition;
+
+    &::placeholder {
+        color: $color-muted;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: $color-primary;
+    }
+
+    &--multiline {
+        resize: vertical;
+        font-family: $font-body;
+        line-height: 1.5;
+    }
+}

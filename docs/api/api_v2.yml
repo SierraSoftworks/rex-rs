@@ -22,28 +22,50 @@ tags:
   - name: diagnostics
     description: APIs used to triage and diagnose problems with the service.
 paths:
-  /api/v1/auth:
+  /api/v1/auth/me:
     get:
       tags:
         - diagnostics
       security:
-        - AzureAD: [Ideas.Read]
+        - OIDC: []
 
-      summary: Get Authentication Claims (v1)
-      description: Gets the claims that the submitted authorization token offers.
-      operationId: auth_info_v1
+      summary: Get Current Principal (v1)
+      description: >
+        Gets the identity Rex resolved from the token you presented. The web
+        interface uses this to answer "am I signed in?" through exactly the
+        validation the rest of the API applies, rather than by inspecting the
+        token itself.
+      operationId: auth_me_v1
       responses:
         200:
-          description: List of claims.
+          description: The validated principal.
           content:
             application/json:
               schema:
-                additionalProperties:
-                  type: string
-                example:
-                  name: Testy McTesterson
-                  scp: user_impersonation
-                  role: User
+                type: object
+                required:
+                  - id
+                  - name
+                  - email
+                  - emailHash
+                properties:
+                  id:
+                    type: string
+                    description: The 32-character hex principal id used throughout the API.
+                    example: 6ba7b8109dad11d180b400c04fd430c8
+                  name:
+                    type: string
+                    example: Testy McTesterson
+                  email:
+                    type: string
+                    example: testy@example.com
+                  emailHash:
+                    type: string
+                    description: >
+                      The MD5 of the lowercased, trimmed email address. It is a
+                      discoverability key and a Gravatar key, never a secret and
+                      never the basis of an authorization decision.
+                    example: 05c1de2f5c5e7933bee97a499e818c5e
 
         401:
           $ref: "#/components/responses/Unauthorized"
@@ -81,7 +103,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Read]
+        - OIDC: []
 
       summary: Get Ideas (v2)
       description: Gets the list of ideas registered with the server.
@@ -142,7 +164,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Write]
+        - OIDC: []
 
       summary: New Idea (v2)
       description: Creates a new idea on the server.
@@ -183,7 +205,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Read]
+        - OIDC: []
 
       summary: Get Random Idea (v2)
       description: Gets a single randomly selected idea from the server.
@@ -235,7 +257,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Read]
+        - OIDC: []
 
       summary: Get Idea (v2)
       description: Gets a specific idea from the server based on its ID.
@@ -279,7 +301,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Write]
+        - OIDC: []
 
       summary: Store Idea (v2)
       description: Stores an idea idempotently with the given identifier, replacing an existing instance if one is present.
@@ -331,7 +353,7 @@ paths:
       tags:
         - ideas
       security:
-        - AzureAD: [Ideas.Write]
+        - OIDC: []
 
       summary: Remove Idea (v2)
       description: Removes a specific idea from the server based on its ID.
@@ -367,17 +389,15 @@ paths:
 
 components:
   securitySchemes:
-    AzureAD:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: https://login.microsoftonline.com/a26571f1-22b3-4756-ac7b-39ca684fab48/oauth2/v2.0/authorize
-          scopes:
-            "Ideas.Read": Allows the reading of ideas.
-            "Ideas.Write": Allows the creation, modification and deletion of ideas.
-            "Collections.Read": Allows the reading of collection information.
-            "Collections.Write": Allows the creation, modification and removal of collections.
-            "RoleAssignments.Write": Allows the creation, modification and removal of role assignments for collections.
+    OIDC:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        The ID token issued by the deployment's OpenID Connect provider, which
+        Rex validates on every request. Authorization itself is per-collection:
+        what you may do with a collection is decided by your role on it
+        (Owner, Contributor, or Viewer), not by a token scope.
 
   parameters:
     Auth:
@@ -399,7 +419,7 @@ components:
             example: Bearer
           required: true
     Forbidden:
-      description: Your access token does not grant you the required role or scopes needed to access this resource.
+      description: Your role on this collection does not permit this operation.
     InternalServerError:
       description: The server failed to process your request successfully.
       content:

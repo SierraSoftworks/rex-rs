@@ -1,0 +1,53 @@
+@use "../../tokens" as *;
+
+.gallery {
+    display: flex;
+    gap: 40px;
+    padding: 20px 40px 60px;
+    align-items: flex-start;
+
+    &__nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: sticky;
+        top: 20px;
+        flex: 0 0 160px;
+
+        a {
+            color: $color-text;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: $radius;
+
+            &:hover {
+                background: $color-hover;
+            }
+        }
+    }
+
+    &__specimens {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    &__specimen {
+        margin-bottom: 48px;
+
+        h3 {
+            font-weight: 300;
+            border-bottom: 1px solid $color-hairline;
+            padding-bottom: 8px;
+        }
+    }
+
+    &__stage {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
+        padding: 20px 0;
+        position: relative;
+    }
+}

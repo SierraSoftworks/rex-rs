@@ -65,3 +65,62 @@ fn asset_response(path: &str, body: &'static [u8], immutable: bool) -> HttpRespo
         .insert_header(cache)
         .body(body)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    /// Sass has no globbing, so `ui/styles.scss` lists every component and view
+    /// stylesheet by hand -- and a stylesheet nobody listed simply never loads,
+    /// which shows up as an unstyled screen rather than an error.
+    ///
+    /// This is the error.
+    #[test]
+    fn every_stylesheet_is_referenced() {
+        let ui = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../ui");
+        let manifest = std::fs::read_to_string(ui.join("styles.scss"))
+            .expect("ui/styles.scss should be readable");
+
+        let mut missing = Vec::new();
+        collect(&ui.join("src"), &mut missing);
+
+        let unreferenced: Vec<String> = missing
+            .into_iter()
+            .filter(|path| {
+                // `@use "src/components/button";` -- no leading underscore, no
+                // extension, and always forward slashes.
+                let reference = path
+                    .strip_prefix(&ui)
+                    .unwrap_or(path)
+                    .with_extension("")
+                    .to_string_lossy()
+                    .replace('\\', "/");
+
+                !manifest.contains(&format!("\"{reference}\""))
+            })
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect();
+
+        assert!(
+            unreferenced.is_empty(),
+            "these stylesheets are not referenced from ui/styles.scss, so nothing they contain is applied:\n  {}",
+            unreferenced.join("\n  ")
+        );
+    }
+
+    fn collect(dir: &Path, found: &mut Vec<PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+
+            if path.is_dir() {
+                collect(&path, found);
+            } else if path.extension().is_some_and(|ext| ext == "scss") {
+                found.push(path);
+            }
+        }
+    }
+}

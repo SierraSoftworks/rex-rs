@@ -1,0 +1,17 @@
+@use "../../tokens" as *;
+
+.invite {
+    &__heading {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 0;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+    }
+}

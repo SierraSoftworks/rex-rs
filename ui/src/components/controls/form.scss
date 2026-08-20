@@ -1,0 +1,27 @@
+@use "../../../tokens" as *;
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 480px;
+    max-width: 100%;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &__label {
+        font-family: $font-display;
+        font-weight: 300;
+        font-size: 13px;
+        color: $color-text;
+    }
+
+    &__hint {
+        font-size: 12px;
+        color: $color-muted;
+    }
+}

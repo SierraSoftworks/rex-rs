@@ -1,0 +1,31 @@
+@use "../../../tokens" as *;
+
+.tooltip {
+    position: relative;
+    display: inline-flex;
+
+    &__content {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 4px;
+        padding: 6px 10px;
+        border-radius: $radius;
+        background: $color-ink;
+        color: $color-surface;
+        font-family: $font-body;
+        font-size: 12px;
+        line-height: 1;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity $transition;
+        z-index: 10;
+    }
+
+    &:hover &__content,
+    &:focus-within &__content {
+        opacity: 1;
+    }
+}

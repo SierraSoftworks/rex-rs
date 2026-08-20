@@ -1,0 +1,115 @@
+@use "tokens" as *;
+
+// Sass has no globbing, so every component and view stylesheet is listed here
+// by hand. A unit test in the server crate fails the build when one is missing,
+// which is what stops a stylesheet from quietly never being loaded.
+@use "src/components/header";
+@use "src/components/idea_controls";
+@use "src/components/idea_display";
+@use "src/components/markdown_view";
+@use "src/components/notifications";
+@use "src/components/tag_editor";
+@use "src/components/controls/avatar";
+@use "src/components/controls/button";
+@use "src/components/controls/form";
+@use "src/components/controls/select";
+@use "src/components/controls/spinner";
+@use "src/components/controls/table";
+@use "src/components/controls/tag";
+@use "src/components/controls/text_input";
+@use "src/components/controls/tooltip";
+@use "src/views/collections";
+@use "src/views/gallery";
+@use "src/views/home";
+@use "src/views/invite";
+@use "src/views/manage";
+@use "src/views/new_idea";
+
+html,
+body {
+    font-family: $font-body;
+    margin: 0;
+    padding: 0;
+    color: $color-text;
+    background: $color-surface;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: $font-display;
+    font-weight: 300;
+    color: $color-ink;
+}
+
+h1 {
+    font-weight: 100;
+    font-size: 2.5em;
+}
+
+a {
+    color: $color-primary;
+}
+
+code {
+    font-family: $font-mono;
+    color: $color-code;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 9pt;
+}
+
+// Fenced blocks are deliberately unthemed: no syntax highlighting theme has
+// ever shipped with Rex, and adding one would change how the app reads.
+pre > code {
+    color: $color-ink;
+}
+
+// The absolute-centring primitive the whole app is built on: one shrink-wrapped
+// block on an otherwise empty canvas. The emptiness is the design -- there are
+// no max-width containers and no cards.
+.fill {
+    width: 100%;
+    height: 100%;
+}
+
+.center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+// A fixed full-viewport shell where only the content pane scrolls.
+.app {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.muted {
+    color: $color-muted;
+}

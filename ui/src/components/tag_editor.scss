@@ -1,0 +1,17 @@
+@use "../../tokens" as *;
+
+.tag-editor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    .tag + .tag {
+        margin-left: 0;
+    }
+
+    &__input {
+        display: inline-block;
+        width: 120px;
+    }
+}

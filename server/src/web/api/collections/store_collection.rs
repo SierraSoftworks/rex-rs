@@ -41,6 +41,8 @@ pub async fn store_collection_v3<S: Services>(
                 })
                 .await?;
 
+            // The role assignment has to come second: a role cannot refer to a
+            // collection that does not exist yet.
             services
                 .store()
                 .store_role_assignment(RoleAssignment {

@@ -1,0 +1,15 @@
+@use "../../tokens" as *;
+
+.collections {
+    padding: 20px 40px 60px;
+
+    &__item {
+        margin-bottom: 32px;
+
+        h4 {
+            font-weight: 300;
+            font-size: 1.2em;
+            margin: 0 0 10px;
+        }
+    }
+}

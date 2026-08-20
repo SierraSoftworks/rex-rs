@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: sierrasoftworks/rex:latest
+          image: ghcr.io/sierrasoftworks/rex-rs:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:

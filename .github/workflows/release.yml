@@ -9,9 +9,10 @@ on:
   release:
     types: [ published ]
 
+# Declaring any permission sets every unlisted scope to `none`, so this is the
+# floor every job starts from. Jobs that need to write something ask for it.
 permissions:
-  id-token: write
-  packages: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -214,6 +215,10 @@ jobs:
   build:
     name: ${{ matrix.os }}-${{ matrix.arch }}-release
     runs-on: ${{ matrix.run_on }}
+
+    # Attaching binaries to the release writes to the repository.
+    permissions:
+      contents: write
 
     needs:
       - version

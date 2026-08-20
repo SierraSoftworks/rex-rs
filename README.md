@@ -19,6 +19,9 @@ docker run -p 8000:8000 \
   ghcr.io/sierrasoftworks/rex-rs:latest
 ```
 
+The `latest` tag tracks `main`. Pin to a release (`:1`, `:1.2`, `:1.2.3`) or to a commit
+(`:sha-<commit>`) to choose when you move.
+
 Pre-compiled binaries for Linux, macOS, and Windows are available from the
 [GitHub releases](https://github.com/SierraSoftworks/rex-rs/releases) page.
 

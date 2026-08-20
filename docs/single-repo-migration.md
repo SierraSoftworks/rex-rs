@@ -186,9 +186,12 @@ pub type TestServices = ServicesContainer<MemoryStore>;
 
 Handlers become generic (`async fn get_idea_v3<S: Services>(services:
 web::Data<S>, ...)`), registered through a generic `configure::<S>()` exactly
-as automate parameterises its `TracingLogger<S>`. Rust 2024's native async fn
-in traits covers this without `async-trait`; actix-web's single-threaded
-workers mean we don't fight `Send` bounds on handler futures.
+as automate parameterises its `TracingLogger<S>`. Native async fn in traits
+(a compiler feature, stable since Rust 1.75 — not an edition feature) covers
+this without `async-trait`, with the usual caveat that such traits are not
+object-safe: everything stays generic (`S: Services`), never `dyn Services`,
+so that limitation never bites. actix-web's single-threaded workers mean we
+don't fight `Send` bounds on handler futures.
 
 **`MemoryStore`** is the existing `src/store/memory.rs` (nested
 `BTreeMap<u128, BTreeMap<u128, _>>` behind `RwLock`s) ported near-verbatim —
@@ -267,6 +270,16 @@ Deliberate decisions baked into this schema:
   deliberately. `GetCollections(principal)` becomes a join instead of a
   partition scan; the `CollectionV3.userId` field is populated with the
   requesting principal, matching what the UI already assumes.
+- **`email_hash` stays MD5 — a documented trade-off, not an oversight.** The
+  hash is the existing wire contract (`GET /api/v3/user/{hash}`, with the
+  client hashing the email before it leaves the browser) and doubles as the
+  Gravatar key throughout the UI. MD5 over a low-entropy input is trivially
+  reversible by dictionary attack, so it must be treated as *pseudonymised,
+  not anonymised*: a discoverability key, never a security boundary — no
+  authorization decision derives from it. Switching to HMAC-SHA256 (or plain
+  SHA-256, which Gravatar also accepts now) would invalidate every stored
+  hash and the invite-lookup contract, so it is deferred to a post-migration
+  decision (§17) rather than entangled with the data migration.
 - **Foreign keys ON** (unlike automate, which has no relations to enforce);
   `PRAGMA foreign_keys = ON` per connection.
 - **Health does real work**: `SELECT 1` through the connection rather than the
@@ -739,3 +752,8 @@ demo fixtures until the server is ready).
 5. **Multi-tenancy**: automate's `TenantDb` structural isolation is *not*
    carried over — Rex's per-collection roles are its authz model. Flagging in
    case a tenant boundary is ever wanted; it would change the schema.
+6. **Replace MD5 email hashes post-migration?** §4.2 keeps them for contract
+   and Gravatar compatibility, but a later move to SHA-256 (Gravatar-
+   compatible) or a keyed HMAC (stronger, but breaks Gravatar derivation and
+   requires a re-hash of stored users plus a v4 lookup endpoint) is possible
+   once the migration has settled.

@@ -92,9 +92,6 @@ pub struct AuthConfig {
     /// validated token's claims (`claims.*`), `client_ip`, `method`, and
     /// `path`. Absent means "any principal with a valid token".
     pub user_acl: Option<String>,
-
-    /// The same, for any administrative surface. Absent means nobody.
-    pub admin_acl: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

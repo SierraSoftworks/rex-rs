@@ -27,12 +27,11 @@ base_url = "https://rex.sierrasoftworks.com"
 cors_origins = []
 
 [web.auth]
-# Deny-by-default gates evaluated over the validated token's claims (`claims.*`),
-# along with `client_ip`, `method`, and `path`. `user_acl` decides who may sign
-# in at all; `admin_acl` guards administrative surfaces. Omitting `user_acl`
-# admits any principal holding a valid token from the configured provider.
+# A deny-by-default gate deciding who may sign in, evaluated over the validated
+# token's claims (`claims.*`) along with `client_ip`, `method`, and `path`.
+# Omitting it admits any principal holding a valid token from the configured
+# provider. What they can then do is decided by their role on each collection.
 # user_acl = 'claims.email endswith "@sierrasoftworks.com"'
-# admin_acl = 'false'
 
 [web.auth.oidc]
 # Omit this whole section to run without authentication. Never do that in a

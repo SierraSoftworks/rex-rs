@@ -72,7 +72,6 @@ pub struct OidcState {
     config: Option<OidcConfig>,
     base_url: Option<String>,
     user_acl: Option<Acl>,
-    admin_acl: Option<Acl>,
     http: openidconnect::reqwest::Client,
     cached: ArcSwapOption<CachedProvider>,
     /// Serialises discovery refreshes so a burst of requests triggers one fetch.
@@ -97,15 +96,6 @@ impl OidcState {
             .transpose()
             .map_err(|err| format!("The `web.auth.user_acl` expression is not valid: {err}"))?;
 
-        let admin_acl = config
-            .web
-            .auth
-            .admin_acl
-            .as_deref()
-            .map(Acl::new)
-            .transpose()
-            .map_err(|err| format!("The `web.auth.admin_acl` expression is not valid: {err}"))?;
-
         if config.web.auth.oidc.is_none() {
             warn!(
                 "No `[web.auth.oidc]` section is configured, so Rex is running with authentication disabled. Every request will be treated as the local developer."
@@ -116,7 +106,6 @@ impl OidcState {
             config: config.web.auth.oidc.clone(),
             base_url: config.web.base_url.clone(),
             user_acl,
-            admin_acl,
             http,
             cached: ArcSwapOption::empty(),
             refreshing: tokio::sync::Mutex::new(()),
@@ -133,10 +122,6 @@ impl OidcState {
 
     pub fn user_acl(&self) -> Option<&Acl> {
         self.user_acl.as_ref()
-    }
-
-    pub fn admin_acl(&self) -> Option<&Acl> {
-        self.admin_acl.as_ref()
     }
 
     /// Where the identity provider sends the popup once the user has consented.

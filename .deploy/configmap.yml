@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rex-config
+  labels:
+    app.kubernetes.io/name: rex
+    app.kubernetes.io/instance: rex-server
+data:
+  # See config.example.toml for every option. Secrets are referenced through
+  # ${{ env.NAME }} and supplied to the container from the rex-secrets Secret.
+  config.toml: |
+    [web]
+    address = "0.0.0.0:8000"
+    database = "/data/rex.sqlite"
+    base_url = "https://rex.sierrasoftworks.com"
+
+    [web.auth.oidc]
+    endpoint = "https://login.microsoftonline.com/a26571f1-22b3-4756-ac7b-39ca684fab48/v2.0"
+    client_id = "${{ env.REX_OIDC_CLIENT_ID }}"
+    client_secret = "${{ env.REX_OIDC_CLIENT_SECRET }}"
+    scopes = ["openid", "profile", "email", "offline_access"]
+    # Keeps every existing Azure AD principal attached to their data.
+    username_claim = "oid"
+
+    [telemetry]
+    otlp_endpoint = "https://api.honeycomb.io:443"
+    analytics_endpoint = "https://analytics.sierrasoftworks.com"

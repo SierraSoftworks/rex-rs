@@ -1,0 +1,25 @@
+[package]
+name = "rex-import-tables"
+description = "One-shot importer moving Rex's Azure Table Storage data into SQLite."
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[[bin]]
+name = "rex-import-tables"
+path = "src/main.rs"
+
+[dependencies]
+rex-server = { path = "../../server" }
+
+azure_core = "1.0"
+azure_data_tables = "0.21"
+azure_storage = "0.21"
+futures = "0.3"
+serde.workspace = true
+tokio = { version = "1.52", features = ["full"] }
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

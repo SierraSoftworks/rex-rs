@@ -1,0 +1,16 @@
+[build]
+target = "index.html"
+dist = "dist"
+# Fingerprinted filenames are what let the server hand out immutable cache
+# headers for everything except the document itself.
+filehash = true
+
+[watch]
+watch = ["src", "index.html", "styles.scss"]
+
+[serve]
+port = 8080
+# `trunk serve` proxies the API to a locally running server, so the dev UI talks
+# to the same endpoints it will in production.
+[[proxy]]
+backend = "http://localhost:8000/api"

@@ -1,0 +1,66 @@
+# Rex configuration.
+#
+# Every value below is optional unless noted; the defaults shown are what Rex
+# uses when the key is omitted. Anything of the form `${{ env.NAME }}` is
+# replaced with that environment variable before the file is parsed, and an
+# unset variable stops the server rather than silently becoming empty.
+#
+# Unknown keys are a startup error, so a typo fails loudly instead of being
+# ignored.
+
+[web]
+# The socket to listen on.
+address = "0.0.0.0:8000"
+
+# Where the SQLite database lives. Use the literal "memory" for a throwaway
+# in-process store — handy for a first run, useless for anything you want to
+# keep.
+database = "rex.sqlite"
+
+# The externally visible origin. Used to build the absolute redirect URI handed
+# to the identity provider, so set it whenever Rex sits behind a proxy.
+base_url = "https://rex.sierrasoftworks.com"
+
+# Extra origins permitted to call the API cross-origin. The UI is served by this
+# same binary, so this should normally stay empty; it exists for the cutover
+# window, while the old statically hosted UI may still point here.
+cors_origins = []
+
+[web.auth]
+# A deny-by-default gate deciding who may sign in, evaluated over the validated
+# token's claims (`claims.*`) along with `client_ip`, `method`, and `path`.
+# Omitting it admits any principal holding a valid token from the configured
+# provider. What they can then do is decided by their role on each collection.
+# user_acl = 'claims.email endswith "@sierrasoftworks.com"'
+
+[web.auth.oidc]
+# Omit this whole section to run without authentication. Never do that in a
+# deployment anybody else can reach.
+endpoint = "https://login.microsoftonline.com/a26571f1-22b3-4756-ac7b-39ca684fab48/v2.0"
+client_id = "${{ env.REX_OIDC_CLIENT_ID }}"
+
+# Required for the server-side authorization code exchange.
+client_secret = "${{ env.REX_OIDC_CLIENT_SECRET }}"
+
+# `offline_access` is what gets us a refresh token, which is what lets a session
+# outlive the ID token's short lifetime.
+scopes = ["openid", "profile", "email", "offline_access"]
+
+# Which claim carries the principal id. The default is the standard `sub`; this
+# deployment uses Azure AD's `oid` because that is where its existing principal
+# ids came from, and changing it would detach every user from their data.
+username_claim = "oid"
+
+# Which claim carries the email address.
+email_claim = "email"
+
+# How long a discovery document (and the JWKS it names) is trusted before being
+# refetched. An unrecognised signing key forces an earlier refetch regardless.
+discovery_ttl_seconds = 3600
+
+[telemetry]
+# All optional; each battery stays switched off while its setting is absent.
+# sentry_dsn = "${{ env.SENTRY_DSN }}"
+# otlp_endpoint = "https://api.honeycomb.io:443"
+# otlp_headers = { x-honeycomb-team = "${{ env.HONEYCOMB_KEY }}" }
+# analytics_endpoint = "https://analytics.sierrasoftworks.com"

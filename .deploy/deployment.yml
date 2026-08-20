@@ -8,6 +8,10 @@ metadata:
     app.kubernetes.io/instance: rex-server
 spec:
   replicas: 1
+  # SQLite has a single writer, so two pods must never hold the database at
+  # once -- which a rolling update would do by design.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: rex
@@ -17,7 +21,6 @@ spec:
       labels:
         app.kubernetes.io/name: rex
         app.kubernetes.io/instance: rex-server
-        aadpodidbinding: rex
     spec:
       containers:
         - name: server
@@ -26,10 +29,10 @@ spec:
           resources:
             requests:
               cpu: 50m
-              memory: 20Mi
+              memory: 64Mi
             limits:
               cpu: 500m
-              memory: 50Mi
+              memory: 256Mi
           env:
             - name: ENVIRONMENT
               valueFrom:
@@ -37,15 +40,30 @@ spec:
                   fieldPath: metadata.namespace
             - name: RUST_LOG
               value: info
-            - name: TABLE_STORAGE_CONNECTION_STRING
+            - name: REX_CONFIG
+              value: /config/config.toml
+            # Interpolated into config.toml at startup, so no secret is ever
+            # written into the ConfigMap.
+            - name: REX_OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  key: connection-string
+                  key: oidc-client-id
+                  name: rex-secrets
+            - name: REX_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: oidc-client-secret
                   name: rex-secrets
           ports:
             - name: http
               containerPort: 8000
               protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: data
+              mountPath: /data
           readinessProbe:
             httpGet:
               port: http
@@ -58,5 +76,12 @@ spec:
               port: http
               path: /api/v1/health
             initialDelaySeconds: 30
-            periodSeconds: 1
+            periodSeconds: 5
             failureThreshold: 3
+      volumes:
+        - name: config
+          configMap:
+            name: rex-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: rex-data

@@ -1,0 +1,31 @@
+@use "../../../tokens" as *;
+
+.spinner {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: $color-muted;
+    font-size: 14px;
+
+    &__ring {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba($color-primary, 0.2);
+        border-top-color: $color-primary;
+        border-radius: 50%;
+        animation: spinner-turn 0.8s linear infinite;
+    }
+}
+
+@keyframes spinner-turn {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Honour a stated preference for less motion rather than spinning regardless.
+@media (prefers-reduced-motion: reduce) {
+    .spinner__ring {
+        animation-duration: 3s;
+    }
+}

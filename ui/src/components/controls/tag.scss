@@ -1,0 +1,44 @@
+@use "../../../tokens" as *;
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1;
+    padding: 5px 8px;
+    border-radius: $radius;
+    border: 1px solid;
+    vertical-align: middle;
+
+    & + & {
+        margin-left: 10px;
+    }
+
+    &--default {
+        color: $color-primary;
+        border-color: rgba($color-primary, 0.3);
+        background: rgba($color-primary, 0.1);
+    }
+
+    &--success {
+        color: $color-success;
+        border-color: rgba($color-success, 0.3);
+        background: rgba($color-success, 0.1);
+    }
+
+    &__close {
+        border: none;
+        background: none;
+        color: inherit;
+        font-size: 14px;
+        line-height: 1;
+        padding: 0;
+        cursor: pointer;
+        opacity: 0.6;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}

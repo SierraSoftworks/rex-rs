@@ -1,0 +1,18 @@
+@use "../../../tokens" as *;
+
+.select {
+    font-family: $font-body;
+    font-size: 14px;
+    color: $color-text;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color $transition;
+
+    &:focus {
+        outline: none;
+        border-color: $color-primary;
+    }
+}

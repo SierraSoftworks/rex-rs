@@ -1,0 +1,41 @@
+@use "../../../tokens" as *;
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+
+    th {
+        font-family: $font-display;
+        font-weight: 300;
+        font-size: 13px;
+        text-align: left;
+        color: $color-muted;
+        padding: 10px 12px;
+        border-bottom: 1px solid $color-border;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid $color-hairline;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover td {
+        background: rgba($color-hover, 0.5);
+    }
+
+    // Completed ideas were meant to be tinted in the old interface, but the
+    // class was never given a style. It has one now -- including under the
+    // hover rule above, which would otherwise wash it straight back out.
+    tbody tr.success-row td,
+    tbody tr.success-row:hover td {
+        background: $color-success-row;
+    }
+
+    &__empty td {
+        color: $color-muted;
+        text-align: center;
+        padding: 24px 12px;
+    }
+}

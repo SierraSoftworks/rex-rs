@@ -1,0 +1,60 @@
+@use "../../tokens" as *;
+
+.notifications {
+    position: fixed;
+    top: $header-height + 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+    max-width: min(360px, calc(100vw - 32px));
+}
+
+.notification {
+    position: relative;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-left-width: 3px;
+    border-radius: $radius;
+    padding: 12px 32px 12px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+    &--error {
+        border-left-color: $color-danger;
+    }
+
+    &--success {
+        border-left-color: $color-success;
+    }
+
+    &__title {
+        font-family: $font-display;
+        font-weight: 400;
+        font-size: 13px;
+        color: $color-ink;
+        margin-bottom: 4px;
+    }
+
+    &__message {
+        font-size: 13px;
+        color: $color-text;
+        overflow-wrap: anywhere;
+    }
+
+    &__close {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        border: none;
+        background: none;
+        color: $color-muted;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:hover {
+            color: $color-text;
+        }
+    }
+}

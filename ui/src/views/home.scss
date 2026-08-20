@@ -1,0 +1,7 @@
+@use "../../tokens" as *;
+
+.home__empty {
+    color: $color-muted;
+    max-width: 32em;
+    text-align: center;
+}

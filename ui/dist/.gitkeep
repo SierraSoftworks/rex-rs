@@ -1,0 +1,4 @@
+This directory is where Trunk writes the built UI, and `include_dir!` embeds it
+into the server binary. It is checked in empty so that a fresh clone can build
+the server before the UI has ever been built -- without it, the `include_dir!`
+call has nothing to point at and the server does not compile at all.

@@ -1,0 +1,22 @@
+[package]
+name = "rex-api"
+description = "The REST contract shared by the Rex server and its web UI."
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+
+# Adds the actix-web `ResponseError` implementation for `ApiError` so that the
+# server can return the shared wire type directly from its handlers. Off by
+# default so that wasm builds of the UI never pull in a web framework.
+actix = ["dep:actix-web"]
+
+[dependencies]
+chrono.workspace = true
+serde.workspace = true
+
+actix-web = { version = "4.13", optional = true }

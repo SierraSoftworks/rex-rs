@@ -16,7 +16,7 @@ Run the Docker image (published for `linux/amd64` and `linux/arm64`):
 docker run -p 8000:8000 \
   -v $(pwd)/config.toml:/config/config.toml:ro \
   -v rex-data:/data \
-  ghcr.io/sierrasoftworks/rex-rs:latest
+  ghcr.io/sierrasoftworks/rex-rs/rex-rs:latest
 ```
 
 Pre-compiled binaries for Linux, macOS, and Windows are available from the

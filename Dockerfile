@@ -1,7 +1,7 @@
 # Packages a binary that the release workflow has already built, with the UI
 # baked into it. Building inside the image would mean shipping a Rust
 # toolchain, a wasm target, and Trunk in order to produce one file.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # The only runtime dependency. SQLite is compiled in and TLS uses rustls, but
 # reaching the identity provider still needs the system trust store.

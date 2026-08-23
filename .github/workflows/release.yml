@@ -232,31 +232,28 @@ jobs:
             run_on: windows-latest
             target: x86_64-pc-windows-msvc
             extension: .exe
-            builder: cargo
 
           - arch: amd64
             run_on: ubuntu-latest
             os: linux
             target: x86_64-unknown-linux-musl
-            builder: cargo
             setup: |
               sudo apt update && sudo apt install -y musl-tools
           - arch: arm64
             os: linux
-            run_on: ubuntu-latest
+            run_on: ubuntu-24.04-arm
             target: aarch64-unknown-linux-musl
-            builder: cross
+            setup: |
+              sudo apt update && sudo apt install -y musl-tools
 
           - arch: amd64
             run_on: macos-latest
             os: darwin
             target: x86_64-apple-darwin
-            builder: cargo
           - arch: arm64
             run_on: macos-latest
             os: darwin
             target: aarch64-apple-darwin
-            builder: cargo
 
     steps:
       - name: Run setup script
@@ -269,13 +266,6 @@ jobs:
         with:
           toolchain: stable
           target: ${{ matrix.target }}
-
-      - name: Install Cross
-        if: matrix.builder == 'cross'
-        shell: bash
-        run: |
-          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-          cargo binstall --no-confirm cross
 
       - name: Fetch Versioned Manifests
         uses: actions/download-artifact@v8
@@ -297,7 +287,7 @@ jobs:
           key: ${{ matrix.target }}
 
       - name: cargo build
-        run: ${{ matrix.builder }} build --release --target ${{ matrix.target }} -p rex-server --features ci_build
+        run: cargo build --release --target ${{ matrix.target }} -p rex-server --features ci_build
 
       - name: Upload GitHub Release Artifacts
         uses: SierraSoftworks/gh-releases@v1.0.10

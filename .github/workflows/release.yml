@@ -194,8 +194,10 @@ jobs:
           # attribution; PR/push builds keep the default (no debug info).
           CARGO_PROFILE_RELEASE_DEBUG: ${{ github.event_name == 'release' && '1' || 'false' }}
           # Static musl links don't emit a GNU build-id note by default; the
-          # symbols pipeline keys everything off it.
-          RUSTFLAGS: ${{ matrix.os == 'linux' && '-C link-arg=-Wl,--build-id=sha1' || '' }}
+          # symbols pipeline keys everything off it. These targets invoke
+          # rust-lld directly (no cc driver), so the flag is passed bare
+          # rather than via -Wl,.
+          RUSTFLAGS: ${{ matrix.os == 'linux' && '-C link-arg=--build-id=sha1' || '' }}
         run: cargo build -p rex-server
 
       - uses: actions/setup-node@v7
